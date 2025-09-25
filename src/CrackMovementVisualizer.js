@@ -1,10 +1,12 @@
 import React, { useState, useMemo } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ScatterChart, Scatter } from 'recharts';
+import rawData from './data/crackData.json';
+
 
 const CrackMovementVisualizer = () => {
   const [hoveredPoint, setHoveredPoint] = useState(null);
   // Raw dataset
-  const rawData = [
+/*   const rawData = [
     { date: '2024-06-01', Pianterreno: null, 'Piano 1': '+0.25;+0.00;+0.25;+0.50', 'Piano 2': null },
     { date: '2024-06-20', Pianterreno: '-0.25;+0.75;+0.00;+1.00', 'Piano 1': null, 'Piano 2': null },
     { date: '2024-09-01', Pianterreno: null, 'Piano 1': null, 'Piano 2': '+0.00;+0.00;+0.00;+0.00' },
@@ -14,7 +16,7 @@ const CrackMovementVisualizer = () => {
     { date: '2025-05-28', Pianterreno: '-0.50;+0.75;-0.25;+1.25', 'Piano 1': '+0.25;+0.00;+0.25;+0.50', 'Piano 2': '-0.25;+0.00;-0.25;+0.25' },
     { date: '2025-07-31', Pianterreno: '-0.50;+0.75;-0.25;+1.25', 'Piano 1': '+0.25;+0.00;+0.25;+0.50', 'Piano 2': '+0.00;+0.00;+0.00;+0.25' },
     { date: '2025-09-24', Pianterreno: '-0.50;+0.75;-0.25;+1.25', 'Piano 1': '+0.25;+0.00;+0.25;+0.25', 'Piano 2': '-0.25;+0.00;-0.25;+0.25' }
-  ];
+  ]; */
 
   // Function to calculate quadrant angle analysis
   const calculateQuadrantAngles = (reading) => {
