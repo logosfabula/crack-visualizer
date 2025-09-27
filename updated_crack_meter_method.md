@@ -28,19 +28,19 @@ The crack meter readings `[up, right, down, left]` represent where the crack int
 **Vertical Position (Y-coordinate)** - Determined by `left` and `right` values:
 - `left`: Where crack intersects the **left boundary** (vertical position)
 - `right`: Where crack intersects the **right boundary** (vertical position)  
-- **Positive values** = above center line
-- **Negative values** = below center line
+- **Positive values** = below center line
+- **Negative values** = above center line
 
 ### Visual Example
 ```
 Grid Boundaries:           Measurement Values:
                           up = -1 (left of center)
     -2  -1   0  +1  +2    
-+2  ┌───┬───┼───┬───┐     left = +1 (above center)
-+1  ├───┼───┼───┼───┤  ←  
- 0  ├───┼───●───┼───┤     ● = crack intersection at (-0.5, +0.5)
--1  ├───┼───┼───┼───┤  ←  right = 0 (on center)
--2  └───┴───┼───┴───┘     
+-2  ┌───●───┼───┬───┐     left = +1 (below center)
+-1  ├───┼───┼───┼───┤  ←  
+ 0  ├───┼───┼───┼───●     · = crack intersection at (-0.5, +0.5)
++1  ●───┼─˙─┼───┼───┤  ←  right = 0 (on center)
++2  └───┴───●───┴───┘     
                 │         down = 0 (on center)
                 ↓
 ```
