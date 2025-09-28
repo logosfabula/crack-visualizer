@@ -398,6 +398,17 @@ const CrackMovementVisualizer = () => {
               const { date, meter, reading } = parsedReading;
               const meterName = meter;
               
+              // Get meter color based on name
+              const getMeterColor = (meter) => {
+                switch(meter) {
+                  case 'Pianterreno': return '#8884d8';
+                  case 'Piano 1': return '#82ca9d';
+                  case 'Piano 2': return '#ffc658';
+                  default: return '#2563eb';
+                }
+              };
+              const meterColor = getMeterColor(meterName);
+              
               // Calculate intersection point and angle analysis
               const intersection = calculateIntersection(reading);
               const angleAnalysis = calculateQuadrantAngles(reading);
@@ -450,6 +461,10 @@ const CrackMovementVisualizer = () => {
                 <div className="space-y-6">
                   <div className="bg-gray-50 p-4 rounded">
                     <div className="flex items-center gap-2 mb-2">
+                      <div 
+                        className="w-4 h-4 rounded-full"
+                        style={{ backgroundColor: meterColor }}
+                      ></div>
                       <h3 className="font-semibold">{meterName} - {date}</h3>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
@@ -600,13 +615,13 @@ const CrackMovementVisualizer = () => {
                             {/* Normalized intersection marker */}
                             {normalizedIntersection !== null && (
                               <g transform={`translate(${300 + normalizedIntersection.x * 200}, ${200 - normalizedIntersection.y * 133.33})`}>
-                                {/* Blue circle outline */}
+                                {/* Circle outline - meter color */}
                                 <circle 
                                   cx="0" 
                                   cy="0" 
                                   r="8" 
                                   fill="none" 
-                                  stroke="#2563eb" 
+                                  stroke={meterColor} 
                                   strokeWidth="2"
                                   opacity="0.8"
                                 />
@@ -616,7 +631,7 @@ const CrackMovementVisualizer = () => {
                                   y="-15" 
                                   textAnchor="middle" 
                                   fontSize="10" 
-                                  fill="#2563eb" 
+                                  fill={meterColor} 
                                   fontWeight="bold"
                                   stroke="white"
                                   strokeWidth="2"
@@ -632,7 +647,7 @@ const CrackMovementVisualizer = () => {
                               cx={intersectionX} 
                               cy={intersectionY} 
                               r="8" 
-                              fill="#2563eb" 
+                              fill={meterColor} 
                               stroke="white" 
                               strokeWidth="3"
                             />
@@ -678,7 +693,7 @@ const CrackMovementVisualizer = () => {
                               y={intersectionY - 15} 
                               textAnchor="middle" 
                               fontSize="12" 
-                              fill="#2563eb" 
+                              fill={meterColor} 
                               fontWeight="bold"
                               stroke="white"
                               strokeWidth="3"
