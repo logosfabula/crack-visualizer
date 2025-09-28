@@ -39,10 +39,10 @@ Grid Boundaries:           Measurement Values:
 -2  ┌───●───┼───┬───┐     left = +1 (below center)
 -1  ├───┼───┼───┼───┤  ←  
  0  ├───┼───┼───┼───●     · = crack intersection at (-0.5, +0.5)
-+1  ●───┼─˙─┼───┼───┤  ←  right = 0 (on center)
-+2  └───┴───●───┴───┘     
-                │         down = 0 (on center)
-                ↓
++1  ●───┼─˙─┼───┼───┤  ←  
++2  └───┴───●───┴───┘     right = 0 (on center)
+                          
+                          down = 0 (on center)
 ```
 
 ### Key Insight
