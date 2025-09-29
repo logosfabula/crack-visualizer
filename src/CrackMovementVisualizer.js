@@ -1128,6 +1128,8 @@ const CrackMovementVisualizer = () => {
           <div className="mb-4 text-sm text-gray-600">
             <p>• Transparency gradient: oldest (transparent) → newest (solid)</p>
             <p>• Lines show movement direction with days between measurements</p>
+            <p>• <strong>Note:</strong> This view shows raw positions, not consistent across floors, which are not availbale for meaningful interpretations</p>
+            <p>• For consistent analysis across floors, use the Normalized View</p>
           </div>
           
           <div style={{ width: '100%', height: '600px', position: 'relative' }}>
@@ -1408,8 +1410,11 @@ const CrackMovementVisualizer = () => {
         <div>
           <h2 className="text-xl font-semibold mb-4">Processed Data Table</h2>
           <div className="mb-2 text-sm text-gray-600">
-            <span className="inline-block w-4 h-4 bg-gray-50 border border-gray-300 align-middle mr-1"></span> Raw Data (floor-specific interpretation)
-            <span className="inline-block w-4 h-4 bg-slate-100 border border-gray-300 align-middle mr-1 ml-4"></span> Normalized Data (consistent interpretation)
+            <span className="inline-block w-4 h-4 bg-gray-50 border border-gray-300 align-middle mr-1"></span> Raw Data (direct calculations from readings)
+            <span className="inline-block w-4 h-4 bg-slate-100 border border-gray-300 align-middle mr-1 ml-4"></span> Normalized Data (consistent across floors for analysis and interpretation)
+            <div className="mt-1 text-xs">
+              <strong>Note:</strong> Only normalized positions should be used for structural interpretation as they apply corrections for unified analysis across all floors.
+            </div>
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full border-collapse border border-gray-300">
@@ -1586,15 +1591,49 @@ const CrackMovementVisualizer = () => {
                       <div>
                         <div className="font-medium text-gray-700">Position Change:</div>
                         <div>{firstPosition} → {lastPosition}</div>
-                        <div className="text-xs text-gray-600 mt-1">
-                          <strong>Movement Interpretation:</strong><br/>
-                          • Horizontal: {directDx > 0 ? `+${directDx.toFixed(3)}mm (crack expanding)` : 
-                                        directDx < 0 ? `${directDx.toFixed(3)}mm (crack closing)` :
-                                        '0.000mm (no horizontal change)'}<br/>
-                          • Vertical: {directDy > 0 ? `+${directDy.toFixed(3)}mm (wall rising)` : 
-                                      directDy < 0 ? `${directDy.toFixed(3)}mm (wall sinking)` :
-                                      '0.000mm (no vertical change)'}
-                        </div>
+                        <div className="text-gray-500 text-xs">Raw coordinates</div>
+                      </div>
+                      
+                      <div>
+                        <div className="font-medium text-gray-700">Normalized Position Change:</div>
+                        {(() => {
+                          // Get normalized positions for first and last readings
+                          const firstNormX = meterData[0][`${meter.dataKeys[0].replace('_x', '_norm_x')}`] || 0;
+                          const firstNormY = meterData[0][`${meter.dataKeys[1].replace('_y', '_norm_y')}`] || 0;
+                          const lastNormX = meterData[meterData.length - 1][`${meter.dataKeys[0].replace('_x', '_norm_x')}`];
+                          const lastNormY = meterData[meterData.length - 1][`${meter.dataKeys[1].replace('_y', '_norm_y')}`];
+                          
+                          return (
+                            <>
+                              <div>
+                                <span style={{ color: meter.color }}>(0.000, 0.000)</span> → 
+                                <span style={{ color: meter.color }}> ({lastNormX.toFixed(3)}, {lastNormY.toFixed(3)})</span>
+                              </div>
+                              <div className="text-gray-500 text-xs">Analysis-ready coordinates</div>
+                            </>
+                          );
+                        })()}
+                      </div>
+                      
+                      <div>
+                        <div className="font-medium text-gray-700">(Normalized) Movement Interpretation:</div>
+                        {(() => {
+                          // Use normalized coordinates for interpretation
+                          const lastNormX = meterData[meterData.length - 1][`${meter.dataKeys[0].replace('_x', '_norm_x')}`];
+                          const lastNormY = meterData[meterData.length - 1][`${meter.dataKeys[1].replace('_y', '_norm_y')}`];
+                          
+                          return (
+                            <div className="text-xs text-gray-600">
+                              <strong>Based on normalized data:</strong><br/>
+                              • Horizontal: {lastNormX > 0 ? `+${lastNormX.toFixed(3)}mm (crack expanding)` : 
+                                            lastNormX < 0 ? `${lastNormX.toFixed(3)}mm (crack closing)` :
+                                            '0.000mm (no horizontal change)'}<br/>
+                              • Vertical: {lastNormY > 0 ? `+${lastNormY.toFixed(3)}mm (wall rising)` : 
+                                          lastNormY < 0 ? `${lastNormY.toFixed(3)}mm (wall sinking)` :
+                                          '0.000mm (no vertical change)'}
+                            </div>
+                          );
+                        })()}
                       </div>
                       
                       <div>
@@ -1624,9 +1663,9 @@ const CrackMovementVisualizer = () => {
                         <div className="font-medium text-gray-700">Movement Pattern:</div>
                         <div className="text-sm">
                           {totalDistance < 0.1 ? 'Minimal movement' :
-                           totalDistance < 0.5 ? 'Small movements' :
-                           totalDistance < 1.0 ? 'Moderate movement' :
-                           'Significant movement'}
+                          totalDistance < 0.5 ? 'Small movements' :
+                          totalDistance < 1.0 ? 'Moderate movement' :
+                          'Significant movement'}
                         </div>
                         <div className="text-gray-500">
                           Avg: {(totalDistance / (meterData.length - 1 || 1)).toFixed(3)} mm/measurement
@@ -1634,16 +1673,34 @@ const CrackMovementVisualizer = () => {
                       </div>
                       
                       <div>
-                        <div className="font-medium text-gray-700">Weekly Rate:</div>
+                        <div className="font-medium text-gray-700">Weekly Rate (Total Path):</div>
+                        <div className="text-lg font-semibold" style={{ color: meter.color }}>
+                          {(totalDistance / weeksDiff || 0).toFixed(4)} mm/week
+                        </div>
+                        <div className="text-gray-500 text-xs">
+                          Based on cumulative path distance
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <div className="font-medium text-gray-700">Weekly Rate (Direct):</div>
                         <div className="text-lg font-semibold" style={{ color: meter.color }}>
                           {weeklyMovement.toFixed(4)} mm/week
                         </div>
-                        <div className="text-gray-500">
-                          Direction: {directDx === 0 && directDy === 0 ? 'No movement' :
-                                     directDx === 0 ? (directDy > 0 ? 'Wall rising' : 'Wall sinking') :
-                                     directDy === 0 ? (directDx > 0 ? 'Crack expanding' : 'Crack closing') :
-                                     `${directDx > 0 ? 'Expanding' : 'Closing'} & ${directDy > 0 ? 'Rising' : 'Sinking'}`}
-                        </div>
+                        {(() => {
+                          // Use normalized coordinates for direction
+                          const lastNormX = meterData[meterData.length - 1][`${meter.dataKeys[0].replace('_x', '_norm_x')}`];
+                          const lastNormY = meterData[meterData.length - 1][`${meter.dataKeys[1].replace('_y', '_norm_y')}`];
+                          
+                          return (
+                            <div className="text-gray-500 text-xs">
+                              Direction: {lastNormX === 0 && lastNormY === 0 ? 'No movement' :
+                                        lastNormX === 0 ? (lastNormY > 0 ? 'Wall rising' : 'Wall sinking') :
+                                        lastNormY === 0 ? (lastNormX > 0 ? 'Crack expanding' : 'Crack closing') :
+                                        `${lastNormX > 0 ? 'Expanding' : 'Closing'} & ${lastNormY > 0 ? 'Rising' : 'Sinking'}`}
+                            </div>
+                          );
+                        })()}
                       </div>
                     </div>
                   </div>
@@ -1813,10 +1870,12 @@ const CrackMovementVisualizer = () => {
           * Total path distance includes all intermediate movements, not just start-to-end displacement<br/>
           * All measurements in millimeters based on crack meter grid scale<br/>
           <br/>
-          <strong>Structural Movement Interpretation:</strong><br/>
+          <strong>Structural Movement Interpretation (Normalized Data):</strong><br/>
+          • <strong>All floors use consistent interpretation after normalization:</strong><br/>
           • <strong>Horizontal movement:</strong> Left (−X) = crack closing, Right (+X) = crack expanding<br/>
           • <strong>Vertical movement:</strong> Down (−Y) = wall sinking, Up (+Y) = wall rising<br/>
-          • <strong>Direct displacement</strong> shows net structural change from start to end position
+          • <strong>Direct displacement</strong> shows net structural change from start to end position<br/>
+          • P0 and P2 raw readings are inverted during normalization to match P1's standard interpretation
         </p>
       </div>
     </div>
