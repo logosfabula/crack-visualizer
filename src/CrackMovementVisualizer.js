@@ -1350,63 +1350,90 @@ const CrackMovementVisualizer = () => {
       {selectedView === 'data' && (
         <div>
           <h2 className="text-xl font-semibold mb-4">Processed Data Table</h2>
+          <div className="mb-2 text-sm text-gray-600">
+            <span className="inline-block w-4 h-4 bg-gray-50 border border-gray-300 align-middle mr-1"></span> Raw Data (floor-specific interpretation)
+            <span className="inline-block w-4 h-4 bg-slate-100 border border-gray-300 align-middle mr-1 ml-4"></span> Normalized Data (consistent interpretation)
+          </div>
           <div className="overflow-x-auto">
             <table className="min-w-full border-collapse border border-gray-300">
               <thead>
                 <tr className="bg-gray-100">
-                  <th className="border border-gray-300 p-2">Date</th>
-                  <th className="border border-gray-300 p-2">Pianterreno Raw</th>
-                  <th className="border border-gray-300 p-2">Pianterreno Position</th>
-                  <th className="border border-gray-300 p-2">Normalized Position</th>
-                  <th className="border border-gray-300 p-2">Quadrant Angles</th>
-                  <th className="border border-gray-300 p-2">Piano 1 Raw</th>
-                  <th className="border border-gray-300 p-2">Piano 1 Position</th>
-                  <th className="border border-gray-300 p-2">Normalized Position</th>
-                  <th className="border border-gray-300 p-2">Quadrant Angles</th>
-                  <th className="border border-gray-300 p-2">Piano 2 Raw</th>
-                  <th className="border border-gray-300 p-2">Piano 2 Position</th>
-                  <th className="border border-gray-300 p-2">Normalized Position</th>
-                  <th className="border border-gray-300 p-2">Quadrant Angles</th>
+                  <th rowSpan="2" className="border border-gray-300 p-2">Date</th>
+                  <th colSpan="4" className="border border-gray-300 p-2 bg-white">
+                    <span className="inline-block w-3 h-3 rounded-full mr-2" style={{ backgroundColor: '#8884d8' }}></span>
+                    Pianterreno
+                  </th>
+                  <th colSpan="4" className="border border-gray-300 p-2 bg-white">
+                    <span className="inline-block w-3 h-3 rounded-full mr-2" style={{ backgroundColor: '#82ca9d' }}></span>
+                    Piano 1
+                  </th>
+                  <th colSpan="4" className="border border-gray-300 p-2 bg-white">
+                    <span className="inline-block w-3 h-3 rounded-full mr-2" style={{ backgroundColor: '#ffc658' }}></span>
+                    Piano 2
+                  </th>
+                </tr>
+                <tr className="bg-gray-100">
+                  {/* Pianterreno columns */}
+                  <th className="border border-gray-300 p-2 bg-gray-50">Raw Reading</th>
+                  <th className="border border-gray-300 p-2 bg-gray-50">Position</th>
+                  <th className="border border-gray-300 p-2 bg-slate-100">Normalized</th>
+                  <th className="border border-gray-300 p-2 bg-gray-50">Angles</th>
+                  {/* Piano 1 columns */}
+                  <th className="border border-gray-300 p-2 bg-gray-50">Raw Reading</th>
+                  <th className="border border-gray-300 p-2 bg-gray-50">Position</th>
+                  <th className="border border-gray-300 p-2 bg-slate-100">Normalized</th>
+                  <th className="border border-gray-300 p-2 bg-gray-50">Angles</th>
+                  {/* Piano 2 columns */}
+                  <th className="border border-gray-300 p-2 bg-gray-50">Raw Reading</th>
+                  <th className="border border-gray-300 p-2 bg-gray-50">Position</th>
+                  <th className="border border-gray-300 p-2 bg-slate-100">Normalized</th>
+                  <th className="border border-gray-300 p-2 bg-gray-50">Angles</th>
                 </tr>
               </thead>
               <tbody>
                 {processedData.map((row, index) => (
-                  <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : ''}>
+                  <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}>
                     <td className="border border-gray-300 p-2 font-mono">{row.date}</td>
-                    <td className="border border-gray-300 p-2 font-mono">{row.rawPianterreno || '—'}</td>
-                    <td className="border border-gray-300 p-2 font-mono">
+                    
+                    {/* Pianterreno columns */}
+                    <td className="border border-gray-300 p-2 font-mono bg-gray-50">{row.rawPianterreno || '—'}</td>
+                    <td className="border border-gray-300 p-2 font-mono bg-gray-50">
                       {row.pianterreno_x !== undefined ? 
                         `(${row.pianterreno_x.toFixed(3)}, ${row.pianterreno_y.toFixed(3)})` : '—'}
                     </td>
-                    <td className="border border-gray-300 p-2 font-mono bg-green-50">
+                    <td className="border border-gray-300 p-2 font-mono bg-slate-100">
                       {row.pianterreno_norm_x !== undefined ? 
                         `(${row.pianterreno_norm_x.toFixed(3)}, ${row.pianterreno_norm_y.toFixed(3)})` : '—'}
                     </td>
-                    <td className="border border-gray-300 p-2 text-xs">
+                    <td className="border border-gray-300 p-2 text-xs bg-gray-50">
                       {row.pianterreno_angle_analysis || '—'}
                     </td>
-                    <td className="border border-gray-300 p-2 font-mono">{row.rawPiano1 || '—'}</td>
-                    <td className="border border-gray-300 p-2 font-mono">
+                    
+                    {/* Piano 1 columns */}
+                    <td className="border border-gray-300 p-2 font-mono bg-gray-50">{row.rawPiano1 || '—'}</td>
+                    <td className="border border-gray-300 p-2 font-mono bg-gray-50">
                       {row.piano1_x !== undefined ? 
                         `(${row.piano1_x.toFixed(3)}, ${row.piano1_y.toFixed(3)})` : '—'}
                     </td>
-                    <td className="border border-gray-300 p-2 font-mono bg-green-50">
-                      {row.piano1_norm_x !== undefined ? 
-                        `(${row.piano1_norm_x.toFixed(3)}, ${row.piano1_norm_y.toFixed(3)})` : '—'}
+                    <td className="border border-gray-300 p-2 font-mono bg-slate-100">
+                      {row.pianterreno_norm_x !== undefined ? 
+                        `(${row.pianterreno_norm_x.toFixed(3)}, ${row.pianterreno_norm_y.toFixed(3)})` : '—'}
                     </td>
-                    <td className="border border-gray-300 p-2 text-xs">
+                    <td className="border border-gray-300 p-2 text-xs bg-gray-50">
                       {row.piano1_angle_analysis || '—'}
                     </td>
-                    <td className="border border-gray-300 p-2 font-mono">{row.rawPiano2 || '—'}</td>
-                    <td className="border border-gray-300 p-2 font-mono">
+                    
+                    {/* Piano 2 columns */}
+                    <td className="border border-gray-300 p-2 font-mono bg-gray-50">{row.rawPiano2 || '—'}</td>
+                    <td className="border border-gray-300 p-2 font-mono bg-gray-50">
                       {row.piano2_x !== undefined ? 
                         `(${row.piano2_x.toFixed(3)}, ${row.piano2_y.toFixed(3)})` : '—'}
                     </td>
-                    <td className="border border-gray-300 p-2 font-mono bg-green-50">
-                      {row.piano2_norm_x !== undefined ? 
-                        `(${row.piano2_norm_x.toFixed(3)}, ${row.piano2_norm_y.toFixed(3)})` : '—'}
+                    <td className="border border-gray-300 p-2 font-mono bg-slate-100">
+                      {row.pianterreno_norm_x !== undefined ? 
+                        `(${row.pianterreno_norm_x.toFixed(3)}, ${row.pianterreno_norm_y.toFixed(3)})` : '—'}
                     </td>
-                    <td className="border border-gray-300 p-2 text-xs">
+                    <td className="border border-gray-300 p-2 text-xs bg-gray-50">
                       {row.piano2_angle_analysis || '—'}
                     </td>
                   </tr>
