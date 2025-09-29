@@ -534,211 +534,230 @@ const CrackMovementVisualizer = () => {
                     )}
                   </div>
                   
-                  <div className="border border-gray-300 rounded-lg p-4">
-                    <svg width="100%" height="400" viewBox="0 0 600 400">
-                      {/* Grid pattern */}
-                      <defs>
-                        <pattern id="singleGrid" width="100" height="66.67" patternUnits="userSpaceOnUse">
-                          <path d="M 100 0 L 0 0 0 66.67" fill="none" stroke="#e5e7eb" strokeWidth="1"/>
-                        </pattern>
-                      </defs>
-                      <rect width="600" height="400" fill="url(#singleGrid)"/>
-                      
-                      {/* Center lines */}
-                      <line x1="300" y1="0" x2="300" y2="400" stroke="#d1d5db" strokeWidth="2"/>
-                      <line x1="0" y1="200" x2="600" y2="200" stroke="#d1d5db" strokeWidth="2"/>
-                      
-                      {/* Scale markers and labels */}
-                      <g stroke="#9ca3af" strokeWidth="1" fontSize="12" fill="#6b7280">
-                        {/* Horizontal markers */}
-                        <line x1="0" y1="195" x2="0" y2="205"/>
-                        <text x="0" y="220" textAnchor="middle">-1.5</text>
-                        <line x1="100" y1="195" x2="100" y2="205"/>
-                        <text x="100" y="220" textAnchor="middle">-1</text>
-                        <line x1="200" y1="195" x2="200" y2="205"/>
-                        <text x="200" y="220" textAnchor="middle">-0.5</text>
-                        <line x1="400" y1="195" x2="400" y2="205"/>
-                        <text x="400" y="220" textAnchor="middle">+0.5</text>
-                        <line x1="500" y1="195" x2="500" y2="205"/>
-                        <text x="500" y="220" textAnchor="middle">+1</text>
-                        <line x1="600" y1="195" x2="600" y2="205"/>
-                        <text x="600" y="220" textAnchor="middle">+1.5</text>
-                        
-                        {/* Vertical markers */}
-                        <line x1="290" y1="0" x2="310" y2="0"/>
-                        <text x="320" y="8" textAnchor="start">+1.5</text>
-                        <line x1="290" y1="66.67" x2="310" y2="66.67"/>
-                        <text x="320" y="75" textAnchor="start">+1</text>
-                        <line x1="290" y1="133.33" x2="310" y2="133.33"/>
-                        <text x="320" y="142" textAnchor="start">+0.5</text>
-                        <line x1="290" y1="266.67" x2="310" y2="266.67"/>
-                        <text x="320" y="275" textAnchor="start">-0.5</text>
-                        <line x1="290" y1="333.33" x2="310" y2="333.33"/>
-                        <text x="320" y="342" textAnchor="start">-1</text>
-                        <line x1="290" y1="400" x2="310" y2="400"/>
-                        <text x="320" y="408" textAnchor="start">-1.5</text>
-                      </g>
-                      
-                      {/* Draw the crack cross */}
-                      {(() => {
-                        const [up, right, down, left] = reading.split(';').map(v => parseFloat(v));
-                        
-                        // Use the EXACT same calculation as the main method
-                        // Grid parameters (matching the main calculateIntersection function)
-                        const gridWidth = 600;  // SVG canvas width
-                        const gridHeight = 400; // SVG canvas height
-                        const centerX = 300;    // SVG center X
-                        const centerY = 200;    // SVG center Y
-                        const scaleX = 200;     // pixels per unit (600/3 = 200 for -1.5 to +1.5)
-                        const scaleY = 133.33;  // pixels per unit (400/3 = 133.33 for -1.5 to +1.5)
-                        
-                        // Calculate line endpoints EXACTLY like the main method
-                        const topX = centerX + up * scaleX;
-                        const bottomX = centerX + down * scaleX;
-                        const leftY = centerY + left * scaleY;
-                        const rightY = centerY + right * scaleY;
-                        
-                        // Use the EXACT intersection calculation from calculateIntersection
-                        let intersectionX, intersectionY;
-                        
-                        // Handle special case: truly vertical line (up === down)
-                        if (Math.abs(topX - bottomX) < 1e-10) {
-                          const verticalLineX = topX;
-                          const horizontalLineAtX = (rightY - leftY) * (verticalLineX / gridWidth) + leftY;
-                          intersectionX = verticalLineX;
-                          intersectionY = horizontalLineAtX;
-                        } 
-                        // Handle special case: truly horizontal line (left === right)
-                        else if (Math.abs(leftY - rightY) < 1e-10) {
-                          const horizontalLineY = leftY;
-                          const verticalLineAtY = (bottomX - topX) * (horizontalLineY / gridHeight) + topX;
-                          intersectionX = verticalLineAtY;
-                          intersectionY = horizontalLineY;
-                        } 
-                        // Normal case: both lines have slopes
-                        else {
-                          const m1 = gridHeight / (bottomX - topX);
-                          const b1 = -m1 * topX;
-                          const m2 = (rightY - leftY) / gridWidth;
-                          const b2 = leftY;
-                          
-                          if (Math.abs(m1 - m2) < 1e-10) {
-                            // Parallel lines - shouldn't happen with real data
-                            intersectionX = centerX;
-                            intersectionY = centerY;
-                          } else {
-                            intersectionX = (b2 - b1) / (m1 - m2);
-                            intersectionY = m1 * intersectionX + b1;
-                          }
-                        }
-                        
-                        return (
-                          <>
-                            {/* Vertical line - from top boundary to bottom boundary */}
-                            <line 
-                              x1={topX} y1={0} 
-                              x2={bottomX} y2={gridHeight} 
-                              stroke="#dc2626" 
-                              strokeWidth="3"
-                            />
-                            
-                            {/* Horizontal line - from left boundary to right boundary */}
-                            <line 
-                              x1={0} y1={leftY} 
-                              x2={gridWidth} y2={rightY} 
-                              stroke="#dc2626" 
-                              strokeWidth="3"
-                            />
-                            
-                            {/* Normalized intersection marker */}
-                            {normalizedIntersection !== null && (
-                              <g transform={`translate(${300 + normalizedIntersection.x * 200}, ${200 - normalizedIntersection.y * 133.33})`}>
-                                {/* Circle outline - meter color */}
-                                <circle 
-                                  cx="0" 
-                                  cy="0" 
-                                  r="8" 
-                                  fill="none" 
-                                  stroke={meterColor} 
-                                  strokeWidth="2"
-                                  opacity="0.8"
-                                />
-                                {/* Coordinate label */}
-                                <text 
-                                  x="0" 
-                                  y="-15" 
-                                  textAnchor="middle" 
-                                  fontSize="10" 
-                                  fill={meterColor} 
-                                  fontWeight="bold"
-                                  stroke="white"
-                                  strokeWidth="2"
-                                  paintOrder="stroke"
-                                >
-                                  ({normalizedIntersection.x.toFixed(3)}, {normalizedIntersection.y.toFixed(3)})
-                                </text>
-                              </g>
-                            )}
-                            
-                            {/* Intersection point (absolute) */}
-                            <circle 
-                              cx={intersectionX} 
-                              cy={intersectionY} 
-                              r="8" 
-                              fill={meterColor} 
-                              stroke="white" 
-                              strokeWidth="3"
-                            />
-                            
-                            {/* Boundary intersection labels */}
-                            <text x={topX} y="15" textAnchor="middle" fontSize="12" fill="#dc2626" fontWeight="bold">
-                              ↑{up}
-                            </text>
-                            <text x={bottomX} y="390" textAnchor="middle" fontSize="12" fill="#dc2626" fontWeight="bold">
-                              ↓{down}
-                            </text>
-                            <text x="10" y={leftY + 4} textAnchor="start" fontSize="12" fill="#dc2626" fontWeight="bold">
-                              ←{left}
-                            </text>
-                            <text x="590" y={rightY + 4} textAnchor="end" fontSize="12" fill="#dc2626" fontWeight="bold">
-                              →{right}
-                            </text>
-                            
-                            {/* Quadrant angle labels for non-orthogonal crosses */}
-                            {angleAnalysis && angleAnalysis.deviation > 0.5 && (
-                              <>
-                                {/* Quadrant labels */}
-                                <text x="150" y="100" textAnchor="middle" fontSize="11" fill="#7c3aed" fontWeight="bold">
-                                  NW: {angleAnalysis.widerQuadrants.includes('NW') ? 
-                                    angleAnalysis.widerAngle.toFixed(1) : angleAnalysis.narrowerAngle.toFixed(1)}°
-                                </text>
-                                <text x="450" y="100" textAnchor="middle" fontSize="11" fill="#7c3aed" fontWeight="bold">
-                                  NE: {angleAnalysis.widerQuadrants.includes('NE') ? 
-                                    angleAnalysis.widerAngle.toFixed(1) : angleAnalysis.narrowerAngle.toFixed(1)}°
-                                </text>
-                                <text x="150" y="320" textAnchor="middle" fontSize="11" fill="#7c3aed" fontWeight="bold">
-                                  SW: {angleAnalysis.widerQuadrants.includes('SW') ? 
-                                    angleAnalysis.widerAngle.toFixed(1) : angleAnalysis.narrowerAngle.toFixed(1)}°
-                                </text>
-                                <text x="450" y="320" textAnchor="middle" fontSize="11" fill="#7c3aed" fontWeight="bold">
-                                  SE: {angleAnalysis.widerQuadrants.includes('SE') ? 
-                                    angleAnalysis.widerAngle.toFixed(1) : angleAnalysis.narrowerAngle.toFixed(1)}°
-                                </text>
-                              </>
-                            )}
-                            <text 
-                              x={intersectionX} 
-                              y={intersectionY - 15} 
-                              textAnchor="middle" 
-                              fontSize="12" 
-                              fill={meterColor} 
-                              fontWeight="bold"
-                              stroke="white"
-                              strokeWidth="3"
-                              paintOrder="stroke"
-                            >
-                              ({intersection.x.toFixed(3)}, {intersection.y.toFixed(3)})
-                            </text>
+<div className="border border-gray-300 rounded-lg p-4">
+  <svg width="100%" height="600" viewBox="0 0 800 600">
+    {/* Grid pattern - matching other views */}
+    <defs>
+      <pattern id="singleGrid" width="133.33" height="100" patternUnits="userSpaceOnUse">
+        <path d="M 133.33 0 L 0 0 0 100" fill="none" stroke="#e5e7eb" strokeWidth="1"/>
+      </pattern>
+    </defs>
+    <rect width="800" height="600" fill="url(#singleGrid)"/>
+    
+    {/* Center lines */}
+    <line x1="400" y1="0" x2="400" y2="600" stroke="#d1d5db" strokeWidth="2"/>
+    <line x1="0" y1="300" x2="0" y2="600" stroke="#d1d5db" strokeWidth="2"/>
+    
+    {/* Scale markers and labels - matching other views */}
+    <g stroke="#9ca3af" strokeWidth="1" fontSize="12" fill="#6b7280">
+      {/* Horizontal markers */}
+      <line x1="0" y1="295" x2="0" y2="305"/>
+      <text x="0" y="325" textAnchor="middle">-1.5</text>
+      <line x1="133.33" y1="295" x2="133.33" y2="305"/>
+      <text x="133.33" y="325" textAnchor="middle">-1</text>
+      <line x1="266.67" y1="295" x2="266.67" y2="305"/>
+      <text x="266.67" y="325" textAnchor="middle">-0.5</text>
+      <line x1="533.33" y1="295" x2="533.33" y2="305"/>
+      <text x="533.33" y="325" textAnchor="middle">+0.5</text>
+      <line x1="666.67" y1="295" x2="666.67" y2="305"/>
+      <text x="666.67" y="325" textAnchor="middle">+1</text>
+      <line x1="800" y1="295" x2="800" y2="305"/>
+      <text x="800" y="325" textAnchor="middle">+1.5</text>
+      
+      {/* Vertical markers */}
+      <line x1="390" y1="0" x2="410" y2="0"/>
+      <text x="420" y="8" textAnchor="start">+1.5</text>
+      <line x1="390" y1="100" x2="410" y2="100"/>
+      <text x="420" y="108" textAnchor="start">+1</text>
+      <line x1="390" y1="200" x2="410" y2="200"/>
+      <text x="420" y="208" textAnchor="start">+0.5</text>
+      <line x1="390" y1="400" x2="410" y2="400"/>
+      <text x="420" y="408" textAnchor="start">-0.5</text>
+      <line x1="390" y1="500" x2="410" y2="500"/>
+      <text x="420" y="508" textAnchor="start">-1</text>
+      <line x1="390" y1="600" x2="410" y2="600"/>
+      <text x="420" y="608" textAnchor="start">-1.5</text>
+    </g>
+    
+    {/* Draw the crack cross */}
+    {(() => {
+      const [up, right, down, left] = reading.split(';').map(v => parseFloat(v));
+      
+      // CALCULATION parameters (as per documentation)
+      const calcGridWidth = 400;
+      const calcGridHeight = 300;
+      const calcCenterX = 200;
+      const calcCenterY = 150;
+      const calcScaleX = 20;
+      const calcScaleY = 15;
+      
+      // Calculate line endpoints using CALCULATION parameters
+      const topX_calc = calcCenterX + up * calcScaleX;
+      const bottomX_calc = calcCenterX + down * calcScaleX;
+      const leftY_calc = calcCenterY + left * calcScaleY;
+      const rightY_calc = calcCenterY + right * calcScaleY;
+      
+      // Calculate intersection using CALCULATION parameters
+      let intersectionX_calc, intersectionY_calc;
+      
+      if (Math.abs(topX_calc - bottomX_calc) < 1e-10) {
+        intersectionX_calc = topX_calc;
+        const horizontalLineAtX = (rightY_calc - leftY_calc) * (intersectionX_calc / calcGridWidth) + leftY_calc;
+        intersectionY_calc = horizontalLineAtX;
+      } else if (Math.abs(leftY_calc - rightY_calc) < 1e-10) {
+        intersectionY_calc = leftY_calc;
+        const verticalLineAtY = (bottomX_calc - topX_calc) * (intersectionY_calc / calcGridHeight) + topX_calc;
+        intersectionX_calc = verticalLineAtY;
+      } else {
+        const m1 = calcGridHeight / (bottomX_calc - topX_calc);
+        const b1 = -m1 * topX_calc;
+        const m2 = (rightY_calc - leftY_calc) / calcGridWidth;
+        const b2 = leftY_calc;
+        
+        intersectionX_calc = (b2 - b1) / (m1 - m2);
+        intersectionY_calc = m1 * intersectionX_calc + b1;
+      }
+      
+      // Convert to grid coordinates
+      const gridX = (intersectionX_calc - calcCenterX) / calcScaleX;
+      const gridY = (calcCenterY - intersectionY_calc) / calcScaleY;
+      
+      // DISPLAY conversion functions (map to 800x600 SVG space)
+      const toSVGX = (x) => 400 + x * 266.67; // Center at 400, scale 266.67 px/unit
+      const toSVGY = (y) => 300 - y * 200;    // Center at 300, scale 200 px/unit
+      
+      // Convert line endpoints to SVG coordinates
+      const topX_svg = toSVGX(up);
+      const bottomX_svg = toSVGX(down);
+      const leftY_svg = toSVGY(left);
+      const rightY_svg = toSVGY(right);
+      
+      // Convert intersection to SVG coordinates
+      const intersectionX_svg = toSVGX(gridX);
+      const intersectionY_svg = toSVGY(gridY);
+      
+      return (
+        <>
+          {/* Vertical line - from top boundary to bottom boundary */}
+          <line 
+            x1={topX_svg} y1={0} 
+            x2={bottomX_svg} y2={600} 
+            stroke="#dc2626" 
+            strokeWidth="3"
+          />
+          
+          {/* Horizontal line - from left boundary to right boundary */}
+          <line 
+            x1={0} y1={leftY_svg} 
+            x2={800} y2={rightY_svg} 
+            stroke="#dc2626" 
+            strokeWidth="3"
+          />
+          
+          {/* Normalized intersection marker */}
+          {normalizedIntersection !== null && (
+            <g transform={`translate(${toSVGX(normalizedIntersection.x)}, ${toSVGY(normalizedIntersection.y)})`}>
+              {/* Blue circle outline */}
+              <circle 
+                cx="0" 
+                cy="0" 
+                r="8" 
+                fill="none" 
+                stroke="#2563eb" 
+                strokeWidth="2"
+                opacity="0.8"
+              />
+              {/* Coordinate label */}
+              <text 
+                x="0" 
+                y="-15" 
+                textAnchor="middle" 
+                fontSize="10" 
+                fill="#2563eb" 
+                fontWeight="bold"
+                stroke="white"
+                strokeWidth="2"
+                paintOrder="stroke"
+              >
+                ({normalizedIntersection.x.toFixed(3)}, {normalizedIntersection.y.toFixed(3)})
+              </text>
+            </g>
+          )}
+          
+          {/* Intersection point (absolute) */}
+          <circle 
+            cx={intersectionX_svg} 
+            cy={intersectionY_svg} 
+            r="8" 
+            fill="#2563eb" 
+            stroke="white" 
+            strokeWidth="3"
+          />
+          
+          {/* Boundary intersection labels */}
+          <text x={topX_svg} y="15" textAnchor="middle" fontSize="12" fill="#dc2626" fontWeight="bold">
+            ↑{up}
+          </text>
+          <text x={bottomX_svg} y="590" textAnchor="middle" fontSize="12" fill="#dc2626" fontWeight="bold">
+            ↓{down}
+          </text>
+          <text x="10" y={leftY_svg + 4} textAnchor="start" fontSize="12" fill="#dc2626" fontWeight="bold">
+            ←{left}
+          </text>
+          <text x="790" y={rightY_svg + 4} textAnchor="end" fontSize="12" fill="#dc2626" fontWeight="bold">
+            →{right}
+          </text>
+          
+          {/* Intersection coordinate label */}
+          <text 
+            x={intersectionX_svg} 
+            y={intersectionY_svg - 15} 
+            textAnchor="middle" 
+            fontSize="12" 
+            fill="#2563eb" 
+            fontWeight="bold"
+            stroke="white"
+            strokeWidth="3"
+            paintOrder="stroke"
+          >
+            ({gridX.toFixed(3)}, {gridY.toFixed(3)})
+          </text>
+          
+          {/* Quadrant angle labels for non-orthogonal crosses */}
+          {angleAnalysis && angleAnalysis.deviation > 0.5 && (
+            <>
+              {/* Quadrant labels */}
+              <text x="200" y="150" textAnchor="middle" fontSize="11" fill="#7c3aed" fontWeight="bold">
+                NW: {angleAnalysis.widerQuadrants.includes('NW') ? 
+                  angleAnalysis.widerAngle.toFixed(1) : angleAnalysis.narrowerAngle.toFixed(1)}°
+              </text>
+              <text x="600" y="150" textAnchor="middle" fontSize="11" fill="#7c3aed" fontWeight="bold">
+                NE: {angleAnalysis.widerQuadrants.includes('NE') ? 
+                  angleAnalysis.widerAngle.toFixed(1) : angleAnalysis.narrowerAngle.toFixed(1)}°
+              </text>
+              <text x="200" y="450" textAnchor="middle" fontSize="11" fill="#7c3aed" fontWeight="bold">
+                SW: {angleAnalysis.widerQuadrants.includes('SW') ? 
+                  angleAnalysis.widerAngle.toFixed(1) : angleAnalysis.narrowerAngle.toFixed(1)}°
+              </text>
+              <text x="600" y="450" textAnchor="middle" fontSize="11" fill="#7c3aed" fontWeight="bold">
+                SE: {angleAnalysis.widerQuadrants.includes('SE') ? 
+                  angleAnalysis.widerAngle.toFixed(1) : angleAnalysis.narrowerAngle.toFixed(1)}°
+              </text>
+            </>
+          )}
+              <text 
+                x={intersectionX_svg} 
+                y={intersectionY_svg - 15} 
+                textAnchor="middle" 
+                fontSize="12" 
+                fill="#2563eb" 
+                fontWeight="bold"
+                stroke="white"
+                strokeWidth="3"
+                paintOrder="stroke"
+              >
+                ({gridX.toFixed(3)}, {gridY.toFixed(3)})
+              </text>
                           </>
                         );
                       })()}
@@ -1128,8 +1147,8 @@ const CrackMovementVisualizer = () => {
           <div className="mb-4 text-sm text-gray-600">
             <p>• Transparency gradient: oldest (transparent) → newest (solid)</p>
             <p>• Lines show movement direction with days between measurements</p>
-            <p>• <strong>Note:</strong> This view shows raw positions, not consistent across floors, which are not availbale for meaningful interpretations</p>
-            <p>• For consistent analysis across floors, use the Normalized View</p>
+            <p>• <strong>Note:</strong> This view shows raw positions that not consistent across floors. For consistent analysis across floors, use the Normalized View</p>
+            <p>• <strong>Click any dot</strong> to view detailed crack position visualization</p>
           </div>
           
           <div style={{ width: '100%', height: '600px', position: 'relative' }}>
