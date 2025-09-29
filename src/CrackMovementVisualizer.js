@@ -5,7 +5,26 @@ import rawData from './data/crackData.json';
 
 const CrackMovementVisualizer = () => {
   const [hoveredPoint, setHoveredPoint] = useState(null);
-  // Raw dataset
+  
+  // Floor-specific interpretation configuration
+  const FLOOR_INTERPRETATIONS = {
+    pianterreno: {
+      needsInversion: true,  // P0 needs inversion to match P1
+      name: 'Pianterreno',
+      interpretation: 'Inverted'
+    },
+    piano1: {
+      needsInversion: false, // P1 is the standard
+      name: 'Piano 1', 
+      interpretation: 'Standard'
+    },
+    piano2: {
+      needsInversion: true,  // P2 needs inversion to match P1
+      name: 'Piano 2',
+      interpretation: 'Inverted'
+    }
+  };
+  
 /*   const rawData = [
     { date: '2024-06-01', Pianterreno: null, 'Piano 1': '+0.25;+0.00;+0.25;+0.50', 'Piano 2': null },
     { date: '2024-06-20', Pianterreno: '-0.25;+0.75;+0.00;+1.00', 'Piano 1': null, 'Piano 2': null },
@@ -199,35 +218,44 @@ const CrackMovementVisualizer = () => {
       
       return result;
     });
-
     // Calculate normalized coordinates (relative to first reading for each meter)
-    const normalizedData = rawProcessed.map(entry => ({ ...entry }));
-    
-    // Find first reading for each meter and calculate normalized positions
-    const meters = ['pianterreno', 'piano1', 'piano2'];
-    
-    meters.forEach(meter => {
-      const meterData = normalizedData.filter(d => d[`${meter}_x`] !== undefined);
-      
-      if (meterData.length > 0) {
-        // Sort by date to find the oldest reading
-        meterData.sort((a, b) => new Date(a.date) - new Date(b.date));
+        const normalizedData = rawProcessed.map(entry => ({ ...entry }));
         
-        const firstReading = meterData[0];
-        const originX = firstReading[`${meter}_x`];
-        const originY = firstReading[`${meter}_y`];
+        // Find first reading for each meter and calculate normalized positions
+        const meters = ['pianterreno', 'piano1', 'piano2'];
         
-        // Calculate normalized coordinates for all readings of this meter
-        normalizedData.forEach(entry => {
-          if (entry[`${meter}_x`] !== undefined && entry[`${meter}_y`] !== undefined) {
-            entry[`${meter}_norm_x`] = entry[`${meter}_x`] - originX;
-            entry[`${meter}_norm_y`] = entry[`${meter}_y`] - originY;
+        meters.forEach(meter => {
+          const meterData = normalizedData.filter(d => d[`${meter}_x`] !== undefined);
+          
+          if (meterData.length > 0) {
+            // Sort by date to find the oldest reading
+            meterData.sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            const firstReading = meterData[0];
+            const originX = firstReading[`${meter}_x`];
+            const originY = firstReading[`${meter}_y`];
+            
+            // Calculate normalized coordinates for all readings of this meter
+            normalizedData.forEach(entry => {
+              if (entry[`${meter}_x`] !== undefined && entry[`${meter}_y`] !== undefined) {
+                // Calculate relative position from first reading
+                let normX = entry[`${meter}_x`] - originX;
+                let normY = entry[`${meter}_y`] - originY;
+                
+                // Apply floor-specific inversion to match P1 interpretation
+                if (FLOOR_INTERPRETATIONS[meter].needsInversion) {
+                  normX = -normX;
+                  normY = -normY;
+                }
+                
+                entry[`${meter}_norm_x`] = normX;
+                entry[`${meter}_norm_y`] = normY;
+              }
+            });
           }
         });
-      }
-    });
-    
-    return normalizedData;
+        
+        return normalizedData;
   }, []);
 
   const [selectedView, setSelectedView] = useState('timeline');
