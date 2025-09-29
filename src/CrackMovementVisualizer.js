@@ -445,7 +445,7 @@ const CrackMovementVisualizer = () => {
               let normalizedIntersection = null;
               if (intersection !== null) {
                 const meterKey = meterName === 'Pianterreno' ? 'pianterreno' : 
-                                 meterName === 'Piano 1' ? 'piano1' : 'piano2';
+                                meterName === 'Piano 1' ? 'piano1' : 'piano2';
                 
                 // Find the first reading for this meter to use as origin
                 const meterData = processedData
@@ -457,9 +457,19 @@ const CrackMovementVisualizer = () => {
                   const originX = firstReading[`${meterKey}_x`];
                   const originY = firstReading[`${meterKey}_y`];
                   
+                  // Calculate relative position from first reading
+                  let normX = intersection.x - originX;
+                  let normY = intersection.y - originY;
+                  
+                  // Apply floor-specific inversion to match P1 interpretation
+                  if (FLOOR_INTERPRETATIONS[meterKey].needsInversion) {
+                    normX = -normX;
+                    normY = -normY;
+                  }
+                  
                   normalizedIntersection = {
-                    x: intersection.x - originX,
-                    y: intersection.y - originY
+                    x: normX,
+                    y: normY
                   };
                 }
               }
@@ -743,22 +753,41 @@ const CrackMovementVisualizer = () => {
                         <strong>Cross Position:</strong> {intersection.x.toFixed(3)}mm horizontal, {intersection.y.toFixed(3)}mm vertical
                       </div>
                       <div>
-                        <strong>Interpretation:</strong><br/>
+                        <strong>Interpretation (Normalized):</strong><br/>
                         {normalizedIntersection !== null ? (
-                          // Base interpretation on normalized coordinates (movement from first reading)
-                          normalizedIntersection.x === 0 && normalizedIntersection.y === 0 ? 
-                            'No change from initial position - stable crack' :
-                            Math.abs(normalizedIntersection.x) < 0.1 && Math.abs(normalizedIntersection.y) < 0.1 ? 
-                            'Minimal change from initial position - stable crack' :
-                            <>
-                              {normalizedIntersection.x > 0.1 ? 'Crack expanding ' : 
-                               normalizedIntersection.x < -0.1 ? 'Crack closing ' : 'No horizontal change '}
-                              {normalizedIntersection.y > 0.1 ? '& wall rising' : 
-                               normalizedIntersection.y < -0.1 ? '& wall sinking' : 
-                               normalizedIntersection.x !== 0 ? '& no vertical change' : '& no vertical change'}
-                              {Math.abs(normalizedIntersection.x) > 1 || Math.abs(normalizedIntersection.y) > 1 ? 
-                                ' - significant change (requires attention)' : ''}
-                            </>
+                          <>
+                            {(() => {
+                              // Define meterKey for this section
+                              const meterKey = meterName === 'Pianterreno' ? 'pianterreno' : 
+                                              meterName === 'Piano 1' ? 'piano1' : 'piano2';
+                              
+                              return (
+                                <>
+                                  {/* Base interpretation on normalized coordinates (movement from first reading) */}
+                                  {normalizedIntersection.x === 0 && normalizedIntersection.y === 0 ? 
+                                    'No change from initial position - stable crack' :
+                                    Math.abs(normalizedIntersection.x) < 0.1 && Math.abs(normalizedIntersection.y) < 0.1 ? 
+                                    'Minimal change from initial position - stable crack' :
+                                    <>
+                                      {normalizedIntersection.x > 0.1 ? 'Crack expanding ' : 
+                                      normalizedIntersection.x < -0.1 ? 'Crack closing ' : 'No horizontal change '}
+                                      {normalizedIntersection.y > 0.1 ? '& wall rising' : 
+                                      normalizedIntersection.y < -0.1 ? '& wall sinking' : 
+                                      normalizedIntersection.x !== 0 ? '& no vertical change' : '& no vertical change'}
+                                      {Math.abs(normalizedIntersection.x) > 1 || Math.abs(normalizedIntersection.y) > 1 ? 
+                                        ' - significant change (requires attention)' : ''}
+                                    </>
+                                  }
+                                  <br/>
+                                  <span className="text-xs text-gray-600 mt-1">
+                                    {FLOOR_INTERPRETATIONS[meterKey].needsInversion ? 
+                                      '* Coordinates inverted to standard interpretation' : 
+                                      '* Standard interpretation'}
+                                  </span>
+                                </>
+                              );
+                            })()}
+                          </>
                         ) : (
                           // Fallback to absolute coordinates if normalized not available
                           Math.abs(intersection.x) < 0.1 && Math.abs(intersection.y) < 0.1 ? 
@@ -817,7 +846,7 @@ const CrackMovementVisualizer = () => {
           </div>
           <div className="mb-4 text-sm text-gray-600">
             <p>• Each meter's first reading set as origin (0, 0)</p>
-            <p>• Shows pure relative movement from starting position</p>
+            <p>• Shows movement from origin with floor-specific corrections for unified analysis</p>
             <p>• <strong>Click any dot</strong> to view detailed crack position visualization</p>
           </div>
           
