@@ -1,7 +1,7 @@
 # Crack Meter Analysis Method
 
 ## Overview
-This method converts crack meter readings (4 boundary measurements) into precise crack position and orientation data, with floor-specific interpretations for structural movement analysis.
+This method converts crack meter readings (4 boundary measurements) into precise crack position and orientation data, normalizes them with a floor-specific parameter (orientation), and provides interpretations for structural movement analysis.
 
 ## Input Data Format
 Each measurement consists of 4 values: `[up, right, down, left]`
@@ -17,17 +17,17 @@ Each measurement consists of 4 values: `[up, right, down, left]`
 
 ### How Boundary Measurements Map to Coordinates
 
-The crack meter readings `[up, right, down, left]` represent where the crack intersects the **boundaries** of the measurement grid:
+The crack meter readings `[up, right, down, left]` represent where the red cross intersects the **boundaries** of the measurement grid:
 
 **Horizontal Position (X-coordinate)** - Determined by `up` and `down` values:
-- `up`: Where crack intersects the **top boundary** (horizontal position)
-- `down`: Where crack intersects the **bottom boundary** (horizontal position)
+- `up`: Where red cross intersects the **top boundary** (horizontal position)
+- `down`: Where red cross intersects the **bottom boundary** (horizontal position)
 - **Positive values** = right of center line
 - **Negative values** = left of center line
 
 **Vertical Position (Y-coordinate)** - Determined by `left` and `right` values:
-- `left`: Where crack intersects the **left boundary** (vertical position)
-- `right`: Where crack intersects the **right boundary** (vertical position)  
+- `left`: Where red cross intersects the **left boundary** (vertical position)
+- `right`: Where red cross intersects the **right boundary** (vertical position)  
 - **Positive values** = below center line
 - **Negative values** = above center line
 
@@ -46,16 +46,16 @@ Grid Boundaries:           Measurement Values:
 ```
 
 ### Key Insight
-- **Up/Down measurements** → **Horizontal (X) position** of crack intersection
-- **Left/Right measurements** → **Vertical (Y) position** of crack intersection
+- **Up/Down measurements** → **Horizontal (X) position** of red cross intersection (center)
+- **Left/Right measurements** → **Vertical (Y) position** of red cross intersection (center)
 
-This mapping may seem counterintuitive, but it reflects how the crack's orientation determines where it intersects each boundary of the measurement grid.
+This mapping may seem counterintuitive, but it reflects how the crack's orientation determines where the red cross intersects each boundary of the measurement grid.
 
 ## Floor-Specific Movement Interpretations
 
-The same coordinate changes represent different physical movements depending on the floor level due to different meter orientations or installation setups:
+The same raw coordinate changes represent different physical movements depending on the floor level due to different meter orientations or installation setups:
 
-### Piano 1 (P1) - Standard Interpretation
+### Piano 1 (P1) - Standard Interpretation for this application
 - **Horizontal Movement (X-axis):**
   - **Negative X** = crack closing (wall segments moving toward each other)
   - **Positive X** = crack expanding (wall segments separating)
@@ -70,6 +70,23 @@ The same coordinate changes represent different physical movements depending on 
 - **Vertical Movement (Y-axis):**
   - **Negative Y** = wall rising (upward movement)
   - **Positive Y** = wall sinking (downward movement)
+
+However, all the physical interpretations are standard, because the inverted crack meters data are normalized before being interpreted. 
+
+## Normalization
+
+Normalization consists of two different transformations of the raw readings
+
+### Shifting 
+- **Oldest reading** will be transformed to **(0,0) coordinates**
+- **Difference** between the oldest reading and (0,0) will be applied to **all the same floor's other readings**
+- In case the oldest reading is (0,0), reading's raw data will correspond to normalized data (if no flipping is due)
+
+### Flipping
+- **X and Y values will be flipped**, becoming positive when negative and viceversa, if the floor's crack meter is **marked as inverse**
+- in case the reading's floor is marked as standard, reading's raw data will correspond to normalized data (if no shifting is due)
+
+**If a floor's oldest reading is (0,0) and the floor's crack meter is marked as standard (non-inverse), the floor's normalized readings are the same as the floor's raw readings.**
 
 ## Step-by-Step Method
 
@@ -208,7 +225,7 @@ For any measurement `[up, right, down, left]`:
 - **Comparative analysis**: Compare movement patterns between floors while accounting for interpretation differences
 
 ## Important Notes
-- Always specify the floor level when reporting results
-- Use floor-specific interpretation functions in analysis software
-- Coordinate values are mathematically consistent; only the physical interpretation changes
-- Movement trends should be analyzed within the context of each floor's interpretation system
+- Always specify the floor level correctly when reporting results, as crack meters can have different orientations for each floor
+- Use only normalized interpretation functions in analysis software
+- Coordinate values are mathematically consistent after normalization
+- Movement trends and physical interpretation should only be analyzed within the context of normalized data
