@@ -829,7 +829,7 @@ const CrackMovementVisualizer = () => {
                               <span className="text-blue-700">◯ Good (≤1.0° deviation)</span> :
                               angleAnalysis.deviation < 2.0 ?
                               <span className="text-yellow-700">⚠ Fair (≤2.0° deviation)</span> :
-                              <span className="text-red-700">⚠ Poor (>2.0° deviation)</span>
+                              <span className="text-red-700">⚠ Poor (&gt;2.0° deviation)</span>
                             }
                           </div>
                           <div>
