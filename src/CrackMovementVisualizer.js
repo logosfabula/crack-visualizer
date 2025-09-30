@@ -1643,7 +1643,7 @@ const CrackMovementVisualizer = () => {
                           
                           return (
                             <div className="text-xs text-gray-600">
-                              <strong>Based on normalized data:</strong><br/>
+                              <strong>Based on normalized data</strong><br/>
                               • Horizontal: {lastNormX > 0 ? `+${lastNormX.toFixed(3)}mm (crack expanding)` : 
                                             lastNormX < 0 ? `${lastNormX.toFixed(3)}mm (crack closing)` :
                                             '0.000mm (no horizontal change)'}<br/>
@@ -1679,7 +1679,20 @@ const CrackMovementVisualizer = () => {
                       </div>
                       
                       <div>
-                        <div className="font-medium text-gray-700">Movement Pattern:</div>
+                        <div className="font-medium text-gray-700">Movement Pattern (Direct Path):</div>
+                        <div className="text-sm">
+                          {directDistance < 0.1 ? 'Minimal displacement' :
+                          directDistance < 0.5 ? 'Small displacement' :
+                          directDistance < 1.0 ? 'Moderate displacement' :
+                          'Significant displacement'}
+                        </div>
+                        <div className="text-gray-500">
+                          Avg: {(directDistance / (meterData.length - 1 || 1)).toFixed(3)} mm/measurement
+                        </div>
+                      </div>
+
+                      <div>
+                        <div className="font-medium text-gray-700">Movement Pattern (Total Path):</div>
                         <div className="text-sm">
                           {totalDistance < 0.1 ? 'Minimal movement' :
                           totalDistance < 0.5 ? 'Small movements' :
@@ -1692,6 +1705,16 @@ const CrackMovementVisualizer = () => {
                       </div>
                       
                       <div>
+                        <div className="font-medium text-gray-700">Weekly Rate (Direct):</div>
+                        <div className="text-lg font-semibold" style={{ color: meter.color }}>
+                          {weeklyMovement.toFixed(4)} mm/week
+                        </div>
+                        <div className="text-gray-500 text-xs">
+                          Based on straight-line displacement
+                        </div>
+                      </div>
+
+                      <div>
                         <div className="font-medium text-gray-700">Weekly Rate (Total Path):</div>
                         <div className="text-lg font-semibold" style={{ color: meter.color }}>
                           {(totalDistance / weeksDiff || 0).toFixed(4)} mm/week
@@ -1699,24 +1722,57 @@ const CrackMovementVisualizer = () => {
                         <div className="text-gray-500 text-xs">
                           Based on cumulative path distance
                         </div>
-                      </div>
-                      
-                      <div>
-                        <div className="font-medium text-gray-700">Weekly Rate (Direct):</div>
-                        <div className="text-lg font-semibold" style={{ color: meter.color }}>
-                          {weeklyMovement.toFixed(4)} mm/week
-                        </div>
+                      </div> {/* End of grid */}
+
+                      {/* Overall Interpretation */}
+                      <div className="mt-3 pt-3 border-t border-gray-200">
                         {(() => {
-                          // Use normalized coordinates for direction
+                          // Use normalized coordinates for interpretation
                           const lastNormX = meterData[meterData.length - 1][`${meter.dataKeys[0].replace('_x', '_norm_x')}`];
                           const lastNormY = meterData[meterData.length - 1][`${meter.dataKeys[1].replace('_y', '_norm_y')}`];
                           
+                          // Build descriptive text
+                          let description = "Based on normalized position change data";
+                          
+                          if (lastNormX === 0 && lastNormY === 0) {
+                            description += ", no structural movement detected.";
+                          } else {
+                            description += ", ";
+                            
+                            // Horizontal movement
+                            if (Math.abs(lastNormX) > 0.01) {
+                              description += lastNormX > 0 ? "the crack is expanding" : "the crack is closing";
+                            }
+                            
+                            // Add connector if both movements exist
+                            if (Math.abs(lastNormX) > 0.01 && Math.abs(lastNormY) > 0.01) {
+                              description += " and ";
+                            }
+                            
+                            // Vertical movement
+                            if (Math.abs(lastNormY) > 0.01) {
+                              if (lastNormY > 0) {
+                                description += "the wall is rising (or the rest of the building is sinking)";
+                              } else {
+                                description += "the wall is sinking (or the rest of the building is rising)";
+                              }
+                            }
+                            
+                            description += ".";
+                          }
+                          
                           return (
-                            <div className="text-gray-500 text-xs">
-                              Direction: {lastNormX === 0 && lastNormY === 0 ? 'No movement' :
-                                        lastNormX === 0 ? (lastNormY > 0 ? 'Wall rising' : 'Wall sinking') :
-                                        lastNormY === 0 ? (lastNormX > 0 ? 'Crack expanding' : 'Crack closing') :
-                                        `${lastNormX > 0 ? 'Expanding' : 'Closing'} & ${lastNormY > 0 ? 'Rising' : 'Sinking'}`}
+                            <div>
+                              <div className="font-medium text-gray-700 mb-1">Overall Movement Direction:</div>
+                              <div className="text-sm font-semibold mb-2" style={{ color: meter.color }}>
+                                {lastNormX === 0 && lastNormY === 0 ? 'No movement detected' :
+                                lastNormX === 0 ? (lastNormY > 0 ? '↑ Wall Rising' : '↓ Wall Sinking') :
+                                lastNormY === 0 ? (lastNormX > 0 ? '→ Crack Expanding' : '← Crack Closing') :
+                                `${lastNormX > 0 ? '→ Expanding' : '← Closing'} & ${lastNormY > 0 ? '↑ Rising' : '↓ Sinking'}`}
+                              </div>
+                              <div className="text-xs text-gray-600 italic">
+                                {description}
+                              </div>
                             </div>
                           );
                         })()}
