@@ -1910,7 +1910,7 @@ const CrackMovementVisualizer = () => {
                               {avgWeeklyMovement.toFixed(4)} mm/week
                             </div>
                             <div className="text-sm text-blue-700">
-                              Average across {validMeters} active meter{validMeters !== 1 ? 's' : ''}
+                              Average across {validMeters} active meter{validMeters !== 1 ? 's' : ''}*
                             </div>
                             <div className="text-xs text-blue-600 mt-1">
                               Direction: {directionalMeters === 0 ? 'No net movement' :
@@ -1932,7 +1932,7 @@ const CrackMovementVisualizer = () => {
                   </div>
                   
                   <div className="mt-3 text-xs text-blue-600">
-                    Analysis based on direct displacement over monitoring period
+                    * Analysis based on direct displacement over monitoring period
                   </div>
                 </div>
               </>
