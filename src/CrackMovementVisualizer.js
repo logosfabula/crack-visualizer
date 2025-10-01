@@ -260,6 +260,38 @@ const calculateIntersection = (reading) => {
   const [selectedMeter, setSelectedMeter] = useState('all');
   const [selectedReading, setSelectedReading] = useState(null);
 
+  // Helper function to construct image filename from meter and date
+  const getImageFilename = (meterName, date) => {
+    // Convert meter name to prefix
+    const meterPrefix = meterName === 'Pianterreno' ? 'p0' :
+                        meterName === 'Piano 1' ? 'p1' :
+                        meterName === 'Piano 2' ? 'p2' : 'unknown';
+    
+    // Convert date format: "2024-05-02" → "20240502"
+    const dateString = date.replace(/-/g, '');
+    
+    // Return full path
+    return `/crack_images/${meterPrefix}_${dateString}.jpg`;
+  };
+
+  // Handler to download the crack meter image
+    const downloadCrackImage = (meterName, date) => {
+      const imagePath = getImageFilename(meterName, date);
+      const filename = imagePath.split('/').pop(); // Extract just the filename
+      
+      // Create temporary anchor element
+      const link = document.createElement('a');
+      link.href = imagePath;
+      link.download = filename;
+      
+      // Trigger download
+      document.body.appendChild(link);
+      link.click();
+      
+      // Cleanup
+      document.body.removeChild(link);
+    };
+
   // Custom tooltip for charts
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
@@ -417,8 +449,8 @@ const calculateIntersection = (reading) => {
         <div>
           <h2 className="text-xl font-semibold mb-4">Single Reading Visualization</h2>
           
-          {/* Navigation button */}
-          <div className="mb-4">
+          {/* Navigation and action buttons */}
+          <div className="mb-4 flex items-center gap-3">
             <button
               onClick={() => setSelectedView('movement')}
               className="inline-flex items-center gap-2 px-3 py-1 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors text-sm"
@@ -430,6 +462,24 @@ const calculateIntersection = (reading) => {
               </svg>
               Movement Patterns
             </button>
+            
+            {selectedReading && (() => {
+              const parsedReading = JSON.parse(selectedReading);
+              return (
+                <button
+                  onClick={() => downloadCrackImage(parsedReading.meter, parsedReading.date)}
+                  className="inline-flex items-center gap-2 px-3 py-1 bg-blue-600 text-white hover:bg-blue-700 rounded transition-colors text-sm"
+                  title="Download crack meter image"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                  </svg>
+                  Download Image
+                </button>
+              );
+            })()}
           </div>
           
           {selectedReading ? (
