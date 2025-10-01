@@ -934,8 +934,8 @@ const calculateIntersection = (reading) => {
               {/* Axis labels */}
               <text x="750" y="320" textAnchor="end" fontSize="12" fill="#6b7280">+X</text>
               <text x="50" y="320" textAnchor="start" fontSize="12" fill="#6b7280">-X</text>
-              <text x="410" y="30" textAnchor="start" fontSize="12" fill="#6b7280">+Y</text>
-              <text x="410" y="580" textAnchor="start" fontSize="12" fill="#6b7280">-Y</text>
+              <text x="410" y="30" textAnchor="start" fontSize="12" fill="#6b7280">-Y</text>
+              <text x="410" y="580" textAnchor="start" fontSize="12" fill="#6b7280">+Y</text>
               
               {/* Scale markers */}
               <g stroke="#9ca3af" strokeWidth="1" fontSize="12" fill="#6b7280">
@@ -1229,8 +1229,8 @@ const calculateIntersection = (reading) => {
               {/* Axis labels */}
               <text x="750" y="320" textAnchor="end" fontSize="12" fill="#6b7280">+X</text>
               <text x="50" y="320" textAnchor="start" fontSize="12" fill="#6b7280">-X</text>
-              <text x="410" y="30" textAnchor="start" fontSize="12" fill="#6b7280">+Y</text>
-              <text x="410" y="580" textAnchor="start" fontSize="12" fill="#6b7280">-Y</text>
+              <text x="410" y="30" textAnchor="start" fontSize="12" fill="#6b7280">-Y</text>
+              <text x="410" y="580" textAnchor="start" fontSize="12" fill="#6b7280">+Y</text>
               
               {/* Scale markers */}
               <g stroke="#9ca3af" strokeWidth="1" fontSize="12" fill="#6b7280">
@@ -1819,9 +1819,9 @@ const calculateIntersection = (reading) => {
                             // Vertical movement
                             if (Math.abs(lastNormY) > 0.01) {
                               if (lastNormY > 0) {
-                                description += "the wall is rising (or the rest of the building is sinking)";
+                                description += "the wall is rising";
                               } else {
-                                description += "the wall is sinking (or the rest of the building is rising)";
+                                description += "the wall is sinking";
                               }
                             }
                             
@@ -2015,7 +2015,7 @@ const calculateIntersection = (reading) => {
           <strong>Structural Movement Interpretation (Normalized Data):</strong><br/>
           • <strong>All floors use consistent interpretation after normalization:</strong><br/>
           • <strong>Horizontal movement:</strong> Left (−X) = crack closing, Right (+X) = crack expanding<br/>
-          • <strong>Vertical movement:</strong> Down (−Y) = wall sinking, Up (+Y) = wall rising<br/>
+          • <strong>Vertical movement:</strong> Up (−Y) = wall sinking, Down (+Y) = wall rising<br/>
           • <strong>Direct displacement</strong> shows net structural change from start to end position<br/>
           • P0 and P2 raw readings are inverted during normalization to match P1's standard interpretation
         </p>
