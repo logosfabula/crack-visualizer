@@ -37,148 +37,146 @@ const CrackMovementVisualizer = () => {
     { date: '2025-09-24', Pianterreno: '-0.50;+0.75;-0.25;+1.25', 'Piano 1': '+0.25;+0.00;+0.25;+0.25', 'Piano 2': '-0.25;+0.00;-0.25;+0.25' }
   ]; */
 
-  // Function to calculate quadrant angle analysis
-  const calculateQuadrantAngles = (reading) => {
-    if (!reading) return null;
-    
-    const [up, right, down, left] = reading.split(';').map(v => parseFloat(v));
-    
-    // Grid parameters
-    const gridWidth = 400;
-    const gridHeight = 300;
-    const centerX = 200;
-    const centerY = 150;
-    const scaleX = 20;
-    const scaleY = 15;
-    
-    // Calculate line endpoints
-    const topX = centerX + up * scaleX;
-    const bottomX = centerX + down * scaleX;
-    const leftY = centerY + left * scaleY;
-    const rightY = centerY + right * scaleY;
-    
-    // Calculate angles of both lines
-    let verticalLineAngle, horizontalLineAngle;
-    
-    if (Math.abs(bottomX - topX) < 1e-10) {
-      verticalLineAngle = 90; // Truly vertical
-    } else {
-      const verticalSlope = gridHeight / (bottomX - topX);
-      verticalLineAngle = Math.atan(verticalSlope) * 180 / Math.PI;
-    }
-    
-    if (Math.abs(rightY - leftY) < 1e-10) {
-      horizontalLineAngle = 0; // Truly horizontal
-    } else {
-      const horizontalSlope = (rightY - leftY) / gridWidth;
-      horizontalLineAngle = Math.atan(horizontalSlope) * 180 / Math.PI;
-    }
-    
-    // Calculate angle between lines
-    let angleBetween = Math.abs(verticalLineAngle - horizontalLineAngle);
-    if (angleBetween > 90) angleBetween = 180 - angleBetween;
-    
-    const deviation = Math.abs(90 - angleBetween);
-    
-    if (deviation < 0.01) {
-      return {
-        deviation: 0,
-        description: "Perfect 90°"
-      };
-    }
-    
-    // Determine which quadrants are wider/narrower
-    let widerQuadrants, narrowerQuadrants;
-    
-    if (angleBetween < 90) {
-      widerQuadrants = "NW & SE";
-      narrowerQuadrants = "NE & SW";
-    } else {
-      widerQuadrants = "NE & SW";
-      narrowerQuadrants = "NW & SE";
-    }
-    
-    const widerAngle = 90 + deviation;
-    const narrowerAngle = 90 - deviation;
-    
+// Function to calculate quadrant angle analysis
+const calculateQuadrantAngles = (reading) => {
+  if (!reading) return null;
+  
+  const [up, right, down, left] = reading.split(';').map(v => parseFloat(v));
+  
+  // Physical crack meter boundaries (in millimeters)
+  const METER_Y_MIN = -10;  // Top boundary
+  const METER_Y_MAX = 10;   // Bottom boundary
+  const METER_X_MIN = -20;  // Left boundary
+  const METER_X_MAX = 20;   // Right boundary
+  
+  // Line endpoints in physical coordinates (mm)
+  const topPoint = { x: up, y: METER_Y_MIN };
+  const bottomPoint = { x: down, y: METER_Y_MAX };
+  const leftPoint = { x: METER_X_MIN, y: left };
+  const rightPoint = { x: METER_X_MAX, y: right };
+  
+  // Calculate angles of both lines
+  let verticalLineAngle, horizontalLineAngle;
+  
+  if (Math.abs(bottomPoint.x - topPoint.x) < 1e-10) {
+    verticalLineAngle = 90; // Truly vertical
+  } else {
+    const verticalSlope = (bottomPoint.y - topPoint.y) / (bottomPoint.x - topPoint.x);
+    verticalLineAngle = Math.atan(verticalSlope) * 180 / Math.PI;
+  }
+  
+  if (Math.abs(rightPoint.y - leftPoint.y) < 1e-10) {
+    horizontalLineAngle = 0; // Truly horizontal
+  } else {
+    const horizontalSlope = (rightPoint.y - leftPoint.y) / (rightPoint.x - leftPoint.x);
+    horizontalLineAngle = Math.atan(horizontalSlope) * 180 / Math.PI;
+  }
+  
+  // Calculate angle between lines
+  let angleBetween = Math.abs(verticalLineAngle - horizontalLineAngle);
+  if (angleBetween > 90) angleBetween = 180 - angleBetween;
+  
+  const deviation = Math.abs(90 - angleBetween);
+  
+  if (deviation < 0.01) {
     return {
-      deviation: deviation,
-      widerQuadrants: widerQuadrants,
-      narrowerQuadrants: narrowerQuadrants,
-      widerAngle: widerAngle,
-      narrowerAngle: narrowerAngle,
-      description: `${widerQuadrants}: ${widerAngle.toFixed(2)}°, ${narrowerQuadrants}: ${narrowerAngle.toFixed(2)}°`
+      deviation: 0,
+      description: "Perfect 90°"
     };
+  }
+  
+  // Determine which quadrants are wider/narrower
+  let widerQuadrants, narrowerQuadrants;
+  
+  if (angleBetween < 90) {
+    widerQuadrants = "NW & SE";
+    narrowerQuadrants = "NE & SW";
+  } else {
+    widerQuadrants = "NE & SW";
+    narrowerQuadrants = "NW & SE";
+  }
+  
+  const widerAngle = 90 + deviation;
+  const narrowerAngle = 90 - deviation;
+  
+  return {
+    deviation: deviation,
+    widerQuadrants: widerQuadrants,
+    narrowerQuadrants: narrowerQuadrants,
+    widerAngle: widerAngle,
+    narrowerAngle: narrowerAngle,
+    description: `${widerQuadrants}: ${widerAngle.toFixed(2)}°, ${narrowerQuadrants}: ${narrowerAngle.toFixed(2)}°`
   };
+};
 
-  // Function to calculate intersection point from crack meter readings
-  const calculateIntersection = (reading) => {
-    if (!reading) return null;
+// Function to calculate intersection point from crack meter readings
+const calculateIntersection = (reading) => {
+  if (!reading) return null;
+  
+  const [up, right, down, left] = reading.split(';').map(v => parseFloat(v));
+  
+  // Physical crack meter boundaries (in millimeters)
+  const METER_X_MIN = -20;  // Left boundary
+  const METER_X_MAX = 20;   // Right boundary
+  const METER_Y_MIN = -10;  // Top boundary
+  const METER_Y_MAX = 10;   // Bottom boundary
+  
+  // Line endpoints in physical coordinates (mm)
+  // Vertical line: connects top and bottom boundaries
+  const topPoint = { x: up, y: METER_Y_MIN };      // (up, -10)
+  const bottomPoint = { x: down, y: METER_Y_MAX };  // (down, +10)
+  
+  // Horizontal line: connects left and right boundaries
+  const leftPoint = { x: METER_X_MIN, y: left };    // (-20, left)
+  const rightPoint = { x: METER_X_MAX, y: right };  // (+20, right)
+  
+  // Handle special case: truly vertical line (up === down)
+  if (Math.abs(topPoint.x - bottomPoint.x) < 1e-10) {
+    // Vertical line at x = topPoint.x
+    const verticalX = topPoint.x;
     
-    const [up, right, down, left] = reading.split(';').map(v => parseFloat(v));
+    // Find where horizontal line intersects this vertical line
+    // Horizontal line equation: interpolate between left and right points
+    const horizontalSlope = (rightPoint.y - leftPoint.y) / (METER_X_MAX - METER_X_MIN);
+    const intersectionY = leftPoint.y + horizontalSlope * (verticalX - METER_X_MIN);
     
-    // Grid parameters (same as our method)
-    const gridWidth = 400;
-    const gridHeight = 300;
-    const centerX = 200;
-    const centerY = 150;
-    const scaleX = 20;
-    const scaleY = 15;
+    return { x: verticalX, y: intersectionY };
+  }
+  
+  // Handle special case: truly horizontal line (left === right)
+  if (Math.abs(leftPoint.y - rightPoint.y) < 1e-10) {
+    // Horizontal line at y = leftPoint.y
+    const horizontalY = leftPoint.y;
     
-    // Calculate line endpoints
-    const topX = centerX + up * scaleX;
-    const bottomX = centerX + down * scaleX;
-    const leftY = centerY + left * scaleY;
-    const rightY = centerY + right * scaleY;
+    // Find where vertical line intersects this horizontal line
+    // Vertical line equation: interpolate between top and bottom points
+    const verticalSlope = (bottomPoint.x - topPoint.x) / (METER_Y_MAX - METER_Y_MIN);
+    const intersectionX = topPoint.x + verticalSlope * (horizontalY - METER_Y_MIN);
     
-    // Handle special case: truly vertical line (up === down)
-    if (topX === bottomX) {
-      // Vertical line at x = topX, find where horizontal line intersects it
-      const verticalLineX = topX;
-      const horizontalLineAtX = (rightY - leftY) * (verticalLineX / gridWidth) + leftY;
-      
-      // Convert to grid coordinates
-      const gridX = (verticalLineX - centerX) / scaleX;
-      const gridY = (centerY - horizontalLineAtX) / scaleY;
-      
-      return { x: gridX, y: gridY };
-    }
-    
-    // Handle special case: truly horizontal line (left === right)  
-    if (leftY === rightY) {
-      // Horizontal line at y = leftY, find where vertical line intersects it
-      const horizontalLineY = leftY;
-      const verticalLineAtY = (bottomX - topX) * (horizontalLineY / gridHeight) + topX;
-      
-      // Convert to grid coordinates
-      const gridX = (verticalLineAtY - centerX) / scaleX;
-      const gridY = (centerY - horizontalLineY) / scaleY;
-      
-      return { x: gridX, y: gridY };
-    }
-    
-    // Normal case: both lines have slopes
-    const m1 = gridHeight / (bottomX - topX); // Vertical line slope
-    const b1 = -m1 * topX; // Vertical line y-intercept
-    
-    const m2 = (rightY - leftY) / gridWidth; // Horizontal line slope
-    const b2 = leftY; // Horizontal line y-intercept
-    
-    // Check for parallel lines
-    if (Math.abs(m1 - m2) < 1e-10) {
-      return null; // Lines are parallel, no intersection
-    }
-    
-    // Find intersection
-    const intersectionX = (b2 - b1) / (m1 - m2);
-    const intersectionY = m1 * intersectionX + b1;
-    
-    // Convert to grid coordinates
-    const gridX = (intersectionX - centerX) / scaleX;
-    const gridY = (centerY - intersectionY) / scaleY;
-    
-    return { x: gridX, y: gridY };
-  };
+    return { x: intersectionX, y: horizontalY };
+  }
+  
+  // Normal case: both lines have slopes
+  // Vertical line: from (up, -10) to (down, +10)
+  const m1 = (bottomPoint.y - topPoint.y) / (bottomPoint.x - topPoint.x);
+  const b1 = topPoint.y - m1 * topPoint.x;
+  
+  // Horizontal line: from (-20, left) to (+20, right)
+  const m2 = (rightPoint.y - leftPoint.y) / (rightPoint.x - leftPoint.x);
+  const b2 = leftPoint.y - m2 * leftPoint.x;
+  
+  // Check for parallel lines
+  if (Math.abs(m1 - m2) < 1e-10) {
+    return null; // Lines are parallel
+  }
+  
+  // Find intersection: m1*x + b1 = m2*x + b2
+  const intersectionX = (b2 - b1) / (m1 - m2);
+  const intersectionY = m1 * intersectionX + b1;
+  
+  // Return in millimeters (physical coordinates)
+  return { x: intersectionX, y: intersectionY };
+};
 
   // Process data to calculate intersection points and normalized coordinates
   const processedData = useMemo(() => {
@@ -400,7 +398,7 @@ const CrackMovementVisualizer = () => {
         </div>
       )}
 
-      {/* Single Reading View */}
+      {/******** Single Reading View ********/} 
       {selectedView === 'single' && (
         <div>
           <h2 className="text-xl font-semibold mb-4">Single Reading Visualization</h2>
@@ -534,230 +532,273 @@ const CrackMovementVisualizer = () => {
                     )}
                   </div>
                   
-<div className="border border-gray-300 rounded-lg p-4">
-  <svg width="100%" height="600" viewBox="0 0 800 600">
-    {/* Grid pattern - matching other views */}
-    <defs>
-      <pattern id="singleGrid" width="133.33" height="100" patternUnits="userSpaceOnUse">
-        <path d="M 133.33 0 L 0 0 0 100" fill="none" stroke="#e5e7eb" strokeWidth="1"/>
-      </pattern>
-    </defs>
-    <rect width="800" height="600" fill="url(#singleGrid)"/>
-    
-    {/* Center lines */}
-    <line x1="400" y1="0" x2="400" y2="600" stroke="#d1d5db" strokeWidth="2"/>
-    <line x1="0" y1="300" x2="0" y2="600" stroke="#d1d5db" strokeWidth="2"/>
-    
-    {/* Scale markers and labels - matching other views */}
-    <g stroke="#9ca3af" strokeWidth="1" fontSize="12" fill="#6b7280">
-      {/* Horizontal markers */}
-      <line x1="0" y1="295" x2="0" y2="305"/>
-      <text x="0" y="325" textAnchor="middle">-1.5</text>
-      <line x1="133.33" y1="295" x2="133.33" y2="305"/>
-      <text x="133.33" y="325" textAnchor="middle">-1</text>
-      <line x1="266.67" y1="295" x2="266.67" y2="305"/>
-      <text x="266.67" y="325" textAnchor="middle">-0.5</text>
-      <line x1="533.33" y1="295" x2="533.33" y2="305"/>
-      <text x="533.33" y="325" textAnchor="middle">+0.5</text>
-      <line x1="666.67" y1="295" x2="666.67" y2="305"/>
-      <text x="666.67" y="325" textAnchor="middle">+1</text>
-      <line x1="800" y1="295" x2="800" y2="305"/>
-      <text x="800" y="325" textAnchor="middle">+1.5</text>
-      
-      {/* Vertical markers */}
-      <line x1="390" y1="0" x2="410" y2="0"/>
-      <text x="420" y="8" textAnchor="start">+1.5</text>
-      <line x1="390" y1="100" x2="410" y2="100"/>
-      <text x="420" y="108" textAnchor="start">+1</text>
-      <line x1="390" y1="200" x2="410" y2="200"/>
-      <text x="420" y="208" textAnchor="start">+0.5</text>
-      <line x1="390" y1="400" x2="410" y2="400"/>
-      <text x="420" y="408" textAnchor="start">-0.5</text>
-      <line x1="390" y1="500" x2="410" y2="500"/>
-      <text x="420" y="508" textAnchor="start">-1</text>
-      <line x1="390" y1="600" x2="410" y2="600"/>
-      <text x="420" y="608" textAnchor="start">-1.5</text>
-    </g>
-    
-    {/* Draw the crack cross */}
-    {(() => {
-      const [up, right, down, left] = reading.split(';').map(v => parseFloat(v));
-      
-      // CALCULATION parameters (as per documentation)
-      const calcGridWidth = 400;
-      const calcGridHeight = 300;
-      const calcCenterX = 200;
-      const calcCenterY = 150;
-      const calcScaleX = 20;
-      const calcScaleY = 15;
-      
-      // Calculate line endpoints using CALCULATION parameters
-      const topX_calc = calcCenterX + up * calcScaleX;
-      const bottomX_calc = calcCenterX + down * calcScaleX;
-      const leftY_calc = calcCenterY + left * calcScaleY;
-      const rightY_calc = calcCenterY + right * calcScaleY;
-      
-      // Calculate intersection using CALCULATION parameters
-      let intersectionX_calc, intersectionY_calc;
-      
-      if (Math.abs(topX_calc - bottomX_calc) < 1e-10) {
-        intersectionX_calc = topX_calc;
-        const horizontalLineAtX = (rightY_calc - leftY_calc) * (intersectionX_calc / calcGridWidth) + leftY_calc;
-        intersectionY_calc = horizontalLineAtX;
-      } else if (Math.abs(leftY_calc - rightY_calc) < 1e-10) {
-        intersectionY_calc = leftY_calc;
-        const verticalLineAtY = (bottomX_calc - topX_calc) * (intersectionY_calc / calcGridHeight) + topX_calc;
-        intersectionX_calc = verticalLineAtY;
-      } else {
-        const m1 = calcGridHeight / (bottomX_calc - topX_calc);
-        const b1 = -m1 * topX_calc;
-        const m2 = (rightY_calc - leftY_calc) / calcGridWidth;
-        const b2 = leftY_calc;
-        
-        intersectionX_calc = (b2 - b1) / (m1 - m2);
-        intersectionY_calc = m1 * intersectionX_calc + b1;
-      }
-      
-      // Convert to grid coordinates
-      const gridX = (intersectionX_calc - calcCenterX) / calcScaleX;
-      const gridY = (calcCenterY - intersectionY_calc) / calcScaleY;
-      
-      // DISPLAY conversion functions (map to 800x600 SVG space)
-      const toSVGX = (x) => 400 + x * 266.67; // Center at 400, scale 266.67 px/unit
-      const toSVGY = (y) => 300 - y * 200;    // Center at 300, scale 200 px/unit
-      
-      // Convert line endpoints to SVG coordinates
-      const topX_svg = toSVGX(up);
-      const bottomX_svg = toSVGX(down);
-      const leftY_svg = toSVGY(left);
-      const rightY_svg = toSVGY(right);
-      
-      // Convert intersection to SVG coordinates
-      const intersectionX_svg = toSVGX(gridX);
-      const intersectionY_svg = toSVGY(gridY);
-      
-      return (
-        <>
-          {/* Vertical line - from top boundary to bottom boundary */}
-          <line 
-            x1={topX_svg} y1={0} 
-            x2={bottomX_svg} y2={600} 
-            stroke="#dc2626" 
-            strokeWidth="3"
-          />
-          
-          {/* Horizontal line - from left boundary to right boundary */}
-          <line 
-            x1={0} y1={leftY_svg} 
-            x2={800} y2={rightY_svg} 
-            stroke="#dc2626" 
-            strokeWidth="3"
-          />
-          
-          {/* Normalized intersection marker */}
-          {normalizedIntersection !== null && (
-            <g transform={`translate(${toSVGX(normalizedIntersection.x)}, ${toSVGY(normalizedIntersection.y)})`}>
-              {/* Blue circle outline */}
-              <circle 
-                cx="0" 
-                cy="0" 
-                r="8" 
-                fill="none" 
-                stroke="#2563eb" 
-                strokeWidth="2"
-                opacity="0.8"
-              />
-              {/* Coordinate label */}
-              <text 
-                x="0" 
-                y="-15" 
-                textAnchor="middle" 
-                fontSize="10" 
-                fill="#2563eb" 
-                fontWeight="bold"
-                stroke="white"
-                strokeWidth="2"
-                paintOrder="stroke"
-              >
-                ({normalizedIntersection.x.toFixed(3)}, {normalizedIntersection.y.toFixed(3)})
-              </text>
-            </g>
-          )}
-          
-          {/* Intersection point (absolute) */}
-          <circle 
-            cx={intersectionX_svg} 
-            cy={intersectionY_svg} 
-            r="8" 
-            fill="#2563eb" 
-            stroke="white" 
-            strokeWidth="3"
-          />
-          
-          {/* Boundary intersection labels */}
-          <text x={topX_svg} y="15" textAnchor="middle" fontSize="12" fill="#dc2626" fontWeight="bold">
-            ↑{up}
-          </text>
-          <text x={bottomX_svg} y="590" textAnchor="middle" fontSize="12" fill="#dc2626" fontWeight="bold">
-            ↓{down}
-          </text>
-          <text x="10" y={leftY_svg + 4} textAnchor="start" fontSize="12" fill="#dc2626" fontWeight="bold">
-            ←{left}
-          </text>
-          <text x="790" y={rightY_svg + 4} textAnchor="end" fontSize="12" fill="#dc2626" fontWeight="bold">
-            →{right}
-          </text>
-          
-          {/* Intersection coordinate label */}
-          <text 
-            x={intersectionX_svg} 
-            y={intersectionY_svg - 15} 
-            textAnchor="middle" 
-            fontSize="12" 
-            fill="#2563eb" 
-            fontWeight="bold"
-            stroke="white"
-            strokeWidth="3"
-            paintOrder="stroke"
-          >
-            ({gridX.toFixed(3)}, {gridY.toFixed(3)})
-          </text>
-          
-          {/* Quadrant angle labels for non-orthogonal crosses */}
-          {angleAnalysis && angleAnalysis.deviation > 0.5 && (
-            <>
-              {/* Quadrant labels */}
-              <text x="200" y="150" textAnchor="middle" fontSize="11" fill="#7c3aed" fontWeight="bold">
-                NW: {angleAnalysis.widerQuadrants.includes('NW') ? 
-                  angleAnalysis.widerAngle.toFixed(1) : angleAnalysis.narrowerAngle.toFixed(1)}°
-              </text>
-              <text x="600" y="150" textAnchor="middle" fontSize="11" fill="#7c3aed" fontWeight="bold">
-                NE: {angleAnalysis.widerQuadrants.includes('NE') ? 
-                  angleAnalysis.widerAngle.toFixed(1) : angleAnalysis.narrowerAngle.toFixed(1)}°
-              </text>
-              <text x="200" y="450" textAnchor="middle" fontSize="11" fill="#7c3aed" fontWeight="bold">
-                SW: {angleAnalysis.widerQuadrants.includes('SW') ? 
-                  angleAnalysis.widerAngle.toFixed(1) : angleAnalysis.narrowerAngle.toFixed(1)}°
-              </text>
-              <text x="600" y="450" textAnchor="middle" fontSize="11" fill="#7c3aed" fontWeight="bold">
-                SE: {angleAnalysis.widerQuadrants.includes('SE') ? 
-                  angleAnalysis.widerAngle.toFixed(1) : angleAnalysis.narrowerAngle.toFixed(1)}°
-              </text>
-            </>
-          )}
-              <text 
-                x={intersectionX_svg} 
-                y={intersectionY_svg - 15} 
-                textAnchor="middle" 
-                fontSize="12" 
-                fill="#2563eb" 
-                fontWeight="bold"
-                stroke="white"
-                strokeWidth="3"
-                paintOrder="stroke"
-              >
-                ({gridX.toFixed(3)}, {gridY.toFixed(3)})
-              </text>
+                  <div className="border border-gray-300 rounded-lg p-4">
+                    <svg width="100%" height="600" viewBox="0 0 800 600">
+                      {/* Grid pattern with fine and coarse lines */}
+                      <defs>
+                        {/* Fine grid at 0.25mm intervals (lighter) */}
+                        <pattern id="fineGrid" width="66.67" height="50" patternUnits="userSpaceOnUse">
+                          <path d="M 66.67 0 L 0 0 0 50" fill="none" stroke="#f3f4f6" strokeWidth="1.5"/>
+                        </pattern>
+                        {/* Coarse grid at 0.5mm intervals (darker) */}
+                        <pattern id="coarseGrid" width="133.33" height="100" patternUnits="userSpaceOnUse">
+                          <path d="M 133.33 0 L 0 0 0 100" fill="none" stroke="#e5e7eb" strokeWidth="2"/>
+                        </pattern>
+                      </defs>
+                      {/* Draw fine grid first, then coarse on top */}
+                      <rect width="800" height="600" fill="url(#fineGrid)"/>
+                      <rect width="800" height="600" fill="url(#coarseGrid)"/>
+                      
+                      {/* Center lines */}
+                      <line x1="400" y1="0" x2="400" y2="600" stroke="#d1d5db" strokeWidth="2"/>
+                      <line x1="0" y1="300" x2="800" y2="300" stroke="#d1d5db" strokeWidth="2"/>
+                      
+                      {/* Scale markers and labels - matching other views */}
+                      <g stroke="#9ca3af" strokeWidth="1" fontSize="12" fill="#6b7280">
+                        {/* Horizontal markers */}
+                        <line x1="0" y1="295" x2="0" y2="305"/>
+                        <text x="0" y="325" textAnchor="middle">-1.5</text>
+                        <line x1="133.33" y1="295" x2="133.33" y2="305"/>
+                        <text x="133.33" y="325" textAnchor="middle">-1</text>
+                        <line x1="266.67" y1="295" x2="266.67" y2="305"/>
+                        <text x="266.67" y="325" textAnchor="middle">-0.5</text>
+                        <line x1="533.33" y1="295" x2="533.33" y2="305"/>
+                        <text x="533.33" y="325" textAnchor="middle">+0.5</text>
+                        <line x1="666.67" y1="295" x2="666.67" y2="305"/>
+                        <text x="666.67" y="325" textAnchor="middle">+1</text>
+                        <line x1="800" y1="295" x2="800" y2="305"/>
+                        <text x="800" y="325" textAnchor="middle">+1.5</text>
+                        
+                        {/* Vertical markers */}
+                        <line x1="390" y1="0" x2="410" y2="0"/>
+                        <text x="420" y="8" textAnchor="start">-1.5</text>
+                        <line x1="390" y1="100" x2="410" y2="100"/>
+                        <text x="420" y="108" textAnchor="start">-1</text>
+                        <line x1="390" y1="200" x2="410" y2="200"/>
+                        <text x="420" y="208" textAnchor="start">-0.5</text>
+                        <line x1="390" y1="400" x2="410" y2="400"/>
+                        <text x="420" y="408" textAnchor="start">+0.5</text>
+                        <line x1="390" y1="500" x2="410" y2="500"/>
+                        <text x="420" y="508" textAnchor="start">+1</text>
+                        <line x1="390" y1="600" x2="410" y2="600"/>
+                        <text x="420" y="608" textAnchor="start">+1.5</text>
+                      </g>
+                      
+                      {/* Draw the crack cross */}
+                      {(() => {
+                        const [up, right, down, left] = reading.split(';').map(v => parseFloat(v));
+                        
+                        // Physical crack meter boundaries (in millimeters)
+                        const METER_Y_MIN = -10;
+                        const METER_Y_MAX = 10;
+                        const METER_X_MIN = -20;
+                        const METER_X_MAX = 20;
+                        
+                        // Line endpoints in physical coordinates (mm)
+                        const topPoint = { x: up, y: METER_Y_MIN };
+                        const bottomPoint = { x: down, y: METER_Y_MAX };
+                        const leftPoint = { x: METER_X_MIN, y: left };
+                        const rightPoint = { x: METER_X_MAX, y: right };
+                        
+                        // Calculate intersection in physical coordinates
+                        let gridX, gridY;
+                        
+                        if (Math.abs(topPoint.x - bottomPoint.x) < 1e-10) {
+                          // Vertical line
+                          const verticalX = topPoint.x;
+                          const horizontalSlope = (rightPoint.y - leftPoint.y) / (METER_X_MAX - METER_X_MIN);
+                          const intersectionY = leftPoint.y + horizontalSlope * (verticalX - METER_X_MIN);
+                          gridX = verticalX;
+                          gridY = intersectionY;
+                        } else if (Math.abs(leftPoint.y - rightPoint.y) < 1e-10) {
+                          // Horizontal line
+                          const horizontalY = leftPoint.y;
+                          const verticalSlope = (bottomPoint.x - topPoint.x) / (METER_Y_MAX - METER_Y_MIN);
+                          const intersectionX = topPoint.x + verticalSlope * (horizontalY - METER_Y_MIN);
+                          gridX = intersectionX;
+                          gridY = horizontalY;
+                        } else {
+                          // Normal case
+                          const m1 = (bottomPoint.y - topPoint.y) / (bottomPoint.x - topPoint.x);
+                          const b1 = topPoint.y - m1 * topPoint.x;
+                          const m2 = (rightPoint.y - leftPoint.y) / (rightPoint.x - leftPoint.x);
+                          const b2 = leftPoint.y - m2 * leftPoint.x;
+                          
+                          gridX = (b2 - b1) / (m1 - m2);
+                          gridY = m1 * gridX + b1;
+                        }
+                        
+                        // DISPLAY conversion functions (map physical mm to 800x600 SVG space)
+                        // Display range: X ∈ [-1.5, +1.5]mm, Y ∈ [-1.5, +1.5]mm
+                        const toSVGX = (x_mm) => 400 + x_mm * 266.67;  // 266.67px per mm
+                        const toSVGY = (y_mm) => 300 + y_mm * 200;     // 200px per mm
+                        
+                        // For drawing lines across the ENTIRE display
+                        const displayYMin = -1.5;  // Top of display in mm
+                        const displayYMax = 1.5;   // Bottom of display in mm
+                        const displayXMin = -1.5;  // Left of display in mm
+                        const displayXMax = 1.5;   // Right of display in mm
+                        
+                        // Calculate vertical line endpoints
+                        let topDisplayX, bottomDisplayX;
+                        
+                        if (Math.abs(topPoint.x - bottomPoint.x) < 1e-10) {
+                          // Truly vertical line - same x-coordinate throughout
+                          topDisplayX = up;
+                          bottomDisplayX = down;  // Same as up
+                        } else {
+                          // Sloped line - calculate where it crosses display top and bottom
+                          const verticalSlope = (bottomPoint.y - topPoint.y) / (bottomPoint.x - topPoint.x);
+                          const verticalIntercept = topPoint.y - verticalSlope * topPoint.x;
+                          
+                          // x = (y - b) / m
+                          topDisplayX = (displayYMin - verticalIntercept) / verticalSlope;
+                          bottomDisplayX = (displayYMax - verticalIntercept) / verticalSlope;
+                        }
+                        
+                        // Calculate horizontal line endpoints
+                        let leftDisplayY, rightDisplayY;
+                        
+                        if (Math.abs(leftPoint.y - rightPoint.y) < 1e-10) {
+                          // Truly horizontal line - same y-coordinate throughout
+                          leftDisplayY = left;
+                          rightDisplayY = right;  // Same as left
+                        } else {
+                          // Sloped line - calculate where it crosses display left and right
+                          const horizontalSlope = (rightPoint.y - leftPoint.y) / (rightPoint.x - leftPoint.x);
+                          const horizontalIntercept = leftPoint.y - horizontalSlope * leftPoint.x;
+                          
+                          // y = mx + b
+                          leftDisplayY = horizontalSlope * displayXMin + horizontalIntercept;
+                          rightDisplayY = horizontalSlope * displayXMax + horizontalIntercept;
+                        }
+                        
+                        // Convert to SVG coordinates
+                        const topX_svg = toSVGX(topDisplayX);
+                        const topY_svg = toSVGY(displayYMin);
+                        const bottomX_svg = toSVGX(bottomDisplayX);
+                        const bottomY_svg = toSVGY(displayYMax);
+                        
+                        const leftX_svg = toSVGX(displayXMin);
+                        const leftY_svg = toSVGY(leftDisplayY);
+                        const rightX_svg = toSVGX(displayXMax);
+                        const rightY_svg = toSVGY(rightDisplayY);
+                        
+                        const intersectionX_svg = toSVGX(gridX);
+                        const intersectionY_svg = toSVGY(gridY);
+                        
+                        return (
+                          <>
+                            {/* Vertical line - across entire display */}
+                            <line 
+                              x1={topX_svg} y1={topY_svg} 
+                              x2={bottomX_svg} y2={bottomY_svg} 
+                              stroke="#dc2626" 
+                              strokeWidth="3"
+                            />
+                            
+                            {/* Horizontal line - across entire display */}
+                            <line 
+                              x1={leftX_svg} y1={leftY_svg} 
+                              x2={rightX_svg} y2={rightY_svg} 
+                              stroke="#dc2626" 
+                              strokeWidth="3"
+                            />
+                            
+                            {/* Normalized intersection marker */}
+                            {normalizedIntersection !== null && (
+                              <g transform={`translate(${toSVGX(normalizedIntersection.x)}, ${toSVGY(normalizedIntersection.y)})`}>
+                                {/* Floor-colored circle outline */}
+                                <circle 
+                                  cx="0" 
+                                  cy="0" 
+                                  r="8" 
+                                  fill="none" 
+                                  stroke={meterColor} 
+                                  strokeWidth="2"
+                                  opacity="0.8"
+                                />
+                                {/* Coordinate label */}
+                                <text 
+                                  x="0" 
+                                  y="-15" 
+                                  textAnchor="middle" 
+                                  fontSize="10" 
+                                  fill={meterColor} 
+                                  fontWeight="bold"
+                                  stroke="white"
+                                  strokeWidth="2"
+                                  paintOrder="stroke"
+                                >
+                                  ({normalizedIntersection.x.toFixed(3)}, {normalizedIntersection.y.toFixed(3)})
+                                </text>
+                              </g>
+                            )}
+                            
+                            {/* Intersection point (absolute) */}
+                            <circle 
+                              cx={intersectionX_svg} 
+                              cy={intersectionY_svg} 
+                              r="8" 
+                              fill={meterColor} 
+                              stroke="white" 
+                              strokeWidth="3"
+                            />
+                            
+                            {/* Boundary intersection labels - showing actual reading values */}
+                            <text x={toSVGX(up)} y="15" textAnchor="middle" fontSize="12" fill="#dc2626" fontWeight="bold">
+                              ↑{up}
+                            </text>
+                            <text x={toSVGX(down)} y="590" textAnchor="middle" fontSize="12" fill="#dc2626" fontWeight="bold">
+                              ↓{down}
+                            </text>
+                            <text x="10" y={toSVGY(left) + 4} textAnchor="start" fontSize="12" fill="#dc2626" fontWeight="bold">
+                              ←{left}
+                            </text>
+                            <text x="790" y={toSVGY(right) + 4} textAnchor="end" fontSize="12" fill="#dc2626" fontWeight="bold">
+                              →{right}
+                            </text>
+                            
+                            {/* Intersection coordinate label */}
+                            <text 
+                              x={intersectionX_svg} 
+                              y={intersectionY_svg - 15} 
+                              textAnchor="middle" 
+                              fontSize="12" 
+                              fill={meterColor} 
+                              fontWeight="bold"
+                              stroke="white"
+                              strokeWidth="3"
+                              paintOrder="stroke"
+                            >
+                              ({gridX.toFixed(3)}, {gridY.toFixed(3)})
+                            </text>
+                            
+                            {/* Quadrant angle labels for non-orthogonal crosses */}
+                            {angleAnalysis && angleAnalysis.deviation > 0.1 && (
+                              <>
+                                <text x="200" y="150" textAnchor="middle" fontSize="12" fill="#7c3aed" fontWeight="bold"
+                                      stroke="white" strokeWidth="3" paintOrder="stroke">
+                                  NW: {angleAnalysis.widerQuadrants?.includes('NW') ? 
+                                    angleAnalysis.widerAngle.toFixed(1) : angleAnalysis.narrowerAngle.toFixed(1)}°
+                                </text>
+                                <text x="600" y="150" textAnchor="middle" fontSize="12" fill="#7c3aed" fontWeight="bold"
+                                      stroke="white" strokeWidth="3" paintOrder="stroke">
+                                  NE: {angleAnalysis.widerQuadrants?.includes('NE') ? 
+                                    angleAnalysis.widerAngle.toFixed(1) : angleAnalysis.narrowerAngle.toFixed(1)}°
+                                </text>
+                                <text x="200" y="450" textAnchor="middle" fontSize="12" fill="#7c3aed" fontWeight="bold"
+                                      stroke="white" strokeWidth="3" paintOrder="stroke">
+                                  SW: {angleAnalysis.widerQuadrants?.includes('SW') ? 
+                                    angleAnalysis.widerAngle.toFixed(1) : angleAnalysis.narrowerAngle.toFixed(1)}°
+                                </text>
+                                <text x="600" y="450" textAnchor="middle" fontSize="12" fill="#7c3aed" fontWeight="bold"
+                                      stroke="white" strokeWidth="3" paintOrder="stroke">
+                                  SE: {angleAnalysis.widerQuadrants?.includes('SE') ? 
+                                    angleAnalysis.widerAngle.toFixed(1) : angleAnalysis.narrowerAngle.toFixed(1)}°
+                                </text>
+                              </>
+                            )}
                           </>
                         );
                       })()}
@@ -851,7 +892,7 @@ const CrackMovementVisualizer = () => {
         </div>
       )}
 
-      {/* Normalized Movement Patterns View */}
+      {/******** Normalized Movement Patterns View ********/}
       {selectedView === 'normalized' && (
         <div>
           <div className="flex items-center justify-between mb-4">
@@ -871,13 +912,20 @@ const CrackMovementVisualizer = () => {
           
           <div style={{ width: '100%', height: '600px', position: 'relative' }}>
             <svg width="100%" height="600" viewBox="0 0 800 600">
-              {/* Grid */}
+            {/* Grid pattern with fine and coarse lines */}
               <defs>
-                <pattern id="normalizedGrid" width="133.33" height="100" patternUnits="userSpaceOnUse">
-                  <path d="M 133.33 0 L 0 0 0 100" fill="none" stroke="#e5e7eb" strokeWidth="1"/>
+                {/* Fine grid at 0.25mm intervals (lighter) */}
+                <pattern id="fineGrid" width="66.67" height="50" patternUnits="userSpaceOnUse">
+                  <path d="M 66.67 0 L 0 0 0 50" fill="none" stroke="#f3f4f6" strokeWidth="1.5"/>
+                </pattern>
+                {/* Coarse grid at 0.5mm intervals (darker) */}
+                <pattern id="coarseGrid" width="133.33" height="100" patternUnits="userSpaceOnUse">
+                  <path d="M 133.33 0 L 0 0 0 100" fill="none" stroke="#e5e7eb" strokeWidth="2"/>
                 </pattern>
               </defs>
-              <rect width="800" height="600" fill="url(#normalizedGrid)"/>
+              {/* Draw fine grid first, then coarse on top */}
+              <rect width="800" height="600" fill="url(#fineGrid)"/>
+              <rect width="800" height="600" fill="url(#coarseGrid)"/>
               
               {/* Center lines */}
               <line x1="400" y1="0" x2="400" y2="600" stroke="#d1d5db" strokeWidth="2"/>
@@ -907,17 +955,17 @@ const CrackMovementVisualizer = () => {
                 
                 {/* Vertical markers */}
                 <line x1="390" y1="0" x2="410" y2="0"/>
-                <text x="420" y="8" textAnchor="start">+1.5</text>
+                <text x="420" y="8" textAnchor="start">-1.5</text>
                 <line x1="390" y1="100" x2="410" y2="100"/>
-                <text x="420" y="108" textAnchor="start">+1</text>
+                <text x="420" y="108" textAnchor="start">-1</text>
                 <line x1="390" y1="200" x2="410" y2="200"/>
-                <text x="420" y="208" textAnchor="start">+0.5</text>
+                <text x="420" y="208" textAnchor="start">-0.5</text>
                 <line x1="390" y1="400" x2="410" y2="400"/>
-                <text x="420" y="408" textAnchor="start">-0.5</text>
+                <text x="420" y="408" textAnchor="start">+0.5</text>
                 <line x1="390" y1="500" x2="410" y2="500"/>
-                <text x="420" y="508" textAnchor="start">-1</text>
+                <text x="420" y="508" textAnchor="start">+1</text>
                 <line x1="390" y1="600" x2="410" y2="600"/>
-                <text x="420" y="608" textAnchor="start">-1.5</text>
+                <text x="420" y="608" textAnchor="start">+1.5</text>
               </g>
               
               {/* Render normalized movement patterns for each meter */}
@@ -963,9 +1011,11 @@ const CrackMovementVisualizer = () => {
                   
                   if (meterData.length === 0) return null;
                   
-                  // Convert coordinates to SVG space (-1.5 to +1.5 range)
-                  const toSVGX = (x) => 400 + x * 266.67; // Center at 400, scale: 400px / 1.5 units = 266.67px per unit
-                  const toSVGY = (y) => 300 - y * 200;    // Center at 300, scale: 300px / 1.5 units = 200px per unit
+                  // Convert physical coordinates (mm) to SVG space
+                  // Physical range: X ∈ [-20, +20]mm, Y ∈ [-10, +10]mm
+                  // Display range: X ∈ [-1.5, +1.5]mm, Y ∈ [-1.5, +1.5]mm on screen
+                  const toSVGX = (x_mm) => 400 + x_mm * 266.67; // Map [-20,+20]mm to display
+                  const toSVGY = (y_mm) => 300 + y_mm * 200;    // Map [-10,+10]mm to display
                   
                   return (
                     <g key={config.name}>
@@ -1132,7 +1182,7 @@ const CrackMovementVisualizer = () => {
         </div>
       )}
 
-      {/* Movement Patterns View */}
+      {/******** Movement Patterns View ********/}
       {selectedView === 'movement' && (
         <div>
           <div className="flex items-center justify-between mb-4">
@@ -1153,14 +1203,25 @@ const CrackMovementVisualizer = () => {
           
           <div style={{ width: '100%', height: '600px', position: 'relative' }}>
             <svg width="100%" height="600" viewBox="0 0 800 600">
-              {/* Grid */}
+            {/* Grid pattern with fine and coarse lines */}
               <defs>
-                <pattern id="movementGrid" width="133.33" height="100" patternUnits="userSpaceOnUse">
-                  <path d="M 133.33 0 L 0 0 0 100" fill="none" stroke="#e5e7eb" strokeWidth="1"/>
+                {/* Fine grid at 0.25mm intervals (lighter) */}
+                <pattern id="fineGrid" width="66.67" height="50" patternUnits="userSpaceOnUse">
+                  <path d="M 66.67 0 L 0 0 0 50" fill="none" stroke="#f3f4f6" strokeWidth="1.5"/>
+                </pattern>
+                {/* Coarse grid at 0.5mm intervals (darker) */}
+                <pattern id="coarseGrid" width="133.33" height="100" patternUnits="userSpaceOnUse">
+                  <path d="M 133.33 0 L 0 0 0 100" fill="none" stroke="#e5e7eb" strokeWidth="2"/>
                 </pattern>
               </defs>
-              <rect width="800" height="600" fill="url(#movementGrid)"/>
+              {/* Draw fine grid first, then coarse on top */}
+              <rect width="800" height="600" fill="url(#fineGrid)"/>
+              <rect width="800" height="600" fill="url(#coarseGrid)"/>
               
+              {/* Center lines */}
+              <line x1="400" y1="0" x2="400" y2="600" stroke="#d1d5db" strokeWidth="2"/>
+              <line x1="0" y1="300" x2="800" y2="300" stroke="#d1d5db" strokeWidth="2"/>
+
               {/* Center lines */}
               <line x1="400" y1="0" x2="400" y2="600" stroke="#d1d5db" strokeWidth="2"/>
               <line x1="0" y1="300" x2="800" y2="300" stroke="#d1d5db" strokeWidth="2"/>
@@ -1180,6 +1241,8 @@ const CrackMovementVisualizer = () => {
                 <text x="133.33" y="325" textAnchor="middle">-1</text>
                 <line x1="266.67" y1="295" x2="266.67" y2="305"/>
                 <text x="266.67" y="325" textAnchor="middle">-0.5</text>
+                <line x1="400" y1="290" x2="400" y2="310"/>
+                <text x="400" y="325" textAnchor="middle" fontWeight="bold">0</text>
                 <line x1="533.33" y1="295" x2="533.33" y2="305"/>
                 <text x="533.33" y="325" textAnchor="middle">+0.5</text>
                 <line x1="666.67" y1="295" x2="666.67" y2="305"/>
@@ -1189,17 +1252,19 @@ const CrackMovementVisualizer = () => {
                 
                 {/* Vertical scale markers */}
                 <line x1="390" y1="0" x2="410" y2="0"/>
-                <text x="420" y="8" textAnchor="start">+1.5</text>
+                <text x="420" y="8" textAnchor="start">-1.5</text>
                 <line x1="390" y1="100" x2="410" y2="100"/>
-                <text x="420" y="108" textAnchor="start">+1</text>
+                <text x="420" y="108" textAnchor="start">-1</text>
                 <line x1="390" y1="200" x2="410" y2="200"/>
-                <text x="420" y="208" textAnchor="start">+0.5</text>
+                <text x="420" y="208" textAnchor="start">-0.5</text>
+                <line x1="385" y1="300" x2="415" y2="300"/>
+                <text x="420" y="308" textAnchor="start" fontWeight="bold">0</text>
                 <line x1="390" y1="400" x2="410" y2="400"/>
-                <text x="420" y="408" textAnchor="start">-0.5</text>
+                <text x="420" y="408" textAnchor="start">+0.5</text>
                 <line x1="390" y1="500" x2="410" y2="500"/>
-                <text x="420" y="508" textAnchor="start">-1</text>
+                <text x="420" y="508" textAnchor="start">+1</text>
                 <line x1="390" y1="600" x2="410" y2="600"/>
-                <text x="420" y="608" textAnchor="start">-1.5</text>
+                <text x="420" y="608" textAnchor="start">+1.5</text>
               </g>
               
               {/* Render movement patterns for each meter */}
@@ -1245,9 +1310,11 @@ const CrackMovementVisualizer = () => {
                   
                   if (meterData.length === 0) return null;
                   
-                  // Convert coordinates to SVG space (-1.5 to +1.5 range)
-                  const toSVGX = (x) => 400 + x * 266.67; // Center at 400, scale: 400px / 1.5 units = 266.67px per unit
-                  const toSVGY = (y) => 300 - y * 200;    // Center at 300, scale: 300px / 1.5 units = 200px per unit
+                  // Convert physical coordinates (mm) to SVG space
+                  // Physical range: X ∈ [-20, +20]mm, Y ∈ [-10, +10]mm
+                  // Display range: X ∈ [-1.5, +1.5]mm, Y ∈ [-1.5, +1.5]mm on screen
+                  const toSVGX = (x_mm) => 400 + x_mm * 266.67;  // 266.67px per mm
+                  const toSVGY = (y_mm) => 300 + y_mm * 200;     // 200px per mm
                   
                   return (
                     <g key={config.name}>
@@ -1424,7 +1491,7 @@ const CrackMovementVisualizer = () => {
         </div>
       )}
 
-      {/* Raw Data View */}
+      {/******** Raw Data View ********/}
       {selectedView === 'data' && (
         <div>
           <h2 className="text-xl font-semibold mb-4">Processed Data Table</h2>
@@ -1525,7 +1592,7 @@ const CrackMovementVisualizer = () => {
         </div>
       )}
 
-      {/* Summary Statistics */}
+      {/******** Summary Statistics ********/}
       <div className="mt-8 p-4 bg-gray-50 rounded">
         <h3 className="font-semibold mb-4">Movement Summary</h3>
         <div className="space-y-4">
