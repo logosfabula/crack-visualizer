@@ -1,73 +1,231 @@
-# crack-visualizer
-Multi-view tracker for crack-meters 
+# Crack Meter Analysis Method
 
-# Getting Started with Create React App
+## Overview
+This method converts crack meter readings (4 boundary measurements) into precise crack position and orientation data, normalizes them with a floor-specific parameter (orientation), and provides interpretations for structural movement analysis.
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## Input Data Format
+Each measurement consists of 4 values: `[up, right, down, left]`
 
-## Available Scripts
+**Example**: `[-2, +1, 0, +3]`
 
-In the project directory, you can run:
+## Coordinate System & Measurement Mapping
 
-### `npm start`
+### Grid Layout
+- **Grid center**: (0, 0)
+- **X-axis**: Horizontal (left ← → right movements, determined by "up" and "down" readings)
+- **Y-axis**: Vertical (down ↓ ↑ up movements, determined by "left" and "right" readings)
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### How Boundary Measurements Map to Coordinates
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+The crack meter readings `[up, right, down, left]` represent where the red cross intersects the **boundaries** of the measurement grid:
 
-### `npm test`
+**Horizontal Position (X-coordinate)** - Determined by `up` and `down` values:
+- `up`: Where red cross intersects the **top boundary** (horizontal position)
+- `down`: Where red cross intersects the **bottom boundary** (horizontal position)
+- **Positive values** = right of center line
+- **Negative values** = left of center line
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+**Vertical Position (Y-coordinate)** - Determined by `left` and `right` values:
+- `left`: Where red cross intersects the **left boundary** (vertical position)
+- `right`: Where red cross intersects the **right boundary** (vertical position)  
+- **Positive values** = below center line
+- **Negative values** = above center line
 
-### `npm run build`
+### Visual Example
+```
+Grid Boundaries:           Measurement Values:
+                          up = -1 (left of center)
+    -2  -1   0  +1  +2    
+-2  ┌───●───┼───┬───┐     left = +1 (below center)
+-1  ├───┼───┼───┼───┤  ←  
+ 0  ├───┼───┼───┼───●     · = crack intersection at (-0.5, +0.5)
++1  ●───┼─˙─┼───┼───┤  ←  
++2  └───┴───●───┴───┘     right = 0 (on center)
+                          
+                          down = 0 (on center)
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### Key Insight
+- **Up/Down measurements** → **Horizontal (X) position** of red cross intersection (center)
+- **Left/Right measurements** → **Vertical (Y) position** of red cross intersection (center)
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+This mapping may seem counterintuitive, but it reflects how the crack's orientation determines where the red cross intersects each boundary of the measurement grid.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## Floor-Specific Movement Interpretations
 
-### `npm run eject`
+The same raw coordinate changes represent different physical movements depending on the floor level due to different meter orientations or installation setups:
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+### Piano 1 (P1) - Standard Interpretation for this application
+- **Horizontal Movement (X-axis):**
+  - **Negative X** = crack closing (wall segments moving toward each other)
+  - **Positive X** = crack expanding (wall segments separating)
+- **Vertical Movement (Y-axis):**
+  - **Negative Y** = wall sinking (downward movement)
+  - **Positive Y** = wall rising (upward movement)
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### Pianterreno (P0) & Piano 2 (P2) - Inverted Interpretation
+- **Horizontal Movement (X-axis):**
+  - **Negative X** = crack expanding (wall segments separating)
+  - **Positive X** = crack closing (wall segments moving toward each other)
+- **Vertical Movement (Y-axis):**
+  - **Negative Y** = wall rising (upward movement)
+  - **Positive Y** = wall sinking (downward movement)
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+However, all the physical interpretations are standard, because the inverted crack meters data are normalized before being interpreted. 
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## Normalization
 
-## Learn More
+Normalization consists of two different transformations of the raw readings
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+### Shifting 
+- **Oldest reading** will be transformed to **(0,0) coordinates**
+- **Difference** between the oldest reading and (0,0) will be applied to **all the same floor's other readings**
+- In case the oldest reading is (0,0), reading's raw data will correspond to normalized data (if no flipping is due)
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### Flipping
+- **X and Y values will be flipped**, becoming positive when negative and viceversa, if the floor's crack meter is **marked as inverse**
+- in case the reading's floor is marked as standard, reading's raw data will correspond to normalized data (if no shifting is due)
 
-### Code Splitting
+**If a floor's oldest reading is (0,0) and the floor's crack meter is marked as standard (non-inverse), the floor's normalized readings are the same as the floor's raw readings.**
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+## Step-by-Step Method
 
-### Analyzing the Bundle Size
+### Step 1: Define Grid Parameters
+```javascript
+const gridWidth = 400;    // pixels
+const gridHeight = 300;   // pixels
+const centerX = 200;      // pixels (grid center X)
+const centerY = 150;      // pixels (grid center Y)
+const scaleX = 20;        // pixels per unit (horizontal)
+const scaleY = 15;        // pixels per unit (vertical)
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+### Step 2: Convert Measurements to Line Endpoints
 
-### Making a Progressive Web App
+**Vertical Line** (intersects top and bottom boundaries):
+- Top intersection: x = `up` value
+- Bottom intersection: x = `down` value
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+**Horizontal Line** (intersects left and right boundaries):
+- Left intersection: y = `left` value  
+- Right intersection: y = `right` value
 
-### Advanced Configuration
+### Step 3: Calculate Pixel Coordinates
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+For measurement `[-2, +1, 0, +3]`:
 
-### Deployment
+**Vertical Line Points:**
+- Top: (centerX + up×scaleX, 0) = (200 + (-2)×20, 0) = **(160px, 0px)**
+- Bottom: (centerX + down×scaleX, gridHeight) = (200 + 0×20, 300) = **(200px, 300px)**
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+**Horizontal Line Points:**
+- Left: (0, centerY + left×scaleY) = (0, 150 + 3×15) = **(0px, 195px)**
+- Right: (gridWidth, centerY + right×scaleY) = (400, 150 + 1×15) = **(400px, 165px)**
 
-### `npm run build` fails to minify
+### Step 4: Calculate Line Equations
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+**Vertical Line**: y = m₁x + b₁
+```javascript
+const m1 = (300 - 0) / (200 - 160) = 300/40 = 7.5
+const b1 = 0 - 7.5 × 160 = -1200
+// Equation: y = 7.5x - 1200
+```
+
+**Horizontal Line**: y = m₂x + b₂
+```javascript
+const m2 = (165 - 195) / (400 - 0) = -30/400 = -0.075
+const b2 = 195 - (-0.075) × 0 = 195
+// Equation: y = -0.075x + 195
+```
+
+### Step 5: Find Intersection Point
+
+Set equations equal: `7.5x - 1200 = -0.075x + 195`
+
+Solve for x:
+```javascript
+7.5x + 0.075x = 195 + 1200
+7.575x = 1395
+x = 184.2 pixels
+```
+
+Solve for y:
+```javascript
+y = 7.5 × 184.2 - 1200 = 181.2 pixels
+```
+
+**Intersection Point (pixels)**: (184.2, 181.2)
+
+### Step 6: Convert to Grid Coordinates
+
+```javascript
+const gridX = (184.2 - 200) / 20 = -0.792
+const gridY = (150 - 181.2) / 15 = -2.079
+```
+
+**Final Result**: **(-0.792, -2.079)** in grid coordinates
+
+## Implementation Formula
+
+For any measurement `[up, right, down, left]`:
+
+1. **Line endpoints**:
+   - Vertical: (centerX + up×scaleX, 0) to (centerX + down×scaleX, gridHeight)
+   - Horizontal: (0, centerY + left×scaleY) to (gridWidth, centerY + right×scaleY)
+
+2. **Intersection calculation**:
+   ```javascript
+   // Slopes
+   m1 = gridHeight / ((down - up) × scaleX)
+   m2 = -(right - left) × scaleY / gridWidth
+   
+   // Y-intercepts
+   b1 = -m1 × (centerX + up × scaleX)
+   b2 = centerY + left × scaleY
+   
+   // Intersection
+   x = (b2 - b1) / (m1 - m2)
+   y = m1 × x + b1
+   
+   // Grid coordinates
+   gridX = (x - centerX) / scaleX
+   gridY = (centerY - y) / scaleY
+   ```
+
+## Floor-Specific Movement Analysis Examples
+
+### Example: Coordinate Change (+0.5, -0.3)
+
+**Piano 1 (P1) Interpretation:**
+- Horizontal: +0.5mm = crack expanding
+- Vertical: -0.3mm = wall sinking
+- **Summary**: "Crack expanding and wall sinking"
+
+**Pianterreno (P0) & Piano 2 (P2) Interpretation:**
+- Horizontal: +0.5mm = crack closing
+- Vertical: -0.3mm = wall rising  
+- **Summary**: "Crack closing and wall rising"
+
+### Movement Significance Thresholds
+- **< 0.1mm**: Minimal movement (measurement precision)
+- **0.1-0.5mm**: Small but detectable movement
+- **0.5-1.0mm**: Moderate movement (monitor closely)
+- **> 1.0mm**: Significant movement (requires attention)
+
+## Output Data
+- **Position**: (gridX, gridY) - crack center location
+- **Floor-specific interpretation**: Physical meaning based on floor level
+- **Movement tracking**: Compare positions over time with proper interpretation
+- **Rate analysis**: Movement velocity and acceleration trends
+
+## Applications
+- **Multi-floor monitoring**: Track crack movement with floor-appropriate interpretations
+- **Structural assessment**: Understand different movement patterns per floor
+- **Alert systems**: Set floor-specific thresholds for critical movements
+- **Comparative analysis**: Compare movement patterns between floors while accounting for interpretation differences
+
+## Important Notes
+- Always specify the floor level correctly when reporting results, as crack meters can have different orientations for each floor
+- Use only normalized interpretation functions in analysis software
+- Coordinate values are mathematically consistent after normalization
+- Movement trends and physical interpretation should only be analyzed within the context of normalized data
