@@ -262,21 +262,21 @@ const calculateIntersection = (reading) => {
 
   // Helper function to construct image filename from meter and date
   const getImageFilename = (meterName, date) => {
-    // Convert meter name to prefix
     const meterPrefix = meterName === 'Pianterreno' ? 'p0' :
                         meterName === 'Piano 1' ? 'p1' :
                         meterName === 'Piano 2' ? 'p2' : 'unknown';
     
-    // Convert date format: "2024-05-02" → "20240502"
     const dateString = date.replace(/-/g, '');
     
-    // Return full path
-    return `/crack_images/${meterPrefix}_${dateString}.jpg`;
+    // Use PUBLIC_URL to handle both local and GitHub Pages paths
+    const basePath = process.env.PUBLIC_URL || '';
+    return `${basePath}/crack_images/${meterPrefix}_${dateString}.jpg`;
   };
 
   // Handler to download the crack meter image
     const downloadCrackImage = (meterName, date) => {
       const imagePath = getImageFilename(meterName, date);
+      console.log('Attempting to download from:', imagePath); // ADD THIS LINE
       const filename = imagePath.split('/').pop(); // Extract just the filename
       
       // Create temporary anchor element
