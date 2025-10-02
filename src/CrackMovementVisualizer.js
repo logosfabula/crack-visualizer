@@ -2,28 +2,27 @@ import React, { useState, useMemo } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import rawData from './data/crackData.json';
 
+// Floor-specific interpretation configuration
+const FLOOR_INTERPRETATIONS = {
+  pianterreno: {
+    needsInversion: true,  // P0 needs inversion to match P1
+    name: 'Pianterreno',
+    interpretation: 'Inverted'
+  },
+  piano1: {
+    needsInversion: false, // P1 is the standard
+    name: 'Piano 1', 
+    interpretation: 'Standard'
+  },
+  piano2: {
+    needsInversion: true,  // P2 needs inversion to match P1
+    name: 'Piano 2',
+    interpretation: 'Inverted'
+  }
+};
 
 const CrackMovementVisualizer = () => {
   const [hoveredPoint, setHoveredPoint] = useState(null);
-  
-  // Floor-specific interpretation configuration
-  const FLOOR_INTERPRETATIONS = {
-    pianterreno: {
-      needsInversion: true,  // P0 needs inversion to match P1
-      name: 'Pianterreno',
-      interpretation: 'Inverted'
-    },
-    piano1: {
-      needsInversion: false, // P1 is the standard
-      name: 'Piano 1', 
-      interpretation: 'Standard'
-    },
-    piano2: {
-      needsInversion: true,  // P2 needs inversion to match P1
-      name: 'Piano 2',
-      interpretation: 'Inverted'
-    }
-  };
   
 /*   const rawData = [
     { date: '2024-06-01', Pianterreno: null, 'Piano 1': '+0.25;+0.00;+0.25;+0.50', 'Piano 2': null },
@@ -254,7 +253,7 @@ const calculateIntersection = (reading) => {
         });
         
         return normalizedData;
-  }, [FLOOR_INTERPRETATIONS]);
+  }, []);
 
   const [selectedView, setSelectedView] = useState('timeline');
   const [selectedMeter, setSelectedMeter] = useState('all');
