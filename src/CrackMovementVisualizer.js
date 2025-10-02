@@ -1,29 +1,28 @@
 import React, { useState, useMemo } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ScatterChart, Scatter } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import rawData from './data/crackData.json';
 
+// Floor-specific interpretation configuration
+const FLOOR_INTERPRETATIONS = {
+  pianterreno: {
+    needsInversion: true,  // P0 needs inversion to match P1
+    name: 'Pianterreno',
+    interpretation: 'Inverted'
+  },
+  piano1: {
+    needsInversion: false, // P1 is the standard
+    name: 'Piano 1', 
+    interpretation: 'Standard'
+  },
+  piano2: {
+    needsInversion: true,  // P2 needs inversion to match P1
+    name: 'Piano 2',
+    interpretation: 'Inverted'
+  }
+};
 
 const CrackMovementVisualizer = () => {
   const [hoveredPoint, setHoveredPoint] = useState(null);
-  
-  // Floor-specific interpretation configuration
-  const FLOOR_INTERPRETATIONS = {
-    pianterreno: {
-      needsInversion: true,  // P0 needs inversion to match P1
-      name: 'Pianterreno',
-      interpretation: 'Inverted'
-    },
-    piano1: {
-      needsInversion: false, // P1 is the standard
-      name: 'Piano 1', 
-      interpretation: 'Standard'
-    },
-    piano2: {
-      needsInversion: true,  // P2 needs inversion to match P1
-      name: 'Piano 2',
-      interpretation: 'Inverted'
-    }
-  };
   
 /*   const rawData = [
     { date: '2024-06-01', Pianterreno: null, 'Piano 1': '+0.25;+0.00;+0.25;+0.50', 'Piano 2': null },
@@ -1667,7 +1666,7 @@ const calculateIntersection = (reading) => {
               { name: 'Piano 2', dataKeys: ['piano2_x', 'piano2_y'], color: '#ffc658' }
             ];
 
-            let grandTotalDistance = 0;
+            //let grandTotalDistance = 0;
             const meterResults = meters.map(meter => {
               const meterData = processedData
                 .filter(d => d[meter.dataKeys[0]] !== undefined && d[meter.dataKeys[1]] !== undefined)
@@ -1701,7 +1700,7 @@ const calculateIntersection = (reading) => {
                 totalDistance += Math.sqrt(dx * dx + dy * dy);
               }
 
-              grandTotalDistance += totalDistance;
+              //grandTotalDistance += totalDistance; // unused -> warning
 
               const firstDate = meterData[0].date;
               const lastDate = meterData[meterData.length - 1].date;
@@ -1748,8 +1747,8 @@ const calculateIntersection = (reading) => {
                         <div className="font-medium text-gray-700">Normalized Position Change:</div>
                         {(() => {
                           // Get normalized positions for first and last readings
-                          const firstNormX = meterData[0][`${meter.dataKeys[0].replace('_x', '_norm_x')}`] || 0;
-                          const firstNormY = meterData[0][`${meter.dataKeys[1].replace('_y', '_norm_y')}`] || 0;
+                          //const firstNormX = meterData[0][`${meter.dataKeys[0].replace('_x', '_norm_x')}`] || 0; // unused -> warning
+                          //const firstNormY = meterData[0][`${meter.dataKeys[1].replace('_y', '_norm_y')}`] || 0; // unused -> warning
                           const lastNormX = meterData[meterData.length - 1][`${meter.dataKeys[0].replace('_x', '_norm_x')}`];
                           const lastNormY = meterData[meterData.length - 1][`${meter.dataKeys[1].replace('_y', '_norm_y')}`];
                           
