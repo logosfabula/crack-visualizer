@@ -1701,7 +1701,7 @@ const calculateIntersection = (reading) => {
                 totalDistance += Math.sqrt(dx * dx + dy * dy);
               }
 
-              //grandTotalDistance += totalDistance;
+              //grandTotalDistance += totalDistance; // unused -> warning
 
               const firstDate = meterData[0].date;
               const lastDate = meterData[meterData.length - 1].date;
@@ -1748,8 +1748,8 @@ const calculateIntersection = (reading) => {
                         <div className="font-medium text-gray-700">Normalized Position Change:</div>
                         {(() => {
                           // Get normalized positions for first and last readings
-                          const firstNormX = meterData[0][`${meter.dataKeys[0].replace('_x', '_norm_x')}`] || 0;
-                          const firstNormY = meterData[0][`${meter.dataKeys[1].replace('_y', '_norm_y')}`] || 0;
+                          //const firstNormX = meterData[0][`${meter.dataKeys[0].replace('_x', '_norm_x')}`] || 0; // unused -> warning
+                          //const firstNormY = meterData[0][`${meter.dataKeys[1].replace('_y', '_norm_y')}`] || 0; // unused -> warning
                           const lastNormX = meterData[meterData.length - 1][`${meter.dataKeys[0].replace('_x', '_norm_x')}`];
                           const lastNormY = meterData[meterData.length - 1][`${meter.dataKeys[1].replace('_y', '_norm_y')}`];
                           
