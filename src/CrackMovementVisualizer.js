@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ScatterChart, Scatter } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import rawData from './data/crackData.json';
 
 
@@ -254,7 +254,7 @@ const calculateIntersection = (reading) => {
         });
         
         return normalizedData;
-  }, []);
+  }, [FLOOR_INTERPRETATIONS]);
 
   const [selectedView, setSelectedView] = useState('timeline');
   const [selectedMeter, setSelectedMeter] = useState('all');
@@ -1667,7 +1667,7 @@ const calculateIntersection = (reading) => {
               { name: 'Piano 2', dataKeys: ['piano2_x', 'piano2_y'], color: '#ffc658' }
             ];
 
-            let grandTotalDistance = 0;
+            //let grandTotalDistance = 0;
             const meterResults = meters.map(meter => {
               const meterData = processedData
                 .filter(d => d[meter.dataKeys[0]] !== undefined && d[meter.dataKeys[1]] !== undefined)
@@ -1701,7 +1701,7 @@ const calculateIntersection = (reading) => {
                 totalDistance += Math.sqrt(dx * dx + dy * dy);
               }
 
-              grandTotalDistance += totalDistance;
+              //grandTotalDistance += totalDistance;
 
               const firstDate = meterData[0].date;
               const lastDate = meterData[meterData.length - 1].date;
