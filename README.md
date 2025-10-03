@@ -1,231 +1,202 @@
-# Crack Meter Analysis Method
+# Crack Movement Visualizer
+
+A React-based application for visualizing and analyzing crack meter data from structural monitoring systems.
+
+## ⚠️ CRITICAL DISCLAIMERS - READ BEFORE USE
+
+### 🚨 THIS IS NOT A PROFESSIONAL ENGINEERING TOOL
+
+**IMPORTANT**: This software is provided for **INFORMATIONAL and MONITORING purposes ONLY**.
+
+- ❌ **NOT a substitute** for professional structural engineering assessment
+- ❌ **Developer is NOT** a licensed structural engineer or building professional  
+- ❌ **NOT intended** for making structural safety decisions
+- ✅ **IS intended** as a qualitative visualization and tracking tool only
+
+### ⚖️ Liability and Responsibility
+
+**YOU MUST CONSULT LICENSED STRUCTURAL ENGINEERS** for any structural concerns. This software:
+- Provides approximations based on mathematical models
+- May not account for all structural factors
+- Should never be the sole basis for structural decisions
+- Comes with NO warranty for structural safety
+
+**BY USING THIS SOFTWARE, YOU ASSUME ALL RISKS.** The developer assumes NO liability for damages, injuries, or losses resulting from use of this application.
+
+### 👷 When to Seek Professional Help
+
+Immediately consult licensed professionals if you observe:
+- Rapid crack movement (>1mm change)
+- New cracks or expanding existing cracks
+- Building distress signs (stuck doors/windows, sloping floors, bulging walls)
+- ANY concerns about structural safety
+
+---
 
 ## Overview
-This method converts crack meter readings (4 boundary measurements) into precise crack position and orientation data, normalizes them with a floor-specific parameter (orientation), and provides interpretations for structural movement analysis.
 
-## Input Data Format
-Each measurement consists of 4 values: `[up, right, down, left]`
+This application helps monitor and visualize crack meter readings from structural monitoring systems installed on buildings. It converts 4-boundary crack meter measurements into precise position data and tracks movement patterns over time.
 
-**Example**: `[-2, +1, 0, +3]`
+### Features
 
-## Coordinate System & Measurement Mapping
+- 📊 **Timeline Analysis**: Track horizontal and vertical movement over time
+- 🎯 **Movement Patterns**: Visualize crack position changes with trajectory arrows
+- 📏 **Single Reading View**: Detailed visualization of individual measurements
+- 📈 **Normalized Data**: Floor-specific corrections for consistent analysis
+- 📋 **Data Tables**: Complete raw and normalized measurement history
+- 📊 **Statistical Summary**: Movement rates, displacement analysis, and trends
 
-### Grid Layout
-- **Grid center**: (0, 0)
-- **X-axis**: Horizontal (left ← → right movements, determined by "up" and "down" readings)
-- **Y-axis**: Vertical (down ↓ ↑ up movements, determined by "left" and "right" readings)
+## Installation
 
-### How Boundary Measurements Map to Coordinates
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/crack-visualizer.git
+cd crack-visualizer
 
-The crack meter readings `[up, right, down, left]` represent where the red cross intersects the **boundaries** of the measurement grid:
+# Install dependencies
+npm install
 
-**Horizontal Position (X-coordinate)** - Determined by `up` and `down` values:
-- `up`: Where red cross intersects the **top boundary** (horizontal position)
-- `down`: Where red cross intersects the **bottom boundary** (horizontal position)
-- **Positive values** = right of center line
-- **Negative values** = left of center line
+# Start development server
+npm start
 
-**Vertical Position (Y-coordinate)** - Determined by `left` and `right` values:
-- `left`: Where red cross intersects the **left boundary** (vertical position)
-- `right`: Where red cross intersects the **right boundary** (vertical position)  
-- **Positive values** = below center line
-- **Negative values** = above center line
+# Build for production
+npm run build
 
-### Visual Example
-```
-Grid Boundaries:           Measurement Values:
-                          up = -1 (left of center)
-    -2  -1   0  +1  +2    
--2  ┌───●───┼───┬───┐     left = +1 (below center)
--1  ├───┼───┼───┼───┤  ←  
- 0  ├───┼───┼───┼───●     · = crack intersection at (-0.5, +0.5)
-+1  ●───┼─˙─┼───┼───┤  ←  
-+2  └───┴───●───┴───┘     right = 0 (on center)
-                          
-                          down = 0 (on center)
+# Deploy to GitHub Pages
+npm run deploy
 ```
 
-### Key Insight
-- **Up/Down measurements** → **Horizontal (X) position** of red cross intersection (center)
-- **Left/Right measurements** → **Vertical (Y) position** of red cross intersection (center)
+## Usage
 
-This mapping may seem counterintuitive, but it reflects how the crack's orientation determines where the red cross intersects each boundary of the measurement grid.
+### Data Format
 
-## Floor-Specific Movement Interpretations
+The application expects crack meter data in the following format:
 
-The same raw coordinate changes represent different physical movements depending on the floor level due to different meter orientations or installation setups:
-
-### Piano 1 (P1) - Standard Interpretation for this application
-- **Horizontal Movement (X-axis):**
-  - **Negative X** = crack closing (wall segments moving toward each other)
-  - **Positive X** = crack expanding (wall segments separating)
-- **Vertical Movement (Y-axis):**
-  - **Negative Y** = wall sinking (downward movement)
-  - **Positive Y** = wall rising (upward movement)
-
-### Pianterreno (P0) & Piano 2 (P2) - Inverted Interpretation
-- **Horizontal Movement (X-axis):**
-  - **Negative X** = crack expanding (wall segments separating)
-  - **Positive X** = crack closing (wall segments moving toward each other)
-- **Vertical Movement (Y-axis):**
-  - **Negative Y** = wall rising (upward movement)
-  - **Positive Y** = wall sinking (downward movement)
-
-However, all the physical interpretations are standard, because the inverted crack meters data are normalized before being interpreted. 
-
-## Normalization
-
-Normalization consists of two different transformations of the raw readings
-
-### Shifting 
-- **Oldest reading** will be transformed to **(0,0) coordinates**
-- **Difference** between the oldest reading and (0,0) will be applied to **all the same floor's other readings**
-- In case the oldest reading is (0,0), reading's raw data will correspond to normalized data (if no flipping is due)
-
-### Flipping
-- **X and Y values will be flipped**, becoming positive when negative and viceversa, if the floor's crack meter is **marked as inverse**
-- in case the reading's floor is marked as standard, reading's raw data will correspond to normalized data (if no shifting is due)
-
-**If a floor's oldest reading is (0,0) and the floor's crack meter is marked as standard (non-inverse), the floor's normalized readings are the same as the floor's raw readings.**
-
-## Step-by-Step Method
-
-### Step 1: Define Grid Parameters
-```javascript
-const gridWidth = 400;    // pixels
-const gridHeight = 300;   // pixels
-const centerX = 200;      // pixels (grid center X)
-const centerY = 150;      // pixels (grid center Y)
-const scaleX = 20;        // pixels per unit (horizontal)
-const scaleY = 15;        // pixels per unit (vertical)
+```json
+{
+  "date": "2024-06-01",
+  "Pianterreno": "-0.25;+0.75;+0.00;+1.00",
+  "Piano 1": "+0.25;+0.00;+0.25;+0.50",
+  "Piano 2": null
+}
 ```
 
-### Step 2: Convert Measurements to Line Endpoints
+Where each reading is: `[up; right; down; left]` (boundary measurements in mm)
 
-**Vertical Line** (intersects top and bottom boundaries):
-- Top intersection: x = `up` value
-- Bottom intersection: x = `down` value
+### Understanding the Measurements
 
-**Horizontal Line** (intersects left and right boundaries):
-- Left intersection: y = `left` value  
-- Right intersection: y = `right` value
+- **Raw Data**: Direct calculations from crack meter readings
+- **Normalized Data**: Floor-corrected coordinates for consistent analysis across floors
+- **Movement Interpretation**: Based on position changes from first reading
 
-### Step 3: Calculate Pixel Coordinates
+### Floor-Specific Configurations
 
-For measurement `[-2, +1, 0, +3]`:
+The system accounts for different crack meter orientations:
+- **Pianterreno (P0)**: Inverted interpretation
+- **Piano 1 (P1)**: Standard interpretation  
+- **Piano 2 (P2)**: Inverted interpretation
 
-**Vertical Line Points:**
-- Top: (centerX + up×scaleX, 0) = (200 + (-2)×20, 0) = **(160px, 0px)**
-- Bottom: (centerX + down×scaleX, gridHeight) = (200 + 0×20, 300) = **(200px, 300px)**
+## Technology Stack
 
-**Horizontal Line Points:**
-- Left: (0, centerY + left×scaleY) = (0, 150 + 3×15) = **(0px, 195px)**
-- Right: (gridWidth, centerY + right×scaleY) = (400, 150 + 1×15) = **(400px, 165px)**
+- **React** 18.2.0
+- **Recharts** 2.5.0 (for data visualization)
+- **Tailwind CSS** (via CDN for styling)
 
-### Step 4: Calculate Line Equations
+## Project Structure
 
-**Vertical Line**: y = m₁x + b₁
-```javascript
-const m1 = (300 - 0) / (200 - 160) = 300/40 = 7.5
-const b1 = 0 - 7.5 × 160 = -1200
-// Equation: y = 7.5x - 1200
+```
+crack-visualizer/
+├── public/
+├── src/
+│   ├── data/
+│   │   └── crackData.json          # Measurement data
+│   ├── CrackMovementVisualizer.js  # Main component
+│   └── App.js
+├── package.json
+├── LICENSE
+└── README.md
 ```
 
-**Horizontal Line**: y = m₂x + b₂
-```javascript
-const m2 = (165 - 195) / (400 - 0) = -30/400 = -0.075
-const b2 = 195 - (-0.075) × 0 = 195
-// Equation: y = -0.075x + 195
+## Mathematical Method
+
+The application uses the intersection method described in `updated_crack_meter_method.md`:
+
+1. Converts 4 boundary measurements to line endpoints
+2. Calculates line equations for vertical and horizontal components
+3. Finds intersection point (crack position)
+4. Applies floor-specific normalization
+5. Tracks movement relative to first reading
+
+## Accuracy and Limitations
+
+### ⚠️ Approximations and Limitations
+
+This tool uses mathematical approximations and has several limitations:
+
+1. **Measurement Precision**: Crack meters typically have ±0.1mm precision
+2. **Environmental Factors**: Temperature, humidity, and vibration affect readings
+3. **Installation Variations**: Meter orientation and mounting affect interpretation
+4. **Calculation Approximations**: Mathematical models simplify complex structural behavior
+5. **Qualitative Nature**: Best used for trend monitoring, not precise measurements
+
+### Best Practices
+
+- Use as a **supplementary monitoring tool** alongside professional inspection
+- Track **trends over time** rather than individual measurements
+- Verify significant changes with **on-site inspection**
+- Maintain regular **professional structural assessments**
+- Document all readings with **photos and observations**
+
+## Development
+
+```bash
+# Run tests
+npm test
+
+# Lint code
+npm run lint
+
+# Format code
+npm run format
 ```
 
-### Step 5: Find Intersection Point
+## Contributing
 
-Set equations equal: `7.5x - 1200 = -0.075x + 195`
+Contributions are welcome! Please note:
 
-Solve for x:
-```javascript
-7.5x + 0.075x = 195 + 1200
-7.575x = 1395
-x = 184.2 pixels
-```
+1. All contributions must maintain disclaimer notices
+2. Code should not imply professional engineering capabilities
+3. Documentation must emphasize limitations and proper use
 
-Solve for y:
-```javascript
-y = 7.5 × 184.2 - 1200 = 181.2 pixels
-```
+## License
 
-**Intersection Point (pixels)**: (184.2, 181.2)
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-### Step 6: Convert to Grid Coordinates
+**IMPORTANT**: The license includes additional disclaimers regarding structural engineering, liability, and proper use. Please read the entire LICENSE file carefully.
 
-```javascript
-const gridX = (184.2 - 200) / 20 = -0.792
-const gridY = (150 - 181.2) / 15 = -2.079
-```
+## Support and Resources
 
-**Final Result**: **(-0.792, -2.079)** in grid coordinates
+- **Issues**: [GitHub Issues](https://github.com/yourusername/crack-visualizer/issues)
+- **Documentation**: See `updated_crack_meter_method.md` for technical details
+- **Professional Help**: For structural concerns, consult:
+  - Licensed structural engineers
+  - Licensed architects  
+  - Qualified building inspectors
 
-## Implementation Formula
+## Acknowledgments
 
-For any measurement `[up, right, down, left]`:
+This tool was developed for visualization and monitoring purposes to assist in tracking structural movement data collected by crack meter monitoring systems.
 
-1. **Line endpoints**:
-   - Vertical: (centerX + up×scaleX, 0) to (centerX + down×scaleX, gridHeight)
-   - Horizontal: (0, centerY + left×scaleY) to (gridWidth, centerY + right×scaleY)
+---
 
-2. **Intersection calculation**:
-   ```javascript
-   // Slopes
-   m1 = gridHeight / ((down - up) × scaleX)
-   m2 = -(right - left) × scaleY / gridWidth
-   
-   // Y-intercepts
-   b1 = -m1 × (centerX + up × scaleX)
-   b2 = centerY + left × scaleY
-   
-   // Intersection
-   x = (b2 - b1) / (m1 - m2)
-   y = m1 × x + b1
-   
-   // Grid coordinates
-   gridX = (x - centerX) / scaleX
-   gridY = (centerY - y) / scaleY
-   ```
+## Final Reminder
 
-## Floor-Specific Movement Analysis Examples
+**🏗️ THIS IS A VISUALIZATION TOOL, NOT AN ENGINEERING ANALYSIS TOOL**
 
-### Example: Coordinate Change (+0.5, -0.3)
+Always prioritize professional structural engineering assessment for:
+- Building safety decisions
+- Structural repairs or modifications
+- Legal or insurance matters
+- Any situation where structural integrity is a concern
 
-**Piano 1 (P1) Interpretation:**
-- Horizontal: +0.5mm = crack expanding
-- Vertical: -0.3mm = wall sinking
-- **Summary**: "Crack expanding and wall sinking"
-
-**Pianterreno (P0) & Piano 2 (P2) Interpretation:**
-- Horizontal: +0.5mm = crack closing
-- Vertical: -0.3mm = wall rising  
-- **Summary**: "Crack closing and wall rising"
-
-### Movement Significance Thresholds
-- **< 0.1mm**: Minimal movement (measurement precision)
-- **0.1-0.5mm**: Small but detectable movement
-- **0.5-1.0mm**: Moderate movement (monitor closely)
-- **> 1.0mm**: Significant movement (requires attention)
-
-## Output Data
-- **Position**: (gridX, gridY) - crack center location
-- **Floor-specific interpretation**: Physical meaning based on floor level
-- **Movement tracking**: Compare positions over time with proper interpretation
-- **Rate analysis**: Movement velocity and acceleration trends
-
-## Applications
-- **Multi-floor monitoring**: Track crack movement with floor-appropriate interpretations
-- **Structural assessment**: Understand different movement patterns per floor
-- **Alert systems**: Set floor-specific thresholds for critical movements
-- **Comparative analysis**: Compare movement patterns between floors while accounting for interpretation differences
-
-## Important Notes
-- Always specify the floor level correctly when reporting results, as crack meters can have different orientations for each floor
-- Use only normalized interpretation functions in analysis software
-- Coordinate values are mathematically consistent after normalization
-- Movement trends and physical interpretation should only be analyzed within the context of normalized data
+**Your safety depends on proper professional evaluation, not software tools.**
