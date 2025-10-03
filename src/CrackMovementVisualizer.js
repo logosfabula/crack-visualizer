@@ -2007,7 +2007,6 @@ const calculateIntersection = (reading) => {
               }
 
               //grandTotalDistance += totalDistance; // unused -> warning
-
               const firstDate = meterData[0].date;
               const lastDate = meterData[meterData.length - 1].date;
               const firstPosition = `(${meterData[0][meter.dataKeys[0]].toFixed(3)}, ${meterData[0][meter.dataKeys[1]].toFixed(3)})`;
@@ -2150,6 +2149,85 @@ const calculateIntersection = (reading) => {
                         </div>
                       </div>
 
+                      <div>
+  <div className="font-medium text-gray-700">ETA to Displacement Thresholds:</div>
+  <div className="text-xs text-gray-500 mb-1">Based on direct displacement at current average rate (linear projection)</div>
+  {(() => {
+    // Calculate ETAs based on direct displacement and weekly rate
+    const currentDisplacement = directDistance;
+    const rate = weeklyMovement;
+    
+    if (rate < 0.0001) {
+      return <div className="text-sm text-gray-500">Insufficient movement to calculate</div>;
+    }
+    
+    const formatTime = (weeks) => {
+      const totalDays = Math.round(weeks * 7);
+      
+      const years = Math.floor(totalDays / 365);
+      const remainingAfterYears = totalDays % 365;
+      const weeksRemaining = Math.floor(remainingAfterYears / 7);
+      const days = remainingAfterYears % 7;
+      
+      // Build format string
+      const parts = [];
+      if (years > 0) parts.push(`${years}y`);
+      if (weeksRemaining > 0) parts.push(`${weeksRemaining}w`);
+      if (days > 0 || parts.length === 0) parts.push(`${days}d`);
+      
+      return parts.join(' ');
+    };
+    
+    const calculateETA = (threshold) => {
+      if (currentDisplacement >= threshold) {
+        // Already reached - show when it was reached
+        const totalWeeks = threshold / rate;
+        return (
+          <span className="text-green-700">
+            ✓ Reached (after {formatTime(totalWeeks)} from first reading)
+          </span>
+        );
+      }
+      
+      // Not reached yet - show both total and remaining time
+      const totalWeeksToThreshold = threshold / rate;
+      const remainingMM = threshold - currentDisplacement;
+      const remainingWeeks = remainingMM / rate;
+      
+      return (
+        <span>
+          {formatTime(remainingWeeks)} remaining
+          <span className="text-gray-500 text-xs ml-1">
+            ({formatTime(totalWeeksToThreshold)} from first reading)
+          </span>
+        </span>
+      );
+    };
+    
+    return (
+      <div className="text-sm space-y-1">
+        <div className="flex justify-between items-start">
+          <span className="text-gray-600">1mm:</span>
+          <span className="font-mono text-right" style={{ color: meter.color }}>
+            {calculateETA(1)}
+          </span>
+        </div>
+        <div className="flex justify-between items-start">
+          <span className="text-gray-600">2mm:</span>
+          <span className="font-mono text-right" style={{ color: meter.color }}>
+            {calculateETA(2)}
+          </span>
+        </div>
+        <div className="flex justify-between items-start">
+          <span className="text-gray-600">5mm:</span>
+          <span className="font-mono text-right" style={{ color: meter.color }}>
+            {calculateETA(5)}
+          </span>
+        </div>
+      </div>
+    );
+  })()}
+</div>
                       <div>
                         <div className="font-medium text-gray-700">Weekly Rate (Total Path):</div>
                         <div className="text-lg font-semibold" style={{ color: meter.color }}>
