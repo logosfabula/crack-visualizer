@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/crack-visualizer/static/css/main.e416a83c.css",
-    "main.js": "/crack-visualizer/static/js/main.da01ff24.js",
+    "main.js": "/crack-visualizer/static/js/main.c80f3d2c.js",
     "static/js/488.14fae32d.chunk.js": "/crack-visualizer/static/js/488.14fae32d.chunk.js",
     "index.html": "/crack-visualizer/index.html",
     "main.e416a83c.css.map": "/crack-visualizer/static/css/main.e416a83c.css.map",
-    "main.da01ff24.js.map": "/crack-visualizer/static/js/main.da01ff24.js.map",
+    "main.c80f3d2c.js.map": "/crack-visualizer/static/js/main.c80f3d2c.js.map",
     "488.14fae32d.chunk.js.map": "/crack-visualizer/static/js/488.14fae32d.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.e416a83c.css",
-    "static/js/main.da01ff24.js"
+    "static/js/main.c80f3d2c.js"
   ]
 }
