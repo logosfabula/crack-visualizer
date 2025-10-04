@@ -18,6 +18,7 @@ const FLOOR_INTERPRETATIONS = {
     interpretation: 'Standard'
   },
   piano2: {
+    needsInversion: true,  // P2 needs inversion to match P1
     name: 'Piano 2',
     interpretation: 'Inverted'
   }
@@ -1980,8 +1981,8 @@ const calculateIntersection = (reading) => {
                         `(${row.piano1_x.toFixed(3)}, ${row.piano1_y.toFixed(3)})` : '—'}
                     </td>
                     <td className="border border-gray-300 p-2 font-mono bg-slate-100">
-                      {row.pianterreno_norm_x !== undefined ? 
-                        `(${row.pianterreno_norm_x.toFixed(3)}, ${row.pianterreno_norm_y.toFixed(3)})` : '—'}
+                      {row.piano1_norm_x !== undefined ? 
+                        `(${row.piano1_norm_x.toFixed(3)}, ${row.piano1_norm_y.toFixed(3)})` : '—'}
                     </td>
                     <td className="border border-gray-300 p-2 text-xs bg-gray-50">
                       {row.piano1_angle_analysis || '—'}
@@ -1994,8 +1995,8 @@ const calculateIntersection = (reading) => {
                         `(${row.piano2_x.toFixed(3)}, ${row.piano2_y.toFixed(3)})` : '—'}
                     </td>
                     <td className="border border-gray-300 p-2 font-mono bg-slate-100">
-                      {row.pianterreno_norm_x !== undefined ? 
-                        `(${row.pianterreno_norm_x.toFixed(3)}, ${row.pianterreno_norm_y.toFixed(3)})` : '—'}
+                      {row.piano2_norm_x !== undefined ? 
+                        `(${row.piano2_norm_x.toFixed(3)}, ${row.piano2_norm_y.toFixed(3)})` : '—'}
                     </td>
                     <td className="border border-gray-300 p-2 text-xs bg-gray-50">
                       {row.piano2_angle_analysis || '—'}
