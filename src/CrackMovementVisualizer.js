@@ -2486,25 +2486,23 @@ const calculateIntersection = (reading) => {
                         };
                         
                         return (
-                          <div className="space-y-2">
+                          <div className="space-y-1">
                             {topETAs.map((eta, index) => (
                               <div 
                                 key={`${eta.meterName}-${eta.threshold}`}
-                                className="flex items-center justify-between text-sm"
+                                className="flex items-center justify-between text-xs"
                               >
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-1.5">
                                   <div 
-                                    className="w-3 h-3 rounded-full flex-shrink-0"
-                                    style={{ backgroundColor: eta.meterColor }}
+                                    className="w-2 h-2 rounded-full flex-shrink-0 bg-blue-500"
                                   ></div>
-                                  <span className="font-medium" style={{ color: eta.meterColor }}>
+                                  <span className="font-medium text-black-700">
                                     {eta.meterName}
                                   </span>
-                                  <span className="text-gray-600">→ {eta.threshold}mm:</span>
+                                  <span className="text-black-600">→ {eta.threshold}mm:</span>
                                 </div>
                                 <span 
-                                  className="font-mono font-semibold text-right"
-                                  style={{ color: eta.meterColor }}
+                                  className="font-mono font-semibold text-right ml-2 text-black-600"
                                 >
                                   {formatTime(eta.remainingWeeks)}
                                 </span>
@@ -2512,7 +2510,7 @@ const calculateIntersection = (reading) => {
                               
                             ))}
                             {topETAs.length < 5 && (
-                              <div className="text-xs text-blue-600 mt-2">
+                              <div className="text-xs text-blue-600 mt-1">
                                 Showing {topETAs.length} upcoming threshold{topETAs.length !== 1 ? 's' : ''}
                               </div>
                             )}
