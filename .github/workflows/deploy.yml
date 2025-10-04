@@ -25,6 +25,9 @@ jobs:
           
       - name: Install dependencies
         run: npm ci
+      
+      - name: Validate crack images
+        run: node scripts/validate-images.js
         
       - name: Build
         run: npm run build
