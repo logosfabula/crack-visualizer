@@ -1034,52 +1034,52 @@ const calculateIntersection = (reading) => {
                               strokeWidth="3"
                             />
 
-{/* Physical meter boundary readings shown on display edges */}
-{(() => {
-  const [up, right, down, left] = reading.split(';').map(v => parseFloat(v));
-  
-  // Display boundaries
-  const DISPLAY_X_MIN = -1.5;
-  const DISPLAY_X_MAX = 1.5;
-  const DISPLAY_Y_MIN = -1.5;
-  const DISPLAY_Y_MAX = 1.5;
-  
-  const boundaryMarkers = [];
-  
-  // Top edge: show "up" reading (if visible)
-  if (up >= DISPLAY_X_MIN && up <= DISPLAY_X_MAX) {
-    boundaryMarkers.push({ x: up, y: DISPLAY_Y_MIN, label: 'top' });
-  }
-  
-  // Bottom edge: show "down" reading (if visible)
-  if (down >= DISPLAY_X_MIN && down <= DISPLAY_X_MAX) {
-    boundaryMarkers.push({ x: down, y: DISPLAY_Y_MAX, label: 'bottom' });
-  }
-  
-  // Left edge: show "left" reading (if visible)
-  if (left >= DISPLAY_Y_MIN && left <= DISPLAY_Y_MAX) {
-    boundaryMarkers.push({ x: DISPLAY_X_MIN, y: left, label: 'left' });
-  }
-  
-  // Right edge: show "right" reading (if visible)
-  if (right >= DISPLAY_Y_MIN && right <= DISPLAY_Y_MAX) {
-    boundaryMarkers.push({ x: DISPLAY_X_MAX, y: right, label: 'right' });
-  }
-  
-  return boundaryMarkers.map((marker, idx) => (
-    <circle
-      key={`boundary-reading-${idx}`}
-      cx={toSVGX(marker.x)}
-      cy={toSVGY(marker.y)}
-      r="6"
-      fill="none"
-      stroke="#ff6b6b"
-      strokeWidth="2"
-      strokeDasharray="3,3"
-      opacity="0.6"
-    />
-  ));
-})()}
+                            {/* Physical meter boundary readings shown on display edges */}
+                            {(() => {
+                              const [up, right, down, left] = reading.split(';').map(v => parseFloat(v));
+                              
+                              // Display boundaries
+                              const DISPLAY_X_MIN = -1.5;
+                              const DISPLAY_X_MAX = 1.5;
+                              const DISPLAY_Y_MIN = -1.5;
+                              const DISPLAY_Y_MAX = 1.5;
+                              
+                              const boundaryMarkers = [];
+                              
+                              // Top edge: show "up" reading (if visible)
+                              if (up >= DISPLAY_X_MIN && up <= DISPLAY_X_MAX) {
+                                boundaryMarkers.push({ x: up, y: DISPLAY_Y_MIN, label: 'top' });
+                              }
+                              
+                              // Bottom edge: show "down" reading (if visible)
+                              if (down >= DISPLAY_X_MIN && down <= DISPLAY_X_MAX) {
+                                boundaryMarkers.push({ x: down, y: DISPLAY_Y_MAX, label: 'bottom' });
+                              }
+                              
+                              // Left edge: show "left" reading (if visible)
+                              if (left >= DISPLAY_Y_MIN && left <= DISPLAY_Y_MAX) {
+                                boundaryMarkers.push({ x: DISPLAY_X_MIN, y: left, label: 'left' });
+                              }
+                              
+                              // Right edge: show "right" reading (if visible)
+                              if (right >= DISPLAY_Y_MIN && right <= DISPLAY_Y_MAX) {
+                                boundaryMarkers.push({ x: DISPLAY_X_MAX, y: right, label: 'right' });
+                              }
+                              
+                              return boundaryMarkers.map((marker, idx) => (
+                                <circle
+                                  key={`boundary-reading-${idx}`}
+                                  cx={toSVGX(marker.x)}
+                                  cy={toSVGY(marker.y)}
+                                  r="6"
+                                  fill="none"
+                                  stroke="#ff6b6b"
+                                  strokeWidth="2"
+                                  strokeDasharray="3,3"
+                                  opacity="0.6"
+                                />
+                              ));
+                            })()}
 
                             {/* Boundary intersection labels - showing actual reading values */}
                             <text x={toSVGX(up)} y="15" textAnchor="middle" fontSize="12" fill="#dc2626" fontWeight="bold">
