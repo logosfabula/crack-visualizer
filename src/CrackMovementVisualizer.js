@@ -18,6 +18,7 @@ const FLOOR_INTERPRETATIONS = {
     interpretation: 'Standard'
   },
   piano2: {
+    needsInversion: true,  // P2 needs inversion to match P1
     name: 'Piano 2',
     interpretation: 'Inverted'
   }
@@ -25,6 +26,25 @@ const FLOOR_INTERPRETATIONS = {
 
 const CrackMovementVisualizer = () => {
   const [hoveredPoint, setHoveredPoint] = useState(null);
+  
+  // Floor-specific interpretation configuration
+  const FLOOR_INTERPRETATIONS = {
+    pianterreno: {
+      needsInversion: true,  // P0 needs inversion to match P1
+      name: 'Pianterreno',
+      interpretation: 'Inverted'
+    },
+    piano1: {
+      needsInversion: false, // P1 is the standard
+      name: 'Piano 1', 
+      interpretation: 'Standard'
+    },
+    piano2: {
+      needsInversion: true,  // P2 needs inversion to match P1
+      name: 'Piano 2',
+      interpretation: 'Inverted'
+    }
+  };
   
 /*   const rawData = [
     { date: '2024-06-01', Pianterreno: null, 'Piano 1': '+0.25;+0.00;+0.25;+0.50', 'Piano 2': null },
@@ -267,10 +287,12 @@ const calculateIntersection = (reading) => {
 
   // Helper function to construct image filename from meter and date
   const getImageFilename = (meterName, date) => {
+    // Convert meter name to prefix
     const meterPrefix = meterName === 'Pianterreno' ? 'p0' :
                         meterName === 'Piano 1' ? 'p1' :
                         meterName === 'Piano 2' ? 'p2' : 'unknown';
     
+    // Convert date format: "2024-05-02" → "20240502"
     const dateString = date.replace(/-/g, '');
     
     // Use PUBLIC_URL to handle both local and GitHub Pages paths
@@ -281,7 +303,6 @@ const calculateIntersection = (reading) => {
   // Handler to download the crack meter image
     const downloadCrackImage = (meterName, date) => {
       const imagePath = getImageFilename(meterName, date);
-      console.log('Attempting to download from:', imagePath); // ADD THIS LINE
       const filename = imagePath.split('/').pop(); // Extract just the filename
       
       // Create temporary anchor element
@@ -1980,8 +2001,8 @@ const calculateIntersection = (reading) => {
                         `(${row.piano1_x.toFixed(3)}, ${row.piano1_y.toFixed(3)})` : '—'}
                     </td>
                     <td className="border border-gray-300 p-2 font-mono bg-slate-100">
-                      {row.pianterreno_norm_x !== undefined ? 
-                        `(${row.pianterreno_norm_x.toFixed(3)}, ${row.pianterreno_norm_y.toFixed(3)})` : '—'}
+                      {row.piano1_norm_x !== undefined ? 
+                        `(${row.piano1_norm_x.toFixed(3)}, ${row.piano1_norm_y.toFixed(3)})` : '—'}
                     </td>
                     <td className="border border-gray-300 p-2 text-xs bg-gray-50">
                       {row.piano1_angle_analysis || '—'}
@@ -1994,8 +2015,8 @@ const calculateIntersection = (reading) => {
                         `(${row.piano2_x.toFixed(3)}, ${row.piano2_y.toFixed(3)})` : '—'}
                     </td>
                     <td className="border border-gray-300 p-2 font-mono bg-slate-100">
-                      {row.pianterreno_norm_x !== undefined ? 
-                        `(${row.pianterreno_norm_x.toFixed(3)}, ${row.pianterreno_norm_y.toFixed(3)})` : '—'}
+                      {row.piano2_norm_x !== undefined ? 
+                        `(${row.piano2_norm_x.toFixed(3)}, ${row.piano2_norm_y.toFixed(3)})` : '—'}
                     </td>
                     <td className="border border-gray-300 p-2 text-xs bg-gray-50">
                       {row.piano2_angle_analysis || '—'}
