@@ -35,7 +35,7 @@ Immediately consult licensed professionals if you observe:
 
 ## Overview
 
-This application helps monitor and visualize crack meter readings from structural monitoring systems installed on buildings. It converts 4-boundary crack meter measurements into precise position data and tracks movement patterns over time.
+This application helps monitor and visualize crack meter readings from structural monitoring systems installed on buildings. It converts 4-boundary crack meter measurements into precise position data and tracks movement patterns over time. It comes with a sample building and crack-meter readings for three floors over a year.
 
 ### Features
 
@@ -91,7 +91,7 @@ Where each reading is: `[up; right; down; left]` (boundary measurements in mm)
 
 ### Floor-Specific Configurations
 
-The system accounts for different crack meter orientations:
+The system accounts for different crack meter orientations. In this case:
 - **Pianterreno (P0)**: Inverted interpretation
 - **Piano 1 (P1)**: Standard interpretation  
 - **Piano 2 (P2)**: Inverted interpretation
@@ -106,7 +106,7 @@ The system accounts for different crack meter orientations:
 
 ```
 crack-visualizer/
-├── public/
+├── public/crack_images/            # complete actual readings set (pictures)
 ├── src/
 │   ├── data/
 │   │   └── crackData.json          # Measurement data
@@ -114,7 +114,9 @@ crack-visualizer/
 │   └── App.js
 ├── package.json
 ├── LICENSE
+├── METHOD.md
 └── README.md
+
 ```
 
 ## Mathematical Method
@@ -126,6 +128,7 @@ The application uses the intersection method described in `updated_crack_meter_m
 3. Finds intersection point (crack position)
 4. Applies floor-specific normalization
 5. Tracks movement relative to first reading
+6. For more detailed info, read METHOD.md
 
 ## Accuracy and Limitations
 
@@ -133,9 +136,9 @@ The application uses the intersection method described in `updated_crack_meter_m
 
 This tool uses mathematical approximations and has several limitations:
 
-1. **Measurement Precision**: Crack meters typically have ±0.1mm precision
+1. **Measurement Precision**: Crack meters typically have ±0.1mm precision; the measurement grids use 1.0 mm or 0.5 mm graduations; the readings in the sample were taken at 0.25 mm resolution
 2. **Environmental Factors**: Temperature, humidity, and vibration affect readings
-3. **Installation Variations**: Meter orientation and mounting affect interpretation
+3. **Installation Variations**: Meter orientation and mounting affect interpretation - see normalization in Method
 4. **Calculation Approximations**: Mathematical models simplify complex structural behavior
 5. **Qualitative Nature**: Best used for trend monitoring, not precise measurements
 
