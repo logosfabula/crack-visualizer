@@ -2156,7 +2156,7 @@ const calculateIntersection = (reading) => {
                         <div className="text-gray-500">
                           {totalDistance > directDistance ? 
                             `${(totalDistance / directDistance).toFixed(1)}× more than direct path` :
-                            'Direct path movement'
+                            'Equal to direct path movement'
                           }
                         </div>
                       </div>
@@ -2294,30 +2294,26 @@ const calculateIntersection = (reading) => {
                           const lastNormY = meterData[meterData.length - 1][`${meter.dataKeys[1].replace('_y', '_norm_y')}`];
                           
                           // Build descriptive text
-                          let description = "Based on normalized position change data";
-                          
+                          let description = "";
+
                           if (lastNormX === 0 && lastNormY === 0) {
-                            description += ", no structural movement detected.";
+                            description = "Normalized data shows no structural movement.";
                           } else {
-                            description += ", ";
+                            description = "Normalized data shows";
                             
                             // Horizontal movement
                             if (Math.abs(lastNormX) > 0.01) {
-                              description += lastNormX > 0 ? "the crack is expanding" : "the crack is closing";
+                              description += lastNormX > 0 ? " outward horizontal movement" : " inward horizontal movement";
                             }
                             
-                            // Add connector if both movements exist
+                            // Add connector ONLY if both movements exist
                             if (Math.abs(lastNormX) > 0.01 && Math.abs(lastNormY) > 0.01) {
-                              description += " and ";
+                              description += " and";
                             }
                             
                             // Vertical movement
                             if (Math.abs(lastNormY) > 0.01) {
-                              if (lastNormY > 0) {
-                                description += "the wall is rising";
-                              } else {
-                                description += "the wall is sinking";
-                              }
+                              description += lastNormY > 0 ? " upward vertical movement" : " downward vertical movement";
                             }
                             
                             description += ".";
@@ -2522,7 +2518,22 @@ const calculateIntersection = (reading) => {
                   </div>
                   
                   <div className="mt-3 text-xs text-blue-600">
-                    * Analysis based on direct displacement over monitoring period
+                    {(() => {
+                      // Get all dates from active meters
+                      const allDates = processedData
+                        .filter(d => d.pianterreno_x !== undefined || d.piano1_x !== undefined || d.piano2_x !== undefined)
+                        .map(d => d.date)
+                        .sort();
+                      
+                      if (allDates.length === 0) {
+                        return "* Analysis based on displacement over monitoring period";
+                      }
+                      
+                      const oldestDate = allDates[0];
+                      const latestDate = allDates[allDates.length - 1];
+                      
+                      return `* Analysis based on displacement over monitoring period ${oldestDate} → ${latestDate}`;
+                    })()}
                   </div>
                 </div>
               </>
@@ -2530,18 +2541,18 @@ const calculateIntersection = (reading) => {
           })()}
         </div>
         
-        <p className="text-xs text-gray-600 mt-4">
-          * Distances calculated using intersection method from boundary measurements [up, right, down, left]<br/>
-          * Total path distance includes all intermediate movements, not just start-to-end displacement<br/>
-          * All measurements in millimeters based on crack meter grid scale<br/>
-          <br/>
-          <strong>Structural Movement Interpretation (Normalized Data):</strong><br/>
-          • <strong>All floors use consistent interpretation after normalization:</strong><br/>
-          • <strong>Horizontal movement:</strong> Left (−X) = crack closing, Right (+X) = crack expanding<br/>
-          • <strong>Vertical movement:</strong> Up (−Y) = wall sinking, Down (+Y) = wall rising<br/>
-          • <strong>Direct displacement</strong> shows net structural change from start to end position<br/>
-          • P0 and P2 raw readings are inverted during normalization to match P1's standard interpretation
-        </p>
+<p className="text-xs text-gray-600 mt-4">
+  Distances calculated using intersection method from boundary measurements [up, right, down, left] (<a href={`${process.env.PUBLIC_URL}/METHOD.md`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 underline italic">see Method</a>)<br/>
+  * Total path distance includes all intermediate movements, not just start-to-end displacement<br/>
+  * All measurements in millimeters based on crack meter grid scale<br/>
+  <br/>
+  <strong>Structural Movement Interpretation (Normalized Data):</strong><br/>
+  • <strong>All floors use consistent interpretation after normalization</strong> (<a href={`${process.env.PUBLIC_URL}/METHOD.md`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 underline italic">see Method</a>)<strong>:</strong><br/>
+  • <strong>Horizontal movement:</strong> Left (−X) = crack closing, Right (+X) = crack expanding<br/>
+  • <strong>Vertical movement:</strong> Up (−Y) = wall sinking, Down (+Y) = wall rising<br/>
+  • <strong>Direct displacement</strong> shows net structural change from start to end position<br/>
+  • P0 and P2 raw readings are inverted during normalization to match P1's crack meter orientation
+</p>
       </div>
     </div>
   );
