@@ -86,7 +86,7 @@ Normalization consists of two different transformations of the raw readings
 - **X and Y values will be flipped**, becoming positive when negative and viceversa, if the floor's crack meter is **marked as inverse**
 - in case the reading's floor is marked as standard, reading's raw data will correspond to normalized data (if no shifting is due)
 
-**If a floor's oldest reading is (0,0) and the floor's crack meter is marked as standard (non-inverse), the floor's normalized readings are the same as the floor's raw readings.**
+**If a floor's oldest reading is (0,0) and the floor's crack meter is marked as standard (non-inverse), the floor's normalized readings are the same as the floor's raw readings. Installing crack-meters to comply to both (so as to avoid translation and reflection of the grid) is advised, but not mandatory, for the software applies normalization to your convenience.**
 
 ## Step-by-Step Method
 
