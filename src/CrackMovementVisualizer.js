@@ -2559,7 +2559,7 @@ const calculateIntersection = (reading) => {
           <div className="flex flex-wrap items-center justify-center gap-4 text-sm">
             
             {/* FIRST LINK - README */}
-            <a href="https://github.com/logosfabula/crack-visualizer/blob/main/README.md" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-blue-600 hover:text-blue-800 hover:underline transition-colors">
+            <a href={`${process.env.PUBLIC_URL}/README.md`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-blue-600 hover:text-blue-800 hover:underline transition-colors">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                 <polyline points="14 2 14 8 20 8"/>
@@ -2570,7 +2570,7 @@ const calculateIntersection = (reading) => {
             <span className="text-gray-400">|</span>
             
             {/* SECOND LINK - METHOD */}
-            <a href="https://github.com/logosfabula/crack-visualizer/blob/main/METHOD.md" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-blue-600 hover:text-blue-800 hover:underline transition-colors">
+            <a href={`${process.env.PUBLIC_URL}/METHOD.md`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-blue-600 hover:text-blue-800 hover:underline transition-colors">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
                 <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
@@ -2581,7 +2581,7 @@ const calculateIntersection = (reading) => {
             <span className="text-gray-400">|</span>
             
             {/* THIRD LINK - LICENSE */}
-            <a href="https://github.com/logosfabula/crack-visualizer/blob/main/LICENSE.md" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-blue-600 hover:text-blue-800 hover:underline transition-colors">
+            <a href={`${process.env.PUBLIC_URL}/LICENSE.md`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-blue-600 hover:text-blue-800 hover:underline transition-colors">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
                 <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
