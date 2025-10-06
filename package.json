@@ -24,7 +24,8 @@
     "build:ci": "CI=true npm run build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "copy-method": "copyfiles METHOD.md public",
+    "copy-docs": "copyfiles METHOD.md LICENSE.md README.md public",
+    "prebuild": "npm run copy-docs",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build -t"
   },
