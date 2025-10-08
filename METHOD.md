@@ -382,7 +382,7 @@ The system generates two types of coordinate data for each measurement:
 ⚠️ **Coordinate system convention**:
 - Display coordinates: +Y points DOWN (standard computer graphics)
 - Physical interpretation: +Y means wall RISING (inverted from display)
-- It can be initially confusing
+- It can be initially confusing as it doesn't follow classic Carthesian direction
 
 ### Data Quality Considerations
 
