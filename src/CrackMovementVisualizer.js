@@ -5,6 +5,410 @@ import JSZip from 'jszip';
 import yaml from 'js-yaml';
 import * as XLSX from 'xlsx';
 
+// Physical crack meter boundaries (in millimeters)
+const METER_BOUNDARIES = {
+  X_MIN: -20,
+  X_MAX: 20,
+  Y_MIN: -10,
+  Y_MAX: 10
+};
+
+// Display range for SVG visualization
+const DISPLAY_RANGE = {
+  X_MIN: -1.5,
+  X_MAX: 1.5,
+  Y_MIN: -1.5,
+  Y_MAX: 1.5
+};
+
+// SVG coordinate conversion functions
+const toSVGX = (x_mm) => 400 + x_mm * 266.67;
+const toSVGY = (y_mm) => 300 + y_mm * 200;
+
+// Meter configurations
+const METER_CONFIGS = {
+  pianterreno: { 
+    name: 'Pianterreno',
+    displayName: 'Pianterreno',
+    color: '#8884d8',
+    rawDataKeys: ['pianterreno_x', 'pianterreno_y'],
+    normDataKeys: ['pianterreno_norm_x', 'pianterreno_norm_y']
+  },
+  piano1: { 
+    name: 'Piano 1',
+    displayName: 'Piano 1',
+    color: '#82ca9d',
+    rawDataKeys: ['piano1_x', 'piano1_y'],
+    normDataKeys: ['piano1_norm_x', 'piano1_norm_y']
+  },
+  piano2: { 
+    name: 'Piano 2',
+    displayName: 'Piano 2',
+    color: '#ffc658',
+    rawDataKeys: ['piano2_x', 'piano2_y'],
+    normDataKeys: ['piano2_norm_x', 'piano2_norm_y']
+  }
+};
+
+const SVGGrid = ({ children, onPointClick, hoveredPoint, setHoveredPoint }) => {
+  return (
+    <svg width="100%" height="600" viewBox="0 0 800 600">
+      {/* Grid pattern with fine and coarse lines */}
+      <defs>
+        <pattern id="fineGrid" width="66.67" height="50" patternUnits="userSpaceOnUse">
+          <path d="M 66.67 0 L 0 0 0 50" fill="none" stroke="#f3f4f6" strokeWidth="1.5"/>
+        </pattern>
+        <pattern id="coarseGrid" width="133.33" height="100" patternUnits="userSpaceOnUse">
+          <path d="M 133.33 0 L 0 0 0 100" fill="none" stroke="#e5e7eb" strokeWidth="2"/>
+        </pattern>
+      </defs>
+      <rect width="800" height="600" fill="url(#fineGrid)"/>
+      <rect width="800" height="600" fill="url(#coarseGrid)"/>
+      
+      {/* Center lines */}
+      <line x1="400" y1="0" x2="400" y2="600" stroke="#d1d5db" strokeWidth="2"/>
+      <line x1="0" y1="300" x2="800" y2="300" stroke="#d1d5db" strokeWidth="2"/>
+      
+      {/* Axis labels */}
+      <text x="750" y="320" textAnchor="end" fontSize="12" fill="#6b7280">+X</text>
+      <text x="50" y="320" textAnchor="start" fontSize="12" fill="#6b7280">-X</text>
+      <text x="410" y="30" textAnchor="start" fontSize="12" fill="#6b7280">-Y</text>
+      <text x="410" y="580" textAnchor="start" fontSize="12" fill="#6b7280">+Y</text>
+      
+      {/* Scale markers */}
+      <g stroke="#9ca3af" strokeWidth="1" fontSize="12" fill="#6b7280">
+        {/* Horizontal markers */}
+        {[-1.5, -1, -0.5, 0.5, 1, 1.5].map(val => (
+          <g key={`h-marker-${val}`}>
+            <line x1={toSVGX(val)} y1="295" x2={toSVGX(val)} y2="305"/>
+            <text x={toSVGX(val)} y="325" textAnchor="middle">
+              {val > 0 ? '+' : ''}{val}
+            </text>
+          </g>
+        ))}
+        
+        {/* Vertical markers */}
+        {[-1.5, -1, -0.5, 0.5, 1, 1.5].map(val => (
+          <g key={`v-marker-${val}`}>
+            <line x1="390" y1={toSVGY(val)} x2="410" y2={toSVGY(val)}/>
+            <text x="420" y={toSVGY(val) + 8} textAnchor="start">
+              {val > 0 ? '+' : ''}{val}
+            </text>
+          </g>
+        ))}
+      </g>
+      
+      {children}
+    </svg>
+  );
+};
+
+// Add this after SVGGrid component definition
+const MovementPatternRenderer = ({ 
+  processedData, 
+  selectedMeter, 
+  useNormalized = false,
+  onPointClick,
+  hoveredPoint,
+  setHoveredPoint
+}) => {
+  // Determine which data keys to use based on useNormalized prop
+  const meterConfigs = [
+    { 
+      name: 'pianterreno',
+      displayName: 'Pianterreno',
+      color: '#8884d8', 
+      dataKey: useNormalized 
+        ? ['pianterreno_norm_x', 'pianterreno_norm_y']
+        : ['pianterreno_x', 'pianterreno_y'],
+      normDataKey: ['pianterreno_norm_x', 'pianterreno_norm_y'], // Always have norm keys
+      rawReadingKey: 'rawPianterreno',
+      show: selectedMeter === 'all' || selectedMeter === 'pianterreno'
+    },
+    { 
+      name: 'piano1',
+      displayName: 'Piano 1',
+      color: '#82ca9d', 
+      dataKey: useNormalized 
+        ? ['piano1_norm_x', 'piano1_norm_y']
+        : ['piano1_x', 'piano1_y'],
+      normDataKey: ['piano1_norm_x', 'piano1_norm_y'], // Always have norm keys
+      rawReadingKey: 'rawPiano1',
+      show: selectedMeter === 'all' || selectedMeter === 'piano1'
+    },
+    { 
+      name: 'piano2',
+      displayName: 'Piano 2',
+      color: '#ffc658', 
+      dataKey: useNormalized 
+        ? ['piano2_norm_x', 'piano2_norm_y']
+        : ['piano2_x', 'piano2_y'],
+      normDataKey: ['piano2_norm_x', 'piano2_norm_y'], // Always have norm keys
+      rawReadingKey: 'rawPiano2',
+      show: selectedMeter === 'all' || selectedMeter === 'piano2'
+    }
+  ];
+  
+  return (
+    <>
+      {meterConfigs.map(config => {
+        if (!config.show) return null;
+        
+        // Filter and sort data for this meter
+        const meterData = processedData
+          .filter(d => d[config.dataKey[0]] !== undefined && d[config.dataKey[1]] !== undefined)
+          .sort((a, b) => new Date(a.date) - new Date(b.date))
+          .map((d, index, array) => ({
+            ...d,
+            x: d[config.dataKey[0]],
+            y: d[config.dataKey[1]],
+            normX: d[config.normDataKey[0]], // Always include normalized
+            normY: d[config.normDataKey[1]], // Always include normalized
+            opacity: (index + 1) / array.length,
+            index: index,
+            rawReading: d[config.rawReadingKey],
+            isFirst: index === 0
+          }));
+        
+        if (meterData.length === 0) return null;
+        
+        // Get first reading date for days calculation
+        const firstDate = new Date(meterData[0].date);
+        
+        // Arrow marker ID unique for normalized vs raw
+        const markerId = `arrowhead-${useNormalized ? 'norm-' : ''}${config.name}`;
+        
+        return (
+          <g key={config.name}>
+            {/* Draw connecting lines - UNCHANGED */}
+            {meterData.slice(1).map((point, i) => {
+              const prevPoint = meterData[i];
+              const x1 = toSVGX(prevPoint.x);
+              const y1 = toSVGY(prevPoint.y);
+              const x2 = toSVGX(point.x);
+              const y2 = toSVGY(point.y);
+              
+              const date1 = new Date(prevPoint.date);
+              const date2 = new Date(point.date);
+              const daysDiff = Math.round((date2 - date1) / (1000 * 60 * 60 * 24));
+              
+              const lineOpacity = point.opacity * 0.8;
+              const midX = (x1 + x2) / 2;
+              const midY = (y1 + y2) / 2;
+              
+              return (
+                <g key={`${config.name}-line-${i}`}>
+                  <line 
+                    x1={x1} y1={y1} 
+                    x2={x2} y2={y2}
+                    stroke={config.color}
+                    strokeOpacity={lineOpacity}
+                    strokeWidth="2"
+                    markerEnd={`url(#${markerId})`}
+                  />
+                  <rect
+                    x={midX - 12}
+                    y={midY - 8}
+                    width="24"
+                    height="16"
+                    fill="white"
+                    stroke={config.color}
+                    strokeOpacity={lineOpacity}
+                    strokeWidth="1"
+                    rx="2"
+                  />
+                  <text
+                    x={midX}
+                    y={midY + 3}
+                    textAnchor="middle"
+                    fontSize="10"
+                    fill={config.color}
+                    fillOpacity={lineOpacity}
+                  >
+                    {daysDiff}d
+                  </text>
+                </g>
+              );
+            })}
+            
+            {/* Draw points with ENHANCED hover */}
+            {meterData.map((point, i) => {
+              const currentDate = new Date(point.date);
+              const daysSinceFirst = Math.round((currentDate - firstDate) / (1000 * 60 * 60 * 24));
+              
+              return (
+                <g key={`${config.name}-point-${i}`}>
+                  <circle
+                    cx={toSVGX(point.x)}
+                    cy={toSVGY(point.y)}
+                    r="8"
+                    fill={config.color}
+                    fillOpacity={point.opacity}
+                    stroke="white"
+                    strokeWidth="2"
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => onPointClick({
+                      date: point.date,
+                      meter: config.displayName,
+                      reading: point.rawReading
+                    })}
+                    onMouseEnter={(e) => {
+                      const svgPoint = e.target.ownerSVGElement.createSVGPoint();
+                      svgPoint.x = e.clientX;
+                      svgPoint.y = e.clientY;
+                      const svgCoords = svgPoint.matrixTransform(
+                        e.target.ownerSVGElement.getScreenCTM().inverse()
+                      );
+                      
+                      setHoveredPoint({
+                        svgX: svgCoords.x,
+                        svgY: svgCoords.y,
+                        meter: config.displayName,
+                        color: config.color,
+                        date: point.date,
+                        daysSinceFirst: daysSinceFirst,
+                        normX: point.normX,
+                        normY: point.normY,
+                        isFirst: point.isFirst
+                      });
+                    }}
+                    onMouseLeave={() => setHoveredPoint(null)}
+                  />
+                  <text
+                    x={toSVGX(point.x)}
+                    y={toSVGY(point.y) - 15}
+                    textAnchor="middle"
+                    fontSize="9"
+                    fill={config.color}
+                    fillOpacity={point.opacity}
+                    fontWeight="500"
+                    style={{ pointerEvents: 'none' }}
+                  >
+                    {point.date.substring(5)}
+                  </text>
+                  
+                  {useNormalized && i === 0 && (
+                    <circle
+                      cx={toSVGX(point.x)}
+                      cy={toSVGY(point.y)}
+                      r="12"
+                      fill="none"
+                      stroke={config.color}
+                      strokeWidth="2"
+                      strokeDasharray="4,2"
+                      opacity="0.6"
+                    />
+                  )}
+                </g>
+              );
+            })}
+            
+            <defs>
+              <marker
+                id={markerId}
+                markerWidth="10"
+                markerHeight="7"
+                refX="9"
+                refY="3.5"
+                orient="auto"
+              >
+                <polygon
+                  points="0 0, 10 3.5, 0 7"
+                  fill={config.color}
+                  fillOpacity="0.8"
+                />
+              </marker>
+            </defs>
+          </g>
+        );
+      })}
+      
+      {/* TOOLTIP DISPLAY */}
+      {hoveredPoint && !hoveredPoint.isFirst && (
+        <g transform={`translate(${hoveredPoint.svgX}, ${hoveredPoint.svgY - 80})`}>
+          {/* Tooltip background */}
+          <rect 
+            x="-95" y="-40" 
+            width="190" height="75" 
+            fill="white" 
+            stroke={hoveredPoint.color}
+            strokeWidth="2" 
+            rx="4"
+            filter="drop-shadow(0 2px 4px rgba(0,0,0,0.2))"
+          />
+          
+          {/* Meter name and date */}
+          <text x="0" y="-20" textAnchor="middle" fontSize="11" fontWeight="bold" fill={hoveredPoint.color}>
+            {hoveredPoint.meter} - {hoveredPoint.date}
+          </text>
+          
+          {/* Days since first */}
+          <text x="0" y="-5" textAnchor="middle" fontSize="10" fill="#666">
+            Day {hoveredPoint.daysSinceFirst} from first reading
+          </text>
+          
+          {/* Normalized difference */}
+          <text x="0" y="8" textAnchor="middle" fontSize="10" fill="#333">
+            Δ Position: ({hoveredPoint.normX.toFixed(3)}, {hoveredPoint.normY.toFixed(3)}) mm
+          </text>
+          
+          {/* Interpretation */}
+          <text x="0" y="22" textAnchor="middle" fontSize="9" fontWeight="bold" fill="#000">
+            {(() => {
+              const x = hoveredPoint.normX;
+              const y = hoveredPoint.normY;
+              
+              if (Math.abs(x) < 0.01 && Math.abs(y) < 0.01) return 'No significant movement';
+              
+              let interpretation = '';
+              if (Math.abs(x) >= 0.01) {
+                interpretation += x > 0 ? 'Expanding' : 'Closing';
+              }
+              if (Math.abs(x) >= 0.01 && Math.abs(y) >= 0.01) {
+                interpretation += ' & ';
+              }
+              if (Math.abs(y) >= 0.01) {
+                interpretation += y > 0 ? 'Rising' : 'Sinking';
+              }
+              
+              return interpretation;
+            })()}
+          </text>
+          
+          {/* Note about normalized data */}
+          <text x="0" y="32" textAnchor="middle" fontSize="8" fill="#888" fontStyle="italic">
+            *Normalized data (unified across floors)
+          </text>
+        </g>
+      )}
+      
+      {/* Special tooltip for first reading */}
+      {hoveredPoint && hoveredPoint.isFirst && (
+        <g transform={`translate(${hoveredPoint.svgX}, ${hoveredPoint.svgY - 50})`}>
+          <rect 
+            x="-70" y="-25" 
+            width="140" height="40" 
+            fill="white" 
+            stroke={hoveredPoint.color}
+            strokeWidth="2" 
+            rx="4"
+            filter="drop-shadow(0 2px 4px rgba(0,0,0,0.2))"
+          />
+          <text x="0" y="-8" textAnchor="middle" fontSize="11" fontWeight="bold" fill={hoveredPoint.color}>
+            {hoveredPoint.meter}
+          </text>
+          <text x="0" y="5" textAnchor="middle" fontSize="10" fill="#666">
+            First Reading (Origin)
+          </text>
+          <text x="0" y="16" textAnchor="middle" fontSize="9" fill="#888">
+            {hoveredPoint.date}
+          </text>
+        </g>
+      )}
+    </>
+  );
+};
+
 // Floor-specific interpretation configuration
 const FLOOR_INTERPRETATIONS = {
   pianterreno: {
@@ -26,6 +430,19 @@ const FLOOR_INTERPRETATIONS = {
 
 const CrackMovementVisualizer = () => {
   const [hoveredPoint, setHoveredPoint] = useState(null);
+
+    // ADD THESE LINES ↓↓↓
+    // Handler for clicking points in movement views
+    const handleMovementPointClick = (pointData) => {
+      const readingValue = JSON.stringify({
+        date: pointData.date,
+        meter: pointData.meter,
+        reading: pointData.reading
+      });
+      setSelectedReading(readingValue);
+      setSelectedView('single');
+    };
+    // ADD THESE LINES ↑↑↑
   
 /*   const rawData = [
     { date: '2024-06-01', Pianterreno: null, 'Piano 1': '+0.25;+0.00;+0.25;+0.50', 'Piano 2': null },
@@ -46,16 +463,29 @@ const calculateQuadrantAngles = (reading) => {
   const [up, right, down, left] = reading.split(';').map(v => parseFloat(v));
   
   // Physical crack meter boundaries (in millimeters)
-  const METER_Y_MIN = -10;  // Top boundary
+/*   const METER_Y_MIN = -10;  // Top boundary
   const METER_Y_MAX = 10;   // Bottom boundary
   const METER_X_MIN = -20;  // Left boundary
-  const METER_X_MAX = 20;   // Right boundary
+  const METER_X_MAX = 20;   // Right boundary */
+  const { X_MIN: METER_X_MIN, X_MAX: METER_X_MAX, 
+        Y_MIN: METER_Y_MIN, Y_MAX: METER_Y_MAX } = METER_BOUNDARIES;
   
   // Line endpoints in physical coordinates (mm)
   const topPoint = { x: up, y: METER_Y_MIN };
   const bottomPoint = { x: down, y: METER_Y_MAX };
   const leftPoint = { x: METER_X_MIN, y: left };
   const rightPoint = { x: METER_X_MAX, y: right };
+
+  // Add this after your state declarations (around line 25)
+  const handleMovementPointClick = (pointData) => {
+    const readingValue = JSON.stringify({
+      date: pointData.date,
+      meter: pointData.meter,
+      reading: pointData.reading
+    });
+    setSelectedReading(readingValue);
+    setSelectedView('single');
+  };
   
   // Calculate angles of both lines
   let verticalLineAngle, horizontalLineAngle;
@@ -118,10 +548,12 @@ const calculateIntersection = (reading) => {
   const [up, right, down, left] = reading.split(';').map(v => parseFloat(v));
   
   // Physical crack meter boundaries (in millimeters)
-  const METER_X_MIN = -20;  // Left boundary
+/*   const METER_X_MIN = -20;  // Left boundary
   const METER_X_MAX = 20;   // Right boundary
   const METER_Y_MIN = -10;  // Top boundary
-  const METER_Y_MAX = 10;   // Bottom boundary
+  const METER_Y_MAX = 10;   // Bottom boundary */
+  const { X_MIN: METER_X_MIN, X_MAX: METER_X_MAX, 
+        Y_MIN: METER_Y_MIN, Y_MAX: METER_Y_MAX } = METER_BOUNDARIES;
   
   // Line endpoints in physical coordinates (mm)
   // Vertical line: connects top and bottom boundaries
@@ -879,10 +1311,12 @@ const calculateIntersection = (reading) => {
                         const [up, right, down, left] = reading.split(';').map(v => parseFloat(v));
                         
                         // Physical crack meter boundaries (in millimeters)
-                        const METER_Y_MIN = -10;
+                        /* const METER_Y_MIN = -10;
                         const METER_Y_MAX = 10;
                         const METER_X_MIN = -20;
-                        const METER_X_MAX = 20;
+                        const METER_X_MAX = 20; */
+                        const { X_MIN: METER_X_MIN, X_MAX: METER_X_MAX, 
+                                Y_MIN: METER_Y_MIN, Y_MAX: METER_Y_MAX } = METER_BOUNDARIES;
                         
                         // Line endpoints in physical coordinates (mm)
                         const topPoint = { x: up, y: METER_Y_MIN };
@@ -1025,7 +1459,7 @@ const calculateIntersection = (reading) => {
                               </g>
                             )}
                             
-                            {/* Intersection point (absolute) */}
+                            {/* Intersection point (absolute) with hover */}
                             <circle 
                               cx={intersectionX_svg} 
                               cy={intersectionY_svg} 
@@ -1033,7 +1467,93 @@ const calculateIntersection = (reading) => {
                               fill={meterColor} 
                               stroke="white" 
                               strokeWidth="3"
+                              style={{ cursor: 'pointer' }}
+                              onMouseEnter={() => {
+                                // Calculate days since first reading for this meter
+                                const meterKey = meterName === 'Pianterreno' ? 'pianterreno' : 
+                                                meterName === 'Piano 1' ? 'piano1' : 'piano2';
+                                const firstReading = processedData
+                                  .filter(d => d[`${meterKey}_x`] !== undefined)
+                                  .sort((a, b) => new Date(a.date) - new Date(b.date))[0];
+                                
+                                const daysSinceFirst = firstReading ? 
+                                  Math.round((new Date(date) - new Date(firstReading.date)) / (1000 * 60 * 60 * 24)) : 0;
+                                
+                                setHoveredPoint({
+                                  show: true,
+                                  meter: meterName,
+                                  color: meterColor,
+                                  date: date,
+                                  daysSinceFirst: daysSinceFirst,
+                                  rawX: intersection.x,
+                                  rawY: intersection.y,
+                                  normX: normalizedIntersection?.x || 0,
+                                  normY: normalizedIntersection?.y || 0,
+                                  reading: reading,
+                                  angleAnalysis: angleAnalysis
+                                });
+                              }}
+                              onMouseLeave={() => setHoveredPoint(null)}
                             />
+
+                            {/* Tooltip for intersection point */}
+                            {hoveredPoint && hoveredPoint.show && (
+                              <g transform={`translate(${intersectionX_svg}, ${intersectionY_svg - 90})`}>
+                                {/* Tooltip background */}
+                                <rect 
+                                  x="-110" y="-45" 
+                                  width="220" height="85" 
+                                  fill="white" 
+                                  stroke={meterColor}
+                                  strokeWidth="2" 
+                                  rx="4"
+                                  filter="drop-shadow(0 2px 4px rgba(0,0,0,0.2))"
+                                />
+                                
+                                {/* Header */}
+                                <text x="0" y="-25" textAnchor="middle" fontSize="11" fontWeight="bold" fill={meterColor}>
+                                  {meterName} - {date}
+                                </text>
+                                
+                                {/* Days since first */}
+                                <text x="0" y="-10" textAnchor="middle" fontSize="10" fill="#666">
+                                  Day {hoveredPoint.daysSinceFirst} from first reading
+                                </text>
+                                
+                                {/* Raw position */}
+                                <text x="0" y="3" textAnchor="middle" fontSize="9" fill="#888">
+                                  Raw: ({hoveredPoint.rawX.toFixed(3)}, {hoveredPoint.rawY.toFixed(3)}) mm
+                                </text>
+                                
+                                {/* Normalized position */}
+                                <text x="0" y="16" textAnchor="middle" fontSize="10" fill="#333">
+                                  Normalized: ({hoveredPoint.normX.toFixed(3)}, {hoveredPoint.normY.toFixed(3)}) mm
+                                </text>
+                                
+                                {/* Interpretation */}
+                                <text x="0" y="30" textAnchor="middle" fontSize="9" fontWeight="bold" fill="#000">
+                                  {(() => {
+                                    const x = hoveredPoint.normX;
+                                    const y = hoveredPoint.normY;
+                                    
+                                    if (Math.abs(x) < 0.01 && Math.abs(y) < 0.01) return 'No significant movement';
+                                    
+                                    let interpretation = '';
+                                    if (Math.abs(x) >= 0.01) {
+                                      interpretation += x > 0 ? 'Expanding' : 'Closing';
+                                    }
+                                    if (Math.abs(x) >= 0.01 && Math.abs(y) >= 0.01) {
+                                      interpretation += ' & ';
+                                    }
+                                    if (Math.abs(y) >= 0.01) {
+                                      interpretation += y > 0 ? 'Rising' : 'Sinking';
+                                    }
+                                    
+                                    return interpretation;
+                                  })()}
+                                </text>
+                              </g>
+                            )}
 
                             {/* Physical meter boundary readings shown on display edges */}
                             {(() => {
@@ -1248,248 +1768,16 @@ const calculateIntersection = (reading) => {
           </div>
           
           <div style={{ width: '100%', height: '600px', position: 'relative' }}>
-            <svg width="100%" height="600" viewBox="0 0 800 600">
-            {/* Grid pattern with fine and coarse lines */}
-              <defs>
-                {/* Fine grid at 0.25mm intervals (lighter) */}
-                <pattern id="fineGrid" width="66.67" height="50" patternUnits="userSpaceOnUse">
-                  <path d="M 66.67 0 L 0 0 0 50" fill="none" stroke="#f3f4f6" strokeWidth="1.5"/>
-                </pattern>
-                {/* Coarse grid at 0.5mm intervals (darker) */}
-                <pattern id="coarseGrid" width="133.33" height="100" patternUnits="userSpaceOnUse">
-                  <path d="M 133.33 0 L 0 0 0 100" fill="none" stroke="#e5e7eb" strokeWidth="2"/>
-                </pattern>
-              </defs>
-              {/* Draw fine grid first, then coarse on top */}
-              <rect width="800" height="600" fill="url(#fineGrid)"/>
-              <rect width="800" height="600" fill="url(#coarseGrid)"/>
-              
-              {/* Center lines */}
-              <line x1="400" y1="0" x2="400" y2="600" stroke="#d1d5db" strokeWidth="2"/>
-              <line x1="0" y1="300" x2="800" y2="300" stroke="#d1d5db" strokeWidth="2"/>
-              
-              {/* Axis labels */}
-              <text x="750" y="320" textAnchor="end" fontSize="12" fill="#6b7280">+X</text>
-              <text x="50" y="320" textAnchor="start" fontSize="12" fill="#6b7280">-X</text>
-              <text x="410" y="30" textAnchor="start" fontSize="12" fill="#6b7280">-Y</text>
-              <text x="410" y="580" textAnchor="start" fontSize="12" fill="#6b7280">+Y</text>
-              
-              {/* Scale markers */}
-              <g stroke="#9ca3af" strokeWidth="1" fontSize="12" fill="#6b7280">
-                {/* Horizontal markers */}
-                <line x1="0" y1="295" x2="0" y2="305"/>
-                <text x="0" y="325" textAnchor="middle">-1.5</text>
-                <line x1="133.33" y1="295" x2="133.33" y2="305"/>
-                <text x="133.33" y="325" textAnchor="middle">-1</text>
-                <line x1="266.67" y1="295" x2="266.67" y2="305"/>
-                <text x="266.67" y="325" textAnchor="middle">-0.5</text>
-                <line x1="533.33" y1="295" x2="533.33" y2="305"/>
-                <text x="533.33" y="325" textAnchor="middle">+0.5</text>
-                <line x1="666.67" y1="295" x2="666.67" y2="305"/>
-                <text x="666.67" y="325" textAnchor="middle">+1</text>
-                <line x1="800" y1="295" x2="800" y2="305"/>
-                <text x="800" y="325" textAnchor="middle">+1.5</text>
-                
-                {/* Vertical markers */}
-                <line x1="390" y1="0" x2="410" y2="0"/>
-                <text x="420" y="8" textAnchor="start">-1.5</text>
-                <line x1="390" y1="100" x2="410" y2="100"/>
-                <text x="420" y="108" textAnchor="start">-1</text>
-                <line x1="390" y1="200" x2="410" y2="200"/>
-                <text x="420" y="208" textAnchor="start">-0.5</text>
-                <line x1="390" y1="400" x2="410" y2="400"/>
-                <text x="420" y="408" textAnchor="start">+0.5</text>
-                <line x1="390" y1="500" x2="410" y2="500"/>
-                <text x="420" y="508" textAnchor="start">+1</text>
-                <line x1="390" y1="600" x2="410" y2="600"/>
-                <text x="420" y="608" textAnchor="start">+1.5</text>
-              </g>
-              
-              {/* Render normalized movement patterns for each meter */}
-              {(() => {
-                const meterConfigs = [
-                  { 
-                    name: 'pianterreno', 
-                    color: '#8884d8', 
-                    dataKey: ['pianterreno_norm_x', 'pianterreno_norm_y'],
-                    show: selectedMeter === 'all' || selectedMeter === 'pianterreno'
-                  },
-                  { 
-                    name: 'piano1', 
-                    color: '#82ca9d', 
-                    dataKey: ['piano1_norm_x', 'piano1_norm_y'],
-                    show: selectedMeter === 'all' || selectedMeter === 'piano1'
-                  },
-                  { 
-                    name: 'piano2', 
-                    color: '#ffc658', 
-                    dataKey: ['piano2_norm_x', 'piano2_norm_y'],
-                    show: selectedMeter === 'all' || selectedMeter === 'piano2'
-                  }
-                ];
-                
-                return meterConfigs.map(config => {
-                  if (!config.show) return null;
-                  
-                  // Filter and sort data for this meter (normalized coordinates)
-                  const meterData = processedData
-                    .filter(d => d[config.dataKey[0]] !== undefined && d[config.dataKey[1]] !== undefined)
-                    .sort((a, b) => new Date(a.date) - new Date(b.date))
-                    .map((d, index, array) => ({
-                      ...d,
-                      x: d[config.dataKey[0]],
-                      y: d[config.dataKey[1]],
-                      opacity: (index + 1) / array.length,
-                      index: index,
-                      rawReading: config.name === 'pianterreno' ? d.rawPianterreno :
-                                  config.name === 'piano1' ? d.rawPiano1 :
-                                  d.rawPiano2
-                    }));
-                  
-                  if (meterData.length === 0) return null;
-                  
-                  // Convert physical coordinates (mm) to SVG space
-                  // Physical range: X ∈ [-20, +20]mm, Y ∈ [-10, +10]mm
-                  // Display range: X ∈ [-1.5, +1.5]mm, Y ∈ [-1.5, +1.5]mm on screen
-                  const toSVGX = (x_mm) => 400 + x_mm * 266.67; // Map [-20,+20]mm to display
-                  const toSVGY = (y_mm) => 300 + y_mm * 200;    // Map [-10,+10]mm to display
-                  
-                  return (
-                    <g key={config.name}>
-                      {/* Draw connecting lines */}
-                      {meterData.slice(1).map((point, i) => {
-                        const prevPoint = meterData[i];
-                        const x1 = toSVGX(prevPoint.x);
-                        const y1 = toSVGY(prevPoint.y);
-                        const x2 = toSVGX(point.x);
-                        const y2 = toSVGY(point.y);
-                        
-                        // Calculate days between measurements
-                        const date1 = new Date(prevPoint.date);
-                        const date2 = new Date(point.date);
-                        const daysDiff = Math.round((date2 - date1) / (1000 * 60 * 60 * 24));
-                        
-                        // Line opacity based on the newer point
-                        const lineOpacity = point.opacity * 0.8;
-                        
-                        // Midpoint for label
-                        const midX = (x1 + x2) / 2;
-                        const midY = (y1 + y2) / 2;
-                        
-                        return (
-                          <g key={`${config.name}-line-${i}`}>
-                            {/* Arrow line */}
-                            <line 
-                              x1={x1} y1={y1} 
-                              x2={x2} y2={y2}
-                              stroke={config.color}
-                              strokeOpacity={lineOpacity}
-                              strokeWidth="2"
-                              markerEnd={`url(#arrowhead-norm-${config.name})`}
-                            />
-                            
-                            {/* Days label */}
-                            <rect
-                              x={midX - 12}
-                              y={midY - 8}
-                              width="24"
-                              height="16"
-                              fill="white"
-                              stroke={config.color}
-                              strokeOpacity={lineOpacity}
-                              strokeWidth="1"
-                              rx="2"
-                            />
-                            <text
-                              x={midX}
-                              y={midY + 3}
-                              textAnchor="middle"
-                              fontSize="10"
-                              fill={config.color}
-                              fillOpacity={lineOpacity}
-                            >
-                              {daysDiff}d
-                            </text>
-                          </g>
-                        );
-                      })}
-                      
-                      {/* Draw points */}
-                      {meterData.map((point, i) => (
-                        <g key={`${config.name}-point-${i}`}>
-                          <circle
-                            cx={toSVGX(point.x)}
-                            cy={toSVGY(point.y)}
-                            r="8"
-                            fill={config.color}
-                            fillOpacity={point.opacity}
-                            stroke="white"
-                            strokeWidth="2"
-                            style={{ cursor: 'pointer' }}
-                            onClick={() => {
-                              // Switch to single reading view and select this reading
-                              const readingValue = JSON.stringify({
-                                date: point.date,
-                                meter: config.name === 'pianterreno' ? 'Pianterreno' :
-                                       config.name === 'piano1' ? 'Piano 1' : 'Piano 2',
-                                reading: point.rawReading
-                              });
-                              setSelectedReading(readingValue);
-                              setSelectedView('single');
-                            }}
-                          />
-                          {/* Date label */}
-                          <text
-                            x={toSVGX(point.x)}
-                            y={toSVGY(point.y) - 15}
-                            textAnchor="middle"
-                            fontSize="9"
-                            fill={config.color}
-                            fillOpacity={point.opacity}
-                            fontWeight="500"
-                            style={{ pointerEvents: 'none' }}
-                          >
-                            {point.date.substring(5)}
-                          </text>
-                          
-                          {/* Origin marker for first point */}
-                          {i === 0 && (
-                            <circle
-                              cx={toSVGX(point.x)}
-                              cy={toSVGY(point.y)}
-                              r="12"
-                              fill="none"
-                              stroke={config.color}
-                              strokeWidth="2"
-                              strokeDasharray="4,2"
-                              opacity="0.6"
-                            />
-                          )}
-                        </g>
-                      ))}
-                      
-                      {/* Define arrowhead marker */}
-                      <defs>
-                        <marker
-                          id={`arrowhead-norm-${config.name}`}
-                          markerWidth="10"
-                          markerHeight="7"
-                          refX="9"
-                          refY="3.5"
-                          orient="auto"
-                        >
-                          <polygon
-                            points="0 0, 10 3.5, 0 7"
-                            fill={config.color}
-                            fillOpacity="0.8"
-                          />
-                        </marker>
-                      </defs>
-                    </g>
-                  );
-                });
-              })()}
-            </svg>
+            <SVGGrid>
+              <MovementPatternRenderer 
+                processedData={processedData}
+                selectedMeter={selectedMeter}
+                useNormalized={true}
+                onPointClick={handleMovementPointClick}
+                hoveredPoint={hoveredPoint}
+                setHoveredPoint={setHoveredPoint}
+              />
+            </SVGGrid>
             
             {/* Legend */}
             <div className="mt-4 flex justify-center space-x-6">
@@ -1539,267 +1827,16 @@ const calculateIntersection = (reading) => {
           </div>
           
           <div style={{ width: '100%', height: '600px', position: 'relative' }}>
-            <svg width="100%" height="600" viewBox="0 0 800 600">
-            {/* Grid pattern with fine and coarse lines */}
-              <defs>
-                {/* Fine grid at 0.25mm intervals (lighter) */}
-                <pattern id="fineGrid" width="66.67" height="50" patternUnits="userSpaceOnUse">
-                  <path d="M 66.67 0 L 0 0 0 50" fill="none" stroke="#f3f4f6" strokeWidth="1.5"/>
-                </pattern>
-                {/* Coarse grid at 0.5mm intervals (darker) */}
-                <pattern id="coarseGrid" width="133.33" height="100" patternUnits="userSpaceOnUse">
-                  <path d="M 133.33 0 L 0 0 0 100" fill="none" stroke="#e5e7eb" strokeWidth="2"/>
-                </pattern>
-              </defs>
-              {/* Draw fine grid first, then coarse on top */}
-              <rect width="800" height="600" fill="url(#fineGrid)"/>
-              <rect width="800" height="600" fill="url(#coarseGrid)"/>
-              
-              {/* Center lines */}
-              <line x1="400" y1="0" x2="400" y2="600" stroke="#d1d5db" strokeWidth="2"/>
-              <line x1="0" y1="300" x2="800" y2="300" stroke="#d1d5db" strokeWidth="2"/>
-
-              {/* Center lines */}
-              <line x1="400" y1="0" x2="400" y2="600" stroke="#d1d5db" strokeWidth="2"/>
-              <line x1="0" y1="300" x2="800" y2="300" stroke="#d1d5db" strokeWidth="2"/>
-              
-              {/* Axis labels */}
-              <text x="750" y="320" textAnchor="end" fontSize="12" fill="#6b7280">+X</text>
-              <text x="50" y="320" textAnchor="start" fontSize="12" fill="#6b7280">-X</text>
-              <text x="410" y="30" textAnchor="start" fontSize="12" fill="#6b7280">-Y</text>
-              <text x="410" y="580" textAnchor="start" fontSize="12" fill="#6b7280">+Y</text>
-              
-              {/* Scale markers */}
-              <g stroke="#9ca3af" strokeWidth="1" fontSize="12" fill="#6b7280">
-                {/* Horizontal scale markers */}
-                <line x1="0" y1="295" x2="0" y2="305"/>
-                <text x="0" y="325" textAnchor="middle">-1.5</text>
-                <line x1="133.33" y1="295" x2="133.33" y2="305"/>
-                <text x="133.33" y="325" textAnchor="middle">-1</text>
-                <line x1="266.67" y1="295" x2="266.67" y2="305"/>
-                <text x="266.67" y="325" textAnchor="middle">-0.5</text>
-                <line x1="400" y1="290" x2="400" y2="310"/>
-                <text x="400" y="325" textAnchor="middle" fontWeight="bold">0</text>
-                <line x1="533.33" y1="295" x2="533.33" y2="305"/>
-                <text x="533.33" y="325" textAnchor="middle">+0.5</text>
-                <line x1="666.67" y1="295" x2="666.67" y2="305"/>
-                <text x="666.67" y="325" textAnchor="middle">+1</text>
-                <line x1="800" y1="295" x2="800" y2="305"/>
-                <text x="800" y="325" textAnchor="middle">+1.5</text>
-                
-                {/* Vertical scale markers */}
-                <line x1="390" y1="0" x2="410" y2="0"/>
-                <text x="420" y="8" textAnchor="start">-1.5</text>
-                <line x1="390" y1="100" x2="410" y2="100"/>
-                <text x="420" y="108" textAnchor="start">-1</text>
-                <line x1="390" y1="200" x2="410" y2="200"/>
-                <text x="420" y="208" textAnchor="start">-0.5</text>
-                <line x1="385" y1="300" x2="415" y2="300"/>
-                <text x="420" y="308" textAnchor="start" fontWeight="bold">0</text>
-                <line x1="390" y1="400" x2="410" y2="400"/>
-                <text x="420" y="408" textAnchor="start">+0.5</text>
-                <line x1="390" y1="500" x2="410" y2="500"/>
-                <text x="420" y="508" textAnchor="start">+1</text>
-                <line x1="390" y1="600" x2="410" y2="600"/>
-                <text x="420" y="608" textAnchor="start">+1.5</text>
-              </g>
-              
-              {/* Render movement patterns for each meter */}
-              {(() => {
-                const meterConfigs = [
-                  { 
-                    name: 'pianterreno', 
-                    color: '#8884d8', 
-                    dataKey: ['pianterreno_x', 'pianterreno_y'],
-                    show: selectedMeter === 'all' || selectedMeter === 'pianterreno'
-                  },
-                  { 
-                    name: 'piano1', 
-                    color: '#82ca9d', 
-                    dataKey: ['piano1_x', 'piano1_y'],
-                    show: selectedMeter === 'all' || selectedMeter === 'piano1'
-                  },
-                  { 
-                    name: 'piano2', 
-                    color: '#ffc658', 
-                    dataKey: ['piano2_x', 'piano2_y'],
-                    show: selectedMeter === 'all' || selectedMeter === 'piano2'
-                  }
-                ];
-                
-                return meterConfigs.map(config => {
-                  if (!config.show) return null;
-                  
-                  // Filter and sort data for this meter
-                  const meterData = processedData
-                    .filter(d => d[config.dataKey[0]] !== undefined && d[config.dataKey[1]] !== undefined)
-                    .sort((a, b) => new Date(a.date) - new Date(b.date))
-                    .map((d, index, array) => ({
-                      ...d,
-                      x: d[config.dataKey[0]],
-                      y: d[config.dataKey[1]],
-                      opacity: (index + 1) / array.length, // Gradient from 0.1 to 1.0
-                      index: index,
-                      rawReading: config.name === 'pianterreno' ? d.rawPianterreno :
-                                  config.name === 'piano1' ? d.rawPiano1 :
-                                  d.rawPiano2
-                    }));
-                  
-                  if (meterData.length === 0) return null;
-                  
-                  // Convert physical coordinates (mm) to SVG space
-                  // Physical range: X ∈ [-20, +20]mm, Y ∈ [-10, +10]mm
-                  // Display range: X ∈ [-1.5, +1.5]mm, Y ∈ [-1.5, +1.5]mm on screen
-                  const toSVGX = (x_mm) => 400 + x_mm * 266.67;  // 266.67px per mm
-                  const toSVGY = (y_mm) => 300 + y_mm * 200;     // 200px per mm
-                  
-                  return (
-                    <g key={config.name}>
-                      {/* Draw connecting lines */}
-                      {meterData.slice(1).map((point, i) => {
-                        const prevPoint = meterData[i];
-                        const x1 = toSVGX(prevPoint.x);
-                        const y1 = toSVGY(prevPoint.y);
-                        const x2 = toSVGX(point.x);
-                        const y2 = toSVGY(point.y);
-                        
-                        // Calculate days between measurements
-                        const date1 = new Date(prevPoint.date);
-                        const date2 = new Date(point.date);
-                        const daysDiff = Math.round((date2 - date1) / (1000 * 60 * 60 * 24));
-                        
-                        // Line opacity based on the newer point
-                        const lineOpacity = point.opacity * 0.8;
-                        
-                        // Midpoint for label
-                        const midX = (x1 + x2) / 2;
-                        const midY = (y1 + y2) / 2;
-                        
-                        return (
-                          <g key={`${config.name}-line-${i}`}>
-                            {/* Arrow line */}
-                            <line 
-                              x1={x1} y1={y1} 
-                              x2={x2} y2={y2}
-                              stroke={config.color}
-                              strokeOpacity={lineOpacity}
-                              strokeWidth="2"
-                              markerEnd={`url(#arrowhead-${config.name})`}
-                            />
-                            
-                            {/* Days label */}
-                            <rect
-                              x={midX - 12}
-                              y={midY - 8}
-                              width="24"
-                              height="16"
-                              fill="white"
-                              stroke={config.color}
-                              strokeOpacity={lineOpacity}
-                              strokeWidth="1"
-                              rx="2"
-                            />
-                            <text
-                              x={midX}
-                              y={midY + 3}
-                              textAnchor="middle"
-                              fontSize="10"
-                              fill={config.color}
-                              fillOpacity={lineOpacity}
-                            >
-                              {daysDiff}d
-                            </text>
-                          </g>
-                        );
-                      })}
-                      
-                      {/* Draw points */}
-                      {meterData.map((point, i) => (
-                        <g key={`${config.name}-point-${i}`}>
-                          <circle
-                            cx={toSVGX(point.x)}
-                            cy={toSVGY(point.y)}
-                            r="8"
-                            fill={config.color}
-                            fillOpacity={point.opacity}
-                            stroke="white"
-                            strokeWidth="2"
-                            style={{ cursor: 'pointer' }}
-                            onClick={() => {
-                              // Switch to single reading view and select this reading
-                              const readingValue = JSON.stringify({
-                                date: point.date,
-                                meter: config.name === 'pianterreno' ? 'Pianterreno' :
-                                       config.name === 'piano1' ? 'Piano 1' : 'Piano 2',
-                                reading: point.rawReading
-                              });
-                              setSelectedReading(readingValue);
-                              setSelectedView('single');
-                            }}
-                            onMouseEnter={(e) => {
-                              setHoveredPoint({
-                                x: e.clientX,
-                                y: e.clientY,
-                                data: {
-                                  meter: config.name,
-                                  date: point.date,
-                                  position: `(${point.x.toFixed(3)}, ${point.y.toFixed(3)})`,
-                                  rawReading: point.rawReading,
-                                  opacity: point.opacity,
-                                  measurement: i + 1,
-                                  total: meterData.length
-                                }
-                              });
-                            }}
-                            onMouseLeave={() => setHoveredPoint(null)}
-                            onMouseMove={(e) => {
-                              if (hoveredPoint) {
-                                setHoveredPoint(prev => ({
-                                  ...prev,
-                                  x: e.clientX,
-                                  y: e.clientY
-                                }));
-                              }
-                            }}
-                          />
-                          {/* Date label */}
-                          <text
-                            x={toSVGX(point.x)}
-                            y={toSVGY(point.y) - 15}
-                            textAnchor="middle"
-                            fontSize="9"
-                            fill={config.color}
-                            fillOpacity={point.opacity}
-                            fontWeight="500"
-                            style={{ pointerEvents: 'none' }}
-                          >
-                            {point.date.substring(5)} {/* Show MM-DD */}
-                          </text>
-                        </g>
-                      ))}
-                      
-                      {/* Define arrowhead marker */}
-                      <defs>
-                        <marker
-                          id={`arrowhead-${config.name}`}
-                          markerWidth="10"
-                          markerHeight="7"
-                          refX="9"
-                          refY="3.5"
-                          orient="auto"
-                        >
-                          <polygon
-                            points="0 0, 10 3.5, 0 7"
-                            fill={config.color}
-                            fillOpacity="0.8"
-                          />
-                        </marker>
-                      </defs>
-                    </g>
-                  );
-                });
-              })()}
-            </svg>
+            <SVGGrid>
+              <MovementPatternRenderer 
+                processedData={processedData}
+                selectedMeter={selectedMeter}
+                useNormalized={false}
+                onPointClick={handleMovementPointClick}
+                hoveredPoint={hoveredPoint}
+                setHoveredPoint={setHoveredPoint}
+              />
+            </SVGGrid>
             
             {/* Legend */}
             <div className="mt-4 flex justify-center space-x-6">
