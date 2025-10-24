@@ -50,6 +50,12 @@ const METER_CONFIGS = {
   }
 };
 
+// Helper to get meter color by display name
+const getMeterColor = (meterDisplayName) => {
+  const config = Object.values(METER_CONFIGS).find(c => c.displayName === meterDisplayName);
+  return config?.color || '#2563eb';
+};
+
 const SVGGrid = ({ children, onPointClick, hoveredPoint, setHoveredPoint }) => {
   return (
     <svg width="100%" height="600" viewBox="0 0 800 600">
@@ -112,42 +118,14 @@ const MovementPatternRenderer = ({
   hoveredPoint,
   setHoveredPoint
 }) => {
-  // Determine which data keys to use based on useNormalized prop
-  const meterConfigs = [
-    { 
-      name: 'pianterreno',
-      displayName: 'Pianterreno',
-      color: '#8884d8', 
-      dataKey: useNormalized 
-        ? ['pianterreno_norm_x', 'pianterreno_norm_y']
-        : ['pianterreno_x', 'pianterreno_y'],
-      normDataKey: ['pianterreno_norm_x', 'pianterreno_norm_y'], // Always have norm keys
-      rawReadingKey: 'rawPianterreno',
-      show: selectedMeter === 'all' || selectedMeter === 'pianterreno'
-    },
-    { 
-      name: 'piano1',
-      displayName: 'Piano 1',
-      color: '#82ca9d', 
-      dataKey: useNormalized 
-        ? ['piano1_norm_x', 'piano1_norm_y']
-        : ['piano1_x', 'piano1_y'],
-      normDataKey: ['piano1_norm_x', 'piano1_norm_y'], // Always have norm keys
-      rawReadingKey: 'rawPiano1',
-      show: selectedMeter === 'all' || selectedMeter === 'piano1'
-    },
-    { 
-      name: 'piano2',
-      displayName: 'Piano 2',
-      color: '#ffc658', 
-      dataKey: useNormalized 
-        ? ['piano2_norm_x', 'piano2_norm_y']
-        : ['piano2_x', 'piano2_y'],
-      normDataKey: ['piano2_norm_x', 'piano2_norm_y'], // Always have norm keys
-      rawReadingKey: 'rawPiano2',
-      show: selectedMeter === 'all' || selectedMeter === 'piano2'
-    }
-  ];
+  // Build meter configs from global constant
+  const meterConfigs = Object.entries(METER_CONFIGS).map(([key, config]) => ({
+    ...config,
+    dataKey: useNormalized ? config.normDataKeys : config.rawDataKeys,
+    normDataKey: config.normDataKeys,
+    rawReadingKey: `raw${config.displayName.replace(' ', '')}`,
+    show: selectedMeter === 'all' || selectedMeter === key
+  }));
   
   return (
     <>
@@ -1146,15 +1124,6 @@ const calculateIntersection = (reading) => {
               const { date, meter, reading } = parsedReading;
               const meterName = meter;
               
-              // Get meter color based on name
-              const getMeterColor = (meter) => {
-                switch(meter) {
-                  case 'Pianterreno': return '#8884d8';
-                  case 'Piano 1': return '#82ca9d';
-                  case 'Piano 2': return '#ffc658';
-                  default: return '#2563eb';
-                }
-              };
               const meterColor = getMeterColor(meterName);
               
               // Calculate intersection point and angle analysis
@@ -1779,17 +1748,9 @@ const calculateIntersection = (reading) => {
             
             {/* Legend */}
             <div className="mt-4 flex justify-center space-x-6">
-              {(selectedMeter === 'all' ? 
-                [
-                  { name: 'Pianterreno', color: '#8884d8' },
-                  { name: 'Piano 1', color: '#82ca9d' },
-                  { name: 'Piano 2', color: '#ffc658' }
-                ] : 
-                [
-                  selectedMeter === 'pianterreno' && { name: 'Pianterreno', color: '#8884d8' },
-                  selectedMeter === 'piano1' && { name: 'Piano 1', color: '#82ca9d' },
-                  selectedMeter === 'piano2' && { name: 'Piano 2', color: '#ffc658' }
-                ].filter(Boolean)
+              {(selectedMeter === 'all' 
+                ? Object.values(METER_CONFIGS).map(c => ({ name: c.displayName, color: c.color }))
+                : [METER_CONFIGS[selectedMeter]].map(c => ({ name: c.displayName, color: c.color }))
               ).map(item => (
                 <div key={item.name} className="flex items-center space-x-2">
                   <div 
@@ -1838,17 +1799,9 @@ const calculateIntersection = (reading) => {
             
             {/* Legend */}
             <div className="mt-4 flex justify-center space-x-6">
-              {(selectedMeter === 'all' ? 
-                [
-                  { name: 'Pianterreno', color: '#8884d8' },
-                  { name: 'Piano 1', color: '#82ca9d' },
-                  { name: 'Piano 2', color: '#ffc658' }
-                ] : 
-                [
-                  selectedMeter === 'pianterreno' && { name: 'Pianterreno', color: '#8884d8' },
-                  selectedMeter === 'piano1' && { name: 'Piano 1', color: '#82ca9d' },
-                  selectedMeter === 'piano2' && { name: 'Piano 2', color: '#ffc658' }
-                ].filter(Boolean)
+              {(selectedMeter === 'all' 
+                ? Object.values(METER_CONFIGS).map(c => ({ name: c.displayName, color: c.color }))
+                : [METER_CONFIGS[selectedMeter]].map(c => ({ name: c.displayName, color: c.color }))
               ).map(item => (
                 <div key={item.name} className="flex items-center space-x-2">
                   <div 
@@ -2049,11 +2002,11 @@ const calculateIntersection = (reading) => {
         <h3 className="font-semibold mb-4">Movement Summary</h3>
         <div className="space-y-4">
           {(() => {
-            const meters = [
-              { name: 'Pianterreno', dataKeys: ['pianterreno_x', 'pianterreno_y'], color: '#8884d8' },
-              { name: 'Piano 1', dataKeys: ['piano1_x', 'piano1_y'], color: '#82ca9d' },
-              { name: 'Piano 2', dataKeys: ['piano2_x', 'piano2_y'], color: '#ffc658' }
-            ];
+            const meters = Object.values(METER_CONFIGS).map(config => ({
+              name: config.displayName,
+              dataKeys: config.rawDataKeys,
+              color: config.color
+            }));
 
             //let grandTotalDistance = 0;
             const meterResults = meters.map(meter => {
