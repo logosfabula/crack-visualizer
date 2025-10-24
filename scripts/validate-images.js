@@ -53,7 +53,7 @@ crackData.forEach(entry => {
         missingImages.push({
           floor: floorName,
           date: date,
-          expectedName: `${expectedImageBase}.{jpg|png|jpeg}`,
+          expectedName: `${expectedImageBase}.{jpg|png|jpeg|JPG|PNG|JPEG}`,
           reading: reading
         });
       }
