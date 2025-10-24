@@ -78,7 +78,7 @@ const SVGGrid = ({ children, onPointClick, hoveredPoint, setHoveredPoint }) => {
       {/* Scale markers */}
       <g stroke="#9ca3af" strokeWidth="1" fontSize="12" fill="#6b7280">
         {/* Horizontal markers */}
-        {[-1.5, -1, -0.5, 0.5, 1, 1.5].map(val => (
+        {[DISPLAY_RANGE.X_MIN, -1, -0.5, 0.5, 1, DISPLAY_RANGE.X_MAX].map(val => (
           <g key={`h-marker-${val}`}>
             <line x1={toSVGX(val)} y1="295" x2={toSVGX(val)} y2="305"/>
             <text x={toSVGX(val)} y="325" textAnchor="middle">
@@ -88,7 +88,7 @@ const SVGGrid = ({ children, onPointClick, hoveredPoint, setHoveredPoint }) => {
         ))}
         
         {/* Vertical markers */}
-        {[-1.5, -1, -0.5, 0.5, 1, 1.5].map(val => (
+        {[DISPLAY_RANGE.Y_MIN, -1, -0.5, 0.5, 1, DISPLAY_RANGE.Y_MAX].map(val => (
           <g key={`v-marker-${val}`}>
             <line x1="390" y1={toSVGY(val)} x2="410" y2={toSVGY(val)}/>
             <text x="420" y={toSVGY(val) + 8} textAnchor="start">
@@ -1278,32 +1278,30 @@ const calculateIntersection = (reading) => {
                       {/* Scale markers and labels - matching other views */}
                       <g stroke="#9ca3af" strokeWidth="1" fontSize="12" fill="#6b7280">
                         {/* Horizontal markers */}
-                        <line x1="0" y1="295" x2="0" y2="305"/>
-                        <text x="0" y="325" textAnchor="middle">-1.5</text>
-                        <line x1="133.33" y1="295" x2="133.33" y2="305"/>
-                        <text x="133.33" y="325" textAnchor="middle">-1</text>
-                        <line x1="266.67" y1="295" x2="266.67" y2="305"/>
-                        <text x="266.67" y="325" textAnchor="middle">-0.5</text>
-                        <line x1="533.33" y1="295" x2="533.33" y2="305"/>
-                        <text x="533.33" y="325" textAnchor="middle">+0.5</text>
-                        <line x1="666.67" y1="295" x2="666.67" y2="305"/>
-                        <text x="666.67" y="325" textAnchor="middle">+1</text>
-                        <line x1="800" y1="295" x2="800" y2="305"/>
-                        <text x="800" y="325" textAnchor="middle">+1.5</text>
+                        {[DISPLAY_RANGE.X_MIN, -1, -0.5, 0.5, 1, DISPLAY_RANGE.X_MAX].map((val, idx) => {
+                          const xPos = toSVGX(val);
+                          return (
+                            <g key={`h-marker-${idx}`}>
+                              <line x1={xPos} y1="295" x2={xPos} y2="305"/>
+                              <text x={xPos} y="325" textAnchor="middle">
+                                {val > 0 ? '+' : ''}{val}
+                              </text>
+                            </g>
+                          );
+                        })}
                         
-                        {/* Vertical markers */}
-                        <line x1="390" y1="0" x2="410" y2="0"/>
-                        <text x="420" y="8" textAnchor="start">-1.5</text>
-                        <line x1="390" y1="100" x2="410" y2="100"/>
-                        <text x="420" y="108" textAnchor="start">-1</text>
-                        <line x1="390" y1="200" x2="410" y2="200"/>
-                        <text x="420" y="208" textAnchor="start">-0.5</text>
-                        <line x1="390" y1="400" x2="410" y2="400"/>
-                        <text x="420" y="408" textAnchor="start">+0.5</text>
-                        <line x1="390" y1="500" x2="410" y2="500"/>
-                        <text x="420" y="508" textAnchor="start">+1</text>
-                        <line x1="390" y1="600" x2="410" y2="600"/>
-                        <text x="420" y="608" textAnchor="start">+1.5</text>
+                      {/* Vertical markers */}
+                        {[DISPLAY_RANGE.Y_MIN, -1, -0.5, 0.5, 1, DISPLAY_RANGE.Y_MAX].map((val, idx) => {
+                          const yPos = toSVGY(val);
+                          return (
+                            <g key={`v-marker-${idx}`}>
+                              <line x1="390" y1={yPos} x2="410" y2={yPos}/>
+                              <text x="420" y={yPos + 8} textAnchor="start">
+                                {val > 0 ? '+' : ''}{val}
+                              </text>
+                            </g>
+                          );
+                        })}
                       </g>
                       
                       {/* Draw the crack cross */}
@@ -1358,10 +1356,10 @@ const calculateIntersection = (reading) => {
                         const toSVGY = (y_mm) => 300 + y_mm * 200;     // 200px per mm
                         
                         // For drawing lines across the ENTIRE display
-                        const displayYMin = -1.5;  // Top of display in mm
-                        const displayYMax = 1.5;   // Bottom of display in mm
-                        const displayXMin = -1.5;  // Left of display in mm
-                        const displayXMax = 1.5;   // Right of display in mm
+                        const displayYMin = DISPLAY_RANGE.Y_MIN;
+                        const displayYMax = DISPLAY_RANGE.Y_MAX;
+                        const displayXMin = DISPLAY_RANGE.X_MIN;
+                        const displayXMax = DISPLAY_RANGE.X_MAX;
                         
                         // Calculate vertical line endpoints
                         let topDisplayX, bottomDisplayX;
@@ -1559,11 +1557,11 @@ const calculateIntersection = (reading) => {
                             {(() => {
                               const [up, right, down, left] = reading.split(';').map(v => parseFloat(v));
                               
-                              // Display boundaries
-                              const DISPLAY_X_MIN = -1.5;
-                              const DISPLAY_X_MAX = 1.5;
-                              const DISPLAY_Y_MIN = -1.5;
-                              const DISPLAY_Y_MAX = 1.5;
+                            // Display boundaries
+                            const DISPLAY_X_MIN = DISPLAY_RANGE.X_MIN;
+                            const DISPLAY_X_MAX = DISPLAY_RANGE.X_MAX;
+                            const DISPLAY_Y_MIN = DISPLAY_RANGE.Y_MIN;
+                            const DISPLAY_Y_MAX = DISPLAY_RANGE.Y_MAX;
                               
                               const boundaryMarkers = [];
                               
