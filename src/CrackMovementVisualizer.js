@@ -453,17 +453,6 @@ const calculateQuadrantAngles = (reading) => {
   const bottomPoint = { x: down, y: METER_Y_MAX };
   const leftPoint = { x: METER_X_MIN, y: left };
   const rightPoint = { x: METER_X_MAX, y: right };
-
-  // Add this after your state declarations (around line 25)
-  const handleMovementPointClick = (pointData) => {
-    const readingValue = JSON.stringify({
-      date: pointData.date,
-      meter: pointData.meter,
-      reading: pointData.reading
-    });
-    setSelectedReading(readingValue);
-    setSelectedView('single');
-  };
   
   // Calculate angles of both lines
   let verticalLineAngle, horizontalLineAngle;
