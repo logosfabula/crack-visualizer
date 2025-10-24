@@ -947,11 +947,11 @@ const calculateIntersection = (reading) => {
             onChange={(e) => setSelectedView(e.target.value)}
             className="border border-gray-300 rounded px-3 py-2"
           >
-            <option value="timeline">Timeline View</option>
+            <option value="timeline">Timeline</option>
             <option value="movement">Movement Patterns</option>
             <option value="normalized">Normalized Movement</option>
             <option value="single">Single Reading</option>
-            <option value="data">Raw Data</option>
+            <option value="data">Data</option>
           </select>
         </div>
         
@@ -1369,39 +1369,106 @@ const calculateIntersection = (reading) => {
                         
                         return (
                           <>
-                            {/* Vertical line - across entire display */}
+                            {/* Vertical line - across entire display - DASHED for actual position */}
                             <line 
                               x1={topX_svg} y1={topY_svg} 
                               x2={bottomX_svg} y2={bottomY_svg} 
-                              stroke="#dc2626" 
-                              strokeWidth="3"
+                              stroke="#ff6b6b" 
+                              strokeWidth="1.5"
+                              strokeDasharray="3,3"
+                              opacity="0.6"
                             />
-                            
-                            {/* Horizontal line - across entire display */}
+
+                            {/* Horizontal line - across entire display - DASHED for actual position */}
                             <line 
                               x1={leftX_svg} y1={leftY_svg} 
                               x2={rightX_svg} y2={rightY_svg} 
-                              stroke="#dc2626" 
-                              strokeWidth="3"
+                              stroke="#ff6b6b" 
+                              strokeWidth="1.5"
+                              strokeDasharray="3,3"
+                              opacity="0.6"
                             />
                             
-                            {/* Normalized intersection marker */}
+                            {/* Intersection point (absolute) - DASHED CIRCLE with simple tooltip */}
+                            <circle 
+                              cx={intersectionX_svg} 
+                              cy={intersectionY_svg} 
+                              r="8" 
+                              fill="white"
+                              stroke={meterColor} 
+                              strokeWidth="2"
+                              strokeDasharray="3,2"
+                              style={{ cursor: 'pointer' }}
+                              onMouseEnter={() => {
+                                setHoveredPoint({
+                                  show: true,
+                                  isRaw: true,
+                                  meter: meterName,
+                                  color: meterColor,
+                                  rawX: intersection.x,
+                                  rawY: intersection.y
+                                });
+                              }}
+                              onMouseLeave={() => setHoveredPoint(null)}
+                            />
+
+                            {/* Normalized intersection marker - SOLID DOT + RED CROSS with detailed tooltip */}
                             {normalizedIntersection !== null && (
                               <g transform={`translate(${toSVGX(normalizedIntersection.x)}, ${toSVGY(normalizedIntersection.y)})`}>
-                                {/* Floor-colored circle outline */}
+                                {/* Red cross at normalized position */}
+                                <line 
+                                  x1="-15" y1="0" 
+                                  x2="15" y2="0" 
+                                  stroke="#dc2626" 
+                                  strokeWidth="3"
+                                />
+                                <line 
+                                  x1="0" y1="-15" 
+                                  x2="0" y2="15" 
+                                  stroke="#dc2626" 
+                                  strokeWidth="3"
+                                />
+                                {/* Solid floor-colored dot with hover */}
                                 <circle 
                                   cx="0" 
                                   cy="0" 
                                   r="8" 
-                                  fill="none" 
-                                  stroke={meterColor} 
+                                  fill={meterColor} 
+                                  stroke="white"
                                   strokeWidth="2"
-                                  opacity="0.8"
+                                  style={{ cursor: 'pointer' }}
+                                  onMouseEnter={() => {
+                                    // Calculate days since first reading for this meter
+                                    const meterKey = meterName === 'Pianterreno' ? 'pianterreno' : 
+                                                    meterName === 'Piano 1' ? 'piano1' : 'piano2';
+                                    const firstReading = processedData
+                                      .filter(d => d[`${meterKey}_x`] !== undefined)
+                                      .sort((a, b) => new Date(a.date) - new Date(b.date))[0];
+                                    
+                                    const daysSinceFirst = firstReading ? 
+                                      Math.round((new Date(date) - new Date(firstReading.date)) / (1000 * 60 * 60 * 24)) : 0;
+                                    
+                                    setHoveredPoint({
+                                      show: true,
+                                      meter: meterName,
+                                      color: meterColor,
+                                      date: date,
+                                      daysSinceFirst: daysSinceFirst,
+                                      rawX: intersection.x,
+                                      rawY: intersection.y,
+                                      normX: normalizedIntersection?.x || 0,
+                                      normY: normalizedIntersection?.y || 0,
+                                      reading: reading,
+                                      angleAnalysis: angleAnalysis,
+                                      isNormalized: true  // Flag to identify this is normalized position
+                                    });
+                                  }}
+                                  onMouseLeave={() => setHoveredPoint(null)}
                                 />
                                 {/* Coordinate label */}
                                 <text 
                                   x="0" 
-                                  y="-15" 
+                                  y="-22" 
                                   textAnchor="middle" 
                                   fontSize="10" 
                                   fill={meterColor} 
@@ -1409,66 +1476,30 @@ const calculateIntersection = (reading) => {
                                   stroke="white"
                                   strokeWidth="2"
                                   paintOrder="stroke"
+                                  style={{ pointerEvents: 'none' }}
                                 >
                                   ({normalizedIntersection.x.toFixed(3)}, {normalizedIntersection.y.toFixed(3)})
                                 </text>
                               </g>
                             )}
-                            
-                            {/* Intersection point (absolute) with hover */}
-                            <circle 
-                              cx={intersectionX_svg} 
-                              cy={intersectionY_svg} 
-                              r="8" 
-                              fill={meterColor} 
-                              stroke="white" 
-                              strokeWidth="3"
-                              style={{ cursor: 'pointer' }}
-                              onMouseEnter={() => {
-                                // Calculate days since first reading for this meter
-                                const meterKey = meterName === 'Pianterreno' ? 'pianterreno' : 
-                                                meterName === 'Piano 1' ? 'piano1' : 'piano2';
-                                const firstReading = processedData
-                                  .filter(d => d[`${meterKey}_x`] !== undefined)
-                                  .sort((a, b) => new Date(a.date) - new Date(b.date))[0];
-                                
-                                const daysSinceFirst = firstReading ? 
-                                  Math.round((new Date(date) - new Date(firstReading.date)) / (1000 * 60 * 60 * 24)) : 0;
-                                
-                                setHoveredPoint({
-                                  show: true,
-                                  meter: meterName,
-                                  color: meterColor,
-                                  date: date,
-                                  daysSinceFirst: daysSinceFirst,
-                                  rawX: intersection.x,
-                                  rawY: intersection.y,
-                                  normX: normalizedIntersection?.x || 0,
-                                  normY: normalizedIntersection?.y || 0,
-                                  reading: reading,
-                                  angleAnalysis: angleAnalysis
-                                });
-                              }}
-                              onMouseLeave={() => setHoveredPoint(null)}
-                            />
 
-                            {/* Tooltip for intersection point */}
-                            {hoveredPoint && hoveredPoint.show && (
-                              <g transform={`translate(${intersectionX_svg}, ${intersectionY_svg - 90})`}>
+                            {/* Tooltip for normalized position (detailed) */}
+                            {hoveredPoint && hoveredPoint.show && hoveredPoint.isNormalized && (
+                              <g transform={`translate(${toSVGX(hoveredPoint.normX)}, ${toSVGY(hoveredPoint.normY) - 90})`}>
                                 {/* Tooltip background */}
                                 <rect 
                                   x="-110" y="-45" 
                                   width="220" height="85" 
                                   fill="white" 
-                                  stroke={meterColor}
+                                  stroke={hoveredPoint.color}
                                   strokeWidth="2" 
                                   rx="4"
                                   filter="drop-shadow(0 2px 4px rgba(0,0,0,0.2))"
                                 />
                                 
                                 {/* Header */}
-                                <text x="0" y="-25" textAnchor="middle" fontSize="11" fontWeight="bold" fill={meterColor}>
-                                  {meterName} - {date}
+                                <text x="0" y="-25" textAnchor="middle" fontSize="11" fontWeight="bold" fill={hoveredPoint.color}>
+                                  {hoveredPoint.meter} - {hoveredPoint.date}
                                 </text>
                                 
                                 {/* Days since first */}
@@ -1507,6 +1538,40 @@ const calculateIntersection = (reading) => {
                                     
                                     return interpretation;
                                   })()}
+                                </text>
+                              </g>
+                            )}
+
+                            {/* Tooltip for raw position (simple) */}
+                            {hoveredPoint && hoveredPoint.show && hoveredPoint.isRaw && (
+                              <g transform={`translate(${toSVGX(hoveredPoint.rawX)}, ${toSVGY(hoveredPoint.rawY) - 50})`}>
+                                {/* Tooltip background */}
+                                <rect 
+                                  x="-95" y="-30" 
+                                  width="190" height="50" 
+                                  fill="white" 
+                                  stroke={hoveredPoint.color}
+                                  strokeWidth="2" 
+                                  rx="4"
+                                  filter="drop-shadow(0 2px 4px rgba(0,0,0,0.2))"
+                                />
+                                
+                                {/* Header */}
+                                <text x="0" y="-12" textAnchor="middle" fontSize="11" fontWeight="bold" fill={hoveredPoint.color}>
+                                  Raw Reading Position
+                                </text>
+                                
+                                {/* Coordinates */}
+                                <text x="0" y="2" textAnchor="middle" fontSize="10" fill="#333">
+                                  ({hoveredPoint.rawX.toFixed(3)}, {hoveredPoint.rawY.toFixed(3)}) mm
+                                </text>
+                                
+                                {/* Instruction */}
+                                <text x="0" y="15" textAnchor="middle" fontSize="9" fill="#666" fontStyle="italic">
+                                  Hover over normalized position (solid dot)
+                                </text>
+                                <text x="0" y="26" textAnchor="middle" fontSize="9" fill="#666" fontStyle="italic">
+                                  for detailed movement analysis
                                 </text>
                               </g>
                             )}
@@ -1616,6 +1681,36 @@ const calculateIntersection = (reading) => {
                         );
                       })()}
                     </svg>
+
+                    {/* Legend */}
+                    <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded">
+                      <div className="text-sm font-semibold mb-2">Symbol Legend:</div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                        <div className="flex items-center gap-2">
+                          <svg width="50" height="30" viewBox="0 0 50 30">
+                            {/* Dashed red cross - hairline */}
+                            <line x1="10" y1="15" x2="40" y2="15" stroke="#dc2626" strokeWidth="1.5" strokeDasharray="6,3" opacity="0.6" />
+                            <line x1="25" y1="5" x2="25" y2="25" stroke="#dc2626" strokeWidth="1.5" strokeDasharray="6,3" opacity="0.6" />
+                            {/* Dashed circle */}
+                            <circle cx="25" cy="15" r="6" fill="white" stroke={meterColor} strokeWidth="2" strokeDasharray="3,2" />
+                          </svg>
+                          <span><strong>Hairline dashed cross + dashed circle:</strong> Raw reading position</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <svg width="50" height="30" viewBox="0 0 50 30">
+                            {/* Solid red cross */}
+                            <line x1="10" y1="15" x2="40" y2="15" stroke="#dc2626" strokeWidth="3" />
+                            <line x1="25" y1="5" x2="25" y2="25" stroke="#dc2626" strokeWidth="3" />
+                            {/* Solid dot */}
+                            <circle cx="25" cy="15" r="6" fill={meterColor} stroke="white" strokeWidth="2" />
+                          </svg>
+                          <span><strong>Solid cross + solid dot:</strong> Normalized position (movement from origin)</span>
+                        </div>
+                      </div>
+                      <div className="mt-2 text-xs text-gray-600 italic">
+                        * Hover over markers for detailed information. Normalized position shows structural movement analysis.
+                      </div>
+                    </div>
                   </div>
                   
                   <div className="bg-blue-50 p-4 rounded border border-blue-200">
@@ -1714,7 +1809,7 @@ const calculateIntersection = (reading) => {
               onClick={() => setSelectedView('movement')}
               className="px-3 py-1 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded text-sm font-medium transition-colors"
             >
-              ↔ Absolute View
+              ↔ Raw View
             </button>
           </div>
           <div className="mb-4 text-sm text-gray-600">
