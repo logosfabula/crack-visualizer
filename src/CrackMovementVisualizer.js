@@ -937,7 +937,14 @@ const calculateIntersection = (reading) => {
   return (
     <div className="w-full max-w-6xl mx-auto p-6 bg-white">
       <h1 className="text-2xl font-bold mb-6">Crack Movement Analysis Dashboard</h1>
-      <h2 className="text-xl font-bold mb-6">🏚️: "Our Lady of Health, 10"</h2>      
+      <h2 className="text-xl font mb-6 flex items-center gap-2">
+        <img 
+          src={`${process.env.PUBLIC_URL}/web-app-manifest-192x192.png`} 
+          alt="Site icon" 
+          className="w-24 h-24"
+        />
+        Case: Our Lady of Health, 10
+      </h2>
       {/* Controls */}
       <div className="flex gap-4 mb-6">
         <div>
