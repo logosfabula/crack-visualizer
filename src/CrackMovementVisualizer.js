@@ -943,7 +943,7 @@ const calculateIntersection = (reading) => {
           alt="Site icon" 
           className="w-24 h-24"
         />
-        Case: Our Lady of Health, 10
+        Case: M. d. S., 10
       </h2>
       {/* Controls */}
       <div className="flex gap-4 mb-6">
