@@ -1,3 +1,29 @@
-[X] FINIRE PROOF-READING della seconda metà del file del METODO 
-[ ] Fattorizzare il calcolo delle coordinate dalle singole view 
-[ ] Perfezionare i bordi della griglia nelle varie view (mancano a destra e in basso)
+v.0.9.1
+[o] FINIRE PROOF-READING della seconda metà del file del METODO 
+[o] Fattorizzare il calcolo delle coordinate dalle singole view 
+[x] Perfezionare i bordi della griglia nelle varie view (poco visibili a destra e in basso)
+[o] Aggiunte previsione di arrivo per soglie di distaccamento notevoli (1mm, 2mm, e 5mm) per piano
+v.0.9.2
+[o] SINGLE READING VIEW: distinguere il calcolo geometrico tra coordinate centrali e rappresentazione della croce nel riquadro ridotto (20x10 -> 3x3)
+[o] aggiunta dei marker di proiezione dei punti up, right, down, left sui bordi del riquadro visibile (3x3)
+[o] miglioramento lettura sinottica tra raw reading e normalized reading.
+[o] proofreading delle legende e uso consistente del color-coding project-wide
+V.0.9.3 
+[o] sezione dataset: aggiunta controllo per il download in vari formati
+[o] sezione dataset: non solo raw reading ma anche normalized data e ortogonalità della croce
+V.0.9.4
+[o] Single reading view: controllo per il download dell'immagine del rilievo
+[o] sezione dataset: controllo per il download del set di immagini completo
+V.0.9.5
+[o] CI/CD: consistenza del set delle immagini dei rilievi 
+[o] CI/CD: standard checks (lint, dependencies, ...) 
+[o] CI/CD: auto-deploy on main branch pass
+[o] Review documentation and footer (readme, method, license)
+V.0.9.6
+[o] aggiungere tooltip info on single reading view
+[o] aggiungere tooltip info on raw ("movement patterns") and normalised ("normalized movements") datapoints
+[o] sommario complessivo: 1) Crepa più attiva 2) Crepa più ampia 3) Ordine di arrivo delle prossime 5 soglie (secondo media aritmetica)
+V.0.9.7
+[o] icona webapp e logo
+[o] uso più consistente delle etichette (absolute -> raw; raw data -> data o dataset)
+[o] refactoring del codice (ridondanza funzioni, variabili di configurazione globali, ...) 

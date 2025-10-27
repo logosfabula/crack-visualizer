@@ -1,4 +1,4 @@
-# Crack Movement Visualizer
+# Crack Movement Visualizer v.0.9
 
 A React-based application for visualizing and analyzing crack meter data from structural monitoring systems.
 
@@ -50,7 +50,7 @@ This application helps monitor and visualize crack meter readings from structura
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/crack-visualizer.git
+git clone https://github.com/logosfabula/crack-visualizer.git
 cd crack-visualizer
 
 # Install dependencies
@@ -95,6 +95,9 @@ The system accounts for different crack meter orientations. In this case:
 - **Pianterreno (P0)**: Inverted interpretation
 - **Piano 1 (P1)**: Standard interpretation  
 - **Piano 2 (P2)**: Inverted interpretation
+
+The flags for standard/inverted interpretations of each floor are harcoded in the main component at current version (v0.9)
+TODO: move this info into the data tier
 
 ## Technology Stack
 
