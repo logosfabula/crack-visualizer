@@ -1,4 +1,7 @@
-# Crack Movement Visualizer v.0.9
+# Crack Movement Visualizer
+
+![Version](https://img.shields.io/badge/version-0.13.2-blue)
+[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE.md)
 
 A React-based application for visualizing and analyzing crack meter data from structural monitoring systems.
 
