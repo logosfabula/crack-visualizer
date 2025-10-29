@@ -5,28 +5,59 @@ import JSZip from 'jszip';
 import yaml from 'js-yaml';
 import * as XLSX from 'xlsx';
 
+// Constants
+import { METER_BOUNDARIES, DISPLAY_RANGE } from './constants/boundaries';
+import { METER_CONFIGS } from './constants/meterConfigs';
+import { FLOOR_INTERPRETATIONS } from './constants/floorInterpretations';
+
+// Services
+import { IntersectionCalculator } from './services/calculations/IntersectionCalculator';
+import { AngleAnalyzer } from './services/calculations/AngleAnalyzer';
+
+// Common components
+import { SVGGrid } from './components/common/SVGGrid';
+import { MovementPatternRenderer } from './components/common/MovementPatternRenderer';
+
+// View components
+import { TimelineView } from './components/views/TimelineView';
+import { MovementPatternsView } from './components/views/MovementPatternsView';
+import { NormalizedMovementView } from './components/views/NormalizedMovementView';
+import { SingleReadingView } from './components/views/SingleReadingView';
+import { DataTableView } from './components/views/DataTableView';
+
+// Hooks
+import { useProcessedData } from './hooks/useProcessedData';
+
+// Utilities
+import { toSVGX, toSVGY } from './utils/coordinateConverters';
+
+// Exports
+import { ExportService } from './services/export/ExportService';
+import { ImageFetcher } from './services/export/ImageFetcher';
+
+
 // Physical crack meter boundaries (in millimeters)
-const METER_BOUNDARIES = {
+/* const METER_BOUNDARIES = {
   X_MIN: -20,
   X_MAX: 20,
   Y_MIN: -10,
   Y_MAX: 10
-};
+}; */
 
 // Display range for SVG visualization
-const DISPLAY_RANGE = {
+/* const DISPLAY_RANGE = {
   X_MIN: -1.5,
   X_MAX: 1.5,
   Y_MIN: -1.5,
   Y_MAX: 1.5
-};
+}; */
 
 // SVG coordinate conversion functions
-const toSVGX = (x_mm) => 400 + x_mm * 266.67;
-const toSVGY = (y_mm) => 300 + y_mm * 200;
+/* const toSVGX = (x_mm) => 400 + x_mm * 266.67;
+const toSVGY = (y_mm) => 300 + y_mm * 200; */
 
 // Meter configurations
-const METER_CONFIGS = {
+/* const METER_CONFIGS = {
   pianterreno: { 
     name: 'Pianterreno',
     displayName: 'Pianterreno',
@@ -48,347 +79,347 @@ const METER_CONFIGS = {
     rawDataKeys: ['piano2_x', 'piano2_y'],
     normDataKeys: ['piano2_norm_x', 'piano2_norm_y']
   }
-};
+}; */
 
 // Helper to get meter color by display name
-const getMeterColor = (meterDisplayName) => {
+/* const getMeterColor = (meterDisplayName) => {
   const config = Object.values(METER_CONFIGS).find(c => c.displayName === meterDisplayName);
   return config?.color || '#2563eb';
-};
+}; */
 
-const SVGGrid = ({ children, onPointClick, hoveredPoint, setHoveredPoint }) => {
-  return (
-    <svg width="100%" height="600" viewBox="0 0 800 600">
-      {/* Grid pattern with fine and coarse lines */}
-      <defs>
-        <pattern id="fineGrid" width="66.67" height="50" patternUnits="userSpaceOnUse">
-          <path d="M 66.67 0 L 0 0 0 50" fill="none" stroke="#f3f4f6" strokeWidth="1.5"/>
-        </pattern>
-        <pattern id="coarseGrid" width="133.33" height="100" patternUnits="userSpaceOnUse">
-          <path d="M 133.33 0 L 0 0 0 100" fill="none" stroke="#e5e7eb" strokeWidth="2"/>
-        </pattern>
-      </defs>
-      <rect width="800" height="600" fill="url(#fineGrid)"/>
-      <rect width="800" height="600" fill="url(#coarseGrid)"/>
+// const SVGGrid = ({ children, onPointClick, hoveredPoint, setHoveredPoint }) => {
+//   return (
+//     <svg width="100%" height="600" viewBox="0 0 800 600">
+//       {/* Grid pattern with fine and coarse lines */}
+//       <defs>
+//         <pattern id="fineGrid" width="66.67" height="50" patternUnits="userSpaceOnUse">
+//           <path d="M 66.67 0 L 0 0 0 50" fill="none" stroke="#f3f4f6" strokeWidth="1.5"/>
+//         </pattern>
+//         <pattern id="coarseGrid" width="133.33" height="100" patternUnits="userSpaceOnUse">
+//           <path d="M 133.33 0 L 0 0 0 100" fill="none" stroke="#e5e7eb" strokeWidth="2"/>
+//         </pattern>
+//       </defs>
+//       <rect width="800" height="600" fill="url(#fineGrid)"/>
+//       <rect width="800" height="600" fill="url(#coarseGrid)"/>
       
-      {/* Center lines */}
-      <line x1="400" y1="0" x2="400" y2="600" stroke="#d1d5db" strokeWidth="2"/>
-      <line x1="0" y1="300" x2="800" y2="300" stroke="#d1d5db" strokeWidth="2"/>
+//       {/* Center lines */}
+//       <line x1="400" y1="0" x2="400" y2="600" stroke="#d1d5db" strokeWidth="2"/>
+//       <line x1="0" y1="300" x2="800" y2="300" stroke="#d1d5db" strokeWidth="2"/>
       
-      {/* Axis labels */}
-      <text x="750" y="320" textAnchor="end" fontSize="12" fill="#6b7280">+X</text>
-      <text x="50" y="320" textAnchor="start" fontSize="12" fill="#6b7280">-X</text>
-      <text x="410" y="30" textAnchor="start" fontSize="12" fill="#6b7280">-Y</text>
-      <text x="410" y="580" textAnchor="start" fontSize="12" fill="#6b7280">+Y</text>
+//       {/* Axis labels */}
+//       <text x="750" y="320" textAnchor="end" fontSize="12" fill="#6b7280">+X</text>
+//       <text x="50" y="320" textAnchor="start" fontSize="12" fill="#6b7280">-X</text>
+//       <text x="410" y="30" textAnchor="start" fontSize="12" fill="#6b7280">-Y</text>
+//       <text x="410" y="580" textAnchor="start" fontSize="12" fill="#6b7280">+Y</text>
       
-      {/* Scale markers */}
-      <g stroke="#9ca3af" strokeWidth="1" fontSize="12" fill="#6b7280">
-        {/* Horizontal markers */}
-        {[DISPLAY_RANGE.X_MIN, -1, -0.5, 0.5, 1, DISPLAY_RANGE.X_MAX].map(val => (
-          <g key={`h-marker-${val}`}>
-            <line x1={toSVGX(val)} y1="295" x2={toSVGX(val)} y2="305"/>
-            <text x={toSVGX(val)} y="325" textAnchor="middle">
-              {val > 0 ? '+' : ''}{val}
-            </text>
-          </g>
-        ))}
+//       {/* Scale markers */}
+//       <g stroke="#9ca3af" strokeWidth="1" fontSize="12" fill="#6b7280">
+//         {/* Horizontal markers */}
+//         {[DISPLAY_RANGE.X_MIN, -1, -0.5, 0.5, 1, DISPLAY_RANGE.X_MAX].map(val => (
+//           <g key={`h-marker-${val}`}>
+//             <line x1={toSVGX(val)} y1="295" x2={toSVGX(val)} y2="305"/>
+//             <text x={toSVGX(val)} y="325" textAnchor="middle">
+//               {val > 0 ? '+' : ''}{val}
+//             </text>
+//           </g>
+//         ))}
         
-        {/* Vertical markers */}
-        {[DISPLAY_RANGE.Y_MIN, -1, -0.5, 0.5, 1, DISPLAY_RANGE.Y_MAX].map(val => (
-          <g key={`v-marker-${val}`}>
-            <line x1="390" y1={toSVGY(val)} x2="410" y2={toSVGY(val)}/>
-            <text x="420" y={toSVGY(val) + 8} textAnchor="start">
-              {val > 0 ? '+' : ''}{val}
-            </text>
-          </g>
-        ))}
-      </g>
+//         {/* Vertical markers */}
+//         {[DISPLAY_RANGE.Y_MIN, -1, -0.5, 0.5, 1, DISPLAY_RANGE.Y_MAX].map(val => (
+//           <g key={`v-marker-${val}`}>
+//             <line x1="390" y1={toSVGY(val)} x2="410" y2={toSVGY(val)}/>
+//             <text x="420" y={toSVGY(val) + 8} textAnchor="start">
+//               {val > 0 ? '+' : ''}{val}
+//             </text>
+//           </g>
+//         ))}
+//       </g>
       
-      {children}
-    </svg>
-  );
-};
+//       {children}
+//     </svg>
+//   );
+// };
 
 // Add this after SVGGrid component definition
-const MovementPatternRenderer = ({ 
-  processedData, 
-  selectedMeter, 
-  useNormalized = false,
-  onPointClick,
-  hoveredPoint,
-  setHoveredPoint
-}) => {
-  // Build meter configs from global constant
-  const meterConfigs = Object.entries(METER_CONFIGS).map(([key, config]) => ({
-    ...config,
-    dataKey: useNormalized ? config.normDataKeys : config.rawDataKeys,
-    normDataKey: config.normDataKeys,
-    rawReadingKey: `raw${config.displayName.replace(' ', '')}`,
-    show: selectedMeter === 'all' || selectedMeter === key
-  }));
+// const MovementPatternRenderer = ({ 
+//   processedData, 
+//   selectedMeter, 
+//   useNormalized = false,
+//   onPointClick,
+//   hoveredPoint,
+//   setHoveredPoint
+// }) => {
+//   // Build meter configs from global constant
+//   const meterConfigs = Object.entries(METER_CONFIGS).map(([key, config]) => ({
+//     ...config,
+//     dataKey: useNormalized ? config.normDataKeys : config.rawDataKeys,
+//     normDataKey: config.normDataKeys,
+//     rawReadingKey: `raw${config.displayName.replace(' ', '')}`,
+//     show: selectedMeter === 'all' || selectedMeter === key
+//   }));
   
-  return (
-    <>
-      {meterConfigs.map(config => {
-        if (!config.show) return null;
+//   return (
+//     <>
+//       {meterConfigs.map(config => {
+//         if (!config.show) return null;
         
-        // Filter and sort data for this meter
-        const meterData = processedData
-          .filter(d => d[config.dataKey[0]] !== undefined && d[config.dataKey[1]] !== undefined)
-          .sort((a, b) => new Date(a.date) - new Date(b.date))
-          .map((d, index, array) => ({
-            ...d,
-            x: d[config.dataKey[0]],
-            y: d[config.dataKey[1]],
-            normX: d[config.normDataKey[0]], // Always include normalized
-            normY: d[config.normDataKey[1]], // Always include normalized
-            opacity: (index + 1) / array.length,
-            index: index,
-            rawReading: d[config.rawReadingKey],
-            isFirst: index === 0
-          }));
+//         // Filter and sort data for this meter
+//         const meterData = processedData
+//           .filter(d => d[config.dataKey[0]] !== undefined && d[config.dataKey[1]] !== undefined)
+//           .sort((a, b) => new Date(a.date) - new Date(b.date))
+//           .map((d, index, array) => ({
+//             ...d,
+//             x: d[config.dataKey[0]],
+//             y: d[config.dataKey[1]],
+//             normX: d[config.normDataKey[0]], // Always include normalized
+//             normY: d[config.normDataKey[1]], // Always include normalized
+//             opacity: (index + 1) / array.length,
+//             index: index,
+//             rawReading: d[config.rawReadingKey],
+//             isFirst: index === 0
+//           }));
         
-        if (meterData.length === 0) return null;
+//         if (meterData.length === 0) return null;
         
-        // Get first reading date for days calculation
-        const firstDate = new Date(meterData[0].date);
+//         // Get first reading date for days calculation
+//         const firstDate = new Date(meterData[0].date);
         
-        // Arrow marker ID unique for normalized vs raw
-        const markerId = `arrowhead-${useNormalized ? 'norm-' : ''}${config.name}`;
+//         // Arrow marker ID unique for normalized vs raw
+//         const markerId = `arrowhead-${useNormalized ? 'norm-' : ''}${config.name}`;
         
-        return (
-          <g key={config.name}>
-            {/* Draw connecting lines - UNCHANGED */}
-            {meterData.slice(1).map((point, i) => {
-              const prevPoint = meterData[i];
-              const x1 = toSVGX(prevPoint.x);
-              const y1 = toSVGY(prevPoint.y);
-              const x2 = toSVGX(point.x);
-              const y2 = toSVGY(point.y);
+//         return (
+//           <g key={config.name}>
+//             {/* Draw connecting lines - UNCHANGED */}
+//             {meterData.slice(1).map((point, i) => {
+//               const prevPoint = meterData[i];
+//               const x1 = toSVGX(prevPoint.x);
+//               const y1 = toSVGY(prevPoint.y);
+//               const x2 = toSVGX(point.x);
+//               const y2 = toSVGY(point.y);
               
-              const date1 = new Date(prevPoint.date);
-              const date2 = new Date(point.date);
-              const daysDiff = Math.round((date2 - date1) / (1000 * 60 * 60 * 24));
+//               const date1 = new Date(prevPoint.date);
+//               const date2 = new Date(point.date);
+//               const daysDiff = Math.round((date2 - date1) / (1000 * 60 * 60 * 24));
               
-              const lineOpacity = point.opacity * 0.8;
-              const midX = (x1 + x2) / 2;
-              const midY = (y1 + y2) / 2;
+//               const lineOpacity = point.opacity * 0.8;
+//               const midX = (x1 + x2) / 2;
+//               const midY = (y1 + y2) / 2;
               
-              return (
-                <g key={`${config.name}-line-${i}`}>
-                  <line 
-                    x1={x1} y1={y1} 
-                    x2={x2} y2={y2}
-                    stroke={config.color}
-                    strokeOpacity={lineOpacity}
-                    strokeWidth="2"
-                    markerEnd={`url(#${markerId})`}
-                  />
-                  <rect
-                    x={midX - 12}
-                    y={midY - 8}
-                    width="24"
-                    height="16"
-                    fill="white"
-                    stroke={config.color}
-                    strokeOpacity={lineOpacity}
-                    strokeWidth="1"
-                    rx="2"
-                  />
-                  <text
-                    x={midX}
-                    y={midY + 3}
-                    textAnchor="middle"
-                    fontSize="10"
-                    fill={config.color}
-                    fillOpacity={lineOpacity}
-                  >
-                    {daysDiff}d
-                  </text>
-                </g>
-              );
-            })}
+//               return (
+//                 <g key={`${config.name}-line-${i}`}>
+//                   <line 
+//                     x1={x1} y1={y1} 
+//                     x2={x2} y2={y2}
+//                     stroke={config.color}
+//                     strokeOpacity={lineOpacity}
+//                     strokeWidth="2"
+//                     markerEnd={`url(#${markerId})`}
+//                   />
+//                   <rect
+//                     x={midX - 12}
+//                     y={midY - 8}
+//                     width="24"
+//                     height="16"
+//                     fill="white"
+//                     stroke={config.color}
+//                     strokeOpacity={lineOpacity}
+//                     strokeWidth="1"
+//                     rx="2"
+//                   />
+//                   <text
+//                     x={midX}
+//                     y={midY + 3}
+//                     textAnchor="middle"
+//                     fontSize="10"
+//                     fill={config.color}
+//                     fillOpacity={lineOpacity}
+//                   >
+//                     {daysDiff}d
+//                   </text>
+//                 </g>
+//               );
+//             })}
             
-            {/* Draw points with ENHANCED hover */}
-            {meterData.map((point, i) => {
-              const currentDate = new Date(point.date);
-              const daysSinceFirst = Math.round((currentDate - firstDate) / (1000 * 60 * 60 * 24));
+//             {/* Draw points with ENHANCED hover */}
+//             {meterData.map((point, i) => {
+//               const currentDate = new Date(point.date);
+//               const daysSinceFirst = Math.round((currentDate - firstDate) / (1000 * 60 * 60 * 24));
               
-              return (
-                <g key={`${config.name}-point-${i}`}>
-                  <circle
-                    cx={toSVGX(point.x)}
-                    cy={toSVGY(point.y)}
-                    r="8"
-                    fill={config.color}
-                    fillOpacity={point.opacity}
-                    stroke="white"
-                    strokeWidth="2"
-                    style={{ cursor: 'pointer' }}
-                    onClick={() => onPointClick({
-                      date: point.date,
-                      meter: config.displayName,
-                      reading: point.rawReading
-                    })}
-                    onMouseEnter={(e) => {
-                      const svgPoint = e.target.ownerSVGElement.createSVGPoint();
-                      svgPoint.x = e.clientX;
-                      svgPoint.y = e.clientY;
-                      const svgCoords = svgPoint.matrixTransform(
-                        e.target.ownerSVGElement.getScreenCTM().inverse()
-                      );
+//               return (
+//                 <g key={`${config.name}-point-${i}`}>
+//                   <circle
+//                     cx={toSVGX(point.x)}
+//                     cy={toSVGY(point.y)}
+//                     r="8"
+//                     fill={config.color}
+//                     fillOpacity={point.opacity}
+//                     stroke="white"
+//                     strokeWidth="2"
+//                     style={{ cursor: 'pointer' }}
+//                     onClick={() => onPointClick({
+//                       date: point.date,
+//                       meter: config.displayName,
+//                       reading: point.rawReading
+//                     })}
+//                     onMouseEnter={(e) => {
+//                       const svgPoint = e.target.ownerSVGElement.createSVGPoint();
+//                       svgPoint.x = e.clientX;
+//                       svgPoint.y = e.clientY;
+//                       const svgCoords = svgPoint.matrixTransform(
+//                         e.target.ownerSVGElement.getScreenCTM().inverse()
+//                       );
                       
-                      setHoveredPoint({
-                        svgX: svgCoords.x,
-                        svgY: svgCoords.y,
-                        meter: config.displayName,
-                        color: config.color,
-                        date: point.date,
-                        daysSinceFirst: daysSinceFirst,
-                        normX: point.normX,
-                        normY: point.normY,
-                        isFirst: point.isFirst
-                      });
-                    }}
-                    onMouseLeave={() => setHoveredPoint(null)}
-                  />
-                  <text
-                    x={toSVGX(point.x)}
-                    y={toSVGY(point.y) - 15}
-                    textAnchor="middle"
-                    fontSize="9"
-                    fill={config.color}
-                    fillOpacity={point.opacity}
-                    fontWeight="500"
-                    style={{ pointerEvents: 'none' }}
-                  >
-                    {point.date.substring(5)}
-                  </text>
+//                       setHoveredPoint({
+//                         svgX: svgCoords.x,
+//                         svgY: svgCoords.y,
+//                         meter: config.displayName,
+//                         color: config.color,
+//                         date: point.date,
+//                         daysSinceFirst: daysSinceFirst,
+//                         normX: point.normX,
+//                         normY: point.normY,
+//                         isFirst: point.isFirst
+//                       });
+//                     }}
+//                     onMouseLeave={() => setHoveredPoint(null)}
+//                   />
+//                   <text
+//                     x={toSVGX(point.x)}
+//                     y={toSVGY(point.y) - 15}
+//                     textAnchor="middle"
+//                     fontSize="9"
+//                     fill={config.color}
+//                     fillOpacity={point.opacity}
+//                     fontWeight="500"
+//                     style={{ pointerEvents: 'none' }}
+//                   >
+//                     {point.date.substring(5)}
+//                   </text>
                   
-                  {useNormalized && i === 0 && (
-                    <circle
-                      cx={toSVGX(point.x)}
-                      cy={toSVGY(point.y)}
-                      r="12"
-                      fill="none"
-                      stroke={config.color}
-                      strokeWidth="2"
-                      strokeDasharray="4,2"
-                      opacity="0.6"
-                    />
-                  )}
-                </g>
-              );
-            })}
+//                   {useNormalized && i === 0 && (
+//                     <circle
+//                       cx={toSVGX(point.x)}
+//                       cy={toSVGY(point.y)}
+//                       r="12"
+//                       fill="none"
+//                       stroke={config.color}
+//                       strokeWidth="2"
+//                       strokeDasharray="4,2"
+//                       opacity="0.6"
+//                     />
+//                   )}
+//                 </g>
+//               );
+//             })}
             
-            <defs>
-              <marker
-                id={markerId}
-                markerWidth="10"
-                markerHeight="7"
-                refX="9"
-                refY="3.5"
-                orient="auto"
-              >
-                <polygon
-                  points="0 0, 10 3.5, 0 7"
-                  fill={config.color}
-                  fillOpacity="0.8"
-                />
-              </marker>
-            </defs>
-          </g>
-        );
-      })}
+//             <defs>
+//               <marker
+//                 id={markerId}
+//                 markerWidth="10"
+//                 markerHeight="7"
+//                 refX="9"
+//                 refY="3.5"
+//                 orient="auto"
+//               >
+//                 <polygon
+//                   points="0 0, 10 3.5, 0 7"
+//                   fill={config.color}
+//                   fillOpacity="0.8"
+//                 />
+//               </marker>
+//             </defs>
+//           </g>
+//         );
+//       })}
       
-      {/* TOOLTIP DISPLAY */}
-      {hoveredPoint && !hoveredPoint.isFirst && (
-        <g transform={`translate(${hoveredPoint.svgX}, ${hoveredPoint.svgY - 80})`}>
-          {/* Tooltip background */}
-          <rect 
-            x="-95" y="-40" 
-            width="190" height="75" 
-            fill="white" 
-            stroke={hoveredPoint.color}
-            strokeWidth="2" 
-            rx="4"
-            filter="drop-shadow(0 2px 4px rgba(0,0,0,0.2))"
-          />
+//       {/* TOOLTIP DISPLAY */}
+//       {hoveredPoint && !hoveredPoint.isFirst && (
+//         <g transform={`translate(${hoveredPoint.svgX}, ${hoveredPoint.svgY - 80})`}>
+//           {/* Tooltip background */}
+//           <rect 
+//             x="-95" y="-40" 
+//             width="190" height="75" 
+//             fill="white" 
+//             stroke={hoveredPoint.color}
+//             strokeWidth="2" 
+//             rx="4"
+//             filter="drop-shadow(0 2px 4px rgba(0,0,0,0.2))"
+//           />
           
-          {/* Meter name and date */}
-          <text x="0" y="-20" textAnchor="middle" fontSize="11" fontWeight="bold" fill={hoveredPoint.color}>
-            {hoveredPoint.meter} - {hoveredPoint.date}
-          </text>
+//           {/* Meter name and date */}
+//           <text x="0" y="-20" textAnchor="middle" fontSize="11" fontWeight="bold" fill={hoveredPoint.color}>
+//             {hoveredPoint.meter} - {hoveredPoint.date}
+//           </text>
           
-          {/* Days since first */}
-          <text x="0" y="-5" textAnchor="middle" fontSize="10" fill="#666">
-            Day {hoveredPoint.daysSinceFirst} from first reading
-          </text>
+//           {/* Days since first */}
+//           <text x="0" y="-5" textAnchor="middle" fontSize="10" fill="#666">
+//             Day {hoveredPoint.daysSinceFirst} from first reading
+//           </text>
           
-          {/* Normalized difference */}
-          <text x="0" y="8" textAnchor="middle" fontSize="10" fill="#333">
-            Δ Position: ({hoveredPoint.normX.toFixed(3)}, {hoveredPoint.normY.toFixed(3)}) mm
-          </text>
+//           {/* Normalized difference */}
+//           <text x="0" y="8" textAnchor="middle" fontSize="10" fill="#333">
+//             Δ Position: ({hoveredPoint.normX.toFixed(3)}, {hoveredPoint.normY.toFixed(3)}) mm
+//           </text>
           
-          {/* Interpretation */}
-          <text x="0" y="22" textAnchor="middle" fontSize="9" fontWeight="bold" fill="#000">
-            {(() => {
-              const x = hoveredPoint.normX;
-              const y = hoveredPoint.normY;
+//           {/* Interpretation */}
+//           <text x="0" y="22" textAnchor="middle" fontSize="9" fontWeight="bold" fill="#000">
+//             {(() => {
+//               const x = hoveredPoint.normX;
+//               const y = hoveredPoint.normY;
               
-              if (Math.abs(x) < 0.01 && Math.abs(y) < 0.01) return 'No significant movement';
+//               if (Math.abs(x) < 0.01 && Math.abs(y) < 0.01) return 'No significant movement';
               
-              let interpretation = '';
-              if (Math.abs(x) >= 0.01) {
-                interpretation += x > 0 ? 'Expanding' : 'Closing';
-              }
-              if (Math.abs(x) >= 0.01 && Math.abs(y) >= 0.01) {
-                interpretation += ' & ';
-              }
-              if (Math.abs(y) >= 0.01) {
-                interpretation += y > 0 ? 'Rising' : 'Sinking';
-              }
+//               let interpretation = '';
+//               if (Math.abs(x) >= 0.01) {
+//                 interpretation += x > 0 ? 'Expanding' : 'Closing';
+//               }
+//               if (Math.abs(x) >= 0.01 && Math.abs(y) >= 0.01) {
+//                 interpretation += ' & ';
+//               }
+//               if (Math.abs(y) >= 0.01) {
+//                 interpretation += y > 0 ? 'Rising' : 'Sinking';
+//               }
               
-              return interpretation;
-            })()}
-          </text>
+//               return interpretation;
+//             })()}
+//           </text>
           
-          {/* Note about normalized data */}
-          <text x="0" y="32" textAnchor="middle" fontSize="8" fill="#888" fontStyle="italic">
-            *Normalized data (unified across floors)
-          </text>
-        </g>
-      )}
+//           {/* Note about normalized data */}
+//           <text x="0" y="32" textAnchor="middle" fontSize="8" fill="#888" fontStyle="italic">
+//             *Normalized data (unified across floors)
+//           </text>
+//         </g>
+//       )}
       
-      {/* Special tooltip for first reading */}
-      {hoveredPoint && hoveredPoint.isFirst && (
-        <g transform={`translate(${hoveredPoint.svgX}, ${hoveredPoint.svgY - 50})`}>
-          <rect 
-            x="-70" y="-25" 
-            width="140" height="40" 
-            fill="white" 
-            stroke={hoveredPoint.color}
-            strokeWidth="2" 
-            rx="4"
-            filter="drop-shadow(0 2px 4px rgba(0,0,0,0.2))"
-          />
-          <text x="0" y="-8" textAnchor="middle" fontSize="11" fontWeight="bold" fill={hoveredPoint.color}>
-            {hoveredPoint.meter}
-          </text>
-          <text x="0" y="5" textAnchor="middle" fontSize="10" fill="#666">
-            First Reading (Origin)
-          </text>
-          <text x="0" y="16" textAnchor="middle" fontSize="9" fill="#888">
-            {hoveredPoint.date}
-          </text>
-        </g>
-      )}
-    </>
-  );
-};
+//       {/* Special tooltip for first reading */}
+//       {hoveredPoint && hoveredPoint.isFirst && (
+//         <g transform={`translate(${hoveredPoint.svgX}, ${hoveredPoint.svgY - 50})`}>
+//           <rect 
+//             x="-70" y="-25" 
+//             width="140" height="40" 
+//             fill="white" 
+//             stroke={hoveredPoint.color}
+//             strokeWidth="2" 
+//             rx="4"
+//             filter="drop-shadow(0 2px 4px rgba(0,0,0,0.2))"
+//           />
+//           <text x="0" y="-8" textAnchor="middle" fontSize="11" fontWeight="bold" fill={hoveredPoint.color}>
+//             {hoveredPoint.meter}
+//           </text>
+//           <text x="0" y="5" textAnchor="middle" fontSize="10" fill="#666">
+//             First Reading (Origin)
+//           </text>
+//           <text x="0" y="16" textAnchor="middle" fontSize="9" fill="#888">
+//             {hoveredPoint.date}
+//           </text>
+//         </g>
+//       )}
+//     </>
+//   );
+// };
 
 // Floor-specific interpretation configuration
-const FLOOR_INTERPRETATIONS = {
+/* const FLOOR_INTERPRETATIONS = {
   pianterreno: {
     needsInversion: true,  // P0 needs inversion to match P1
     name: 'Pianterreno',
@@ -404,7 +435,7 @@ const FLOOR_INTERPRETATIONS = {
     name: 'Piano 2',
     interpretation: 'Inverted'
   }
-};
+}; */
 
 const CrackMovementVisualizer = () => {
   const [hoveredPoint, setHoveredPoint] = useState(null);
@@ -435,16 +466,12 @@ const CrackMovementVisualizer = () => {
   ]; */
 
 // Function to calculate quadrant angle analysis
-const calculateQuadrantAngles = (reading) => {
+/* const calculateQuadrantAngles = (reading) => {
   if (!reading) return null;
   
   const [up, right, down, left] = reading.split(';').map(v => parseFloat(v));
   
   // Physical crack meter boundaries (in millimeters)
-/*   const METER_Y_MIN = -10;  // Top boundary
-  const METER_Y_MAX = 10;   // Bottom boundary
-  const METER_X_MIN = -20;  // Left boundary
-  const METER_X_MAX = 20;   // Right boundary */
   const { X_MIN: METER_X_MIN, X_MAX: METER_X_MAX, 
         Y_MIN: METER_Y_MIN, Y_MAX: METER_Y_MAX } = METER_BOUNDARIES;
   
@@ -506,19 +533,15 @@ const calculateQuadrantAngles = (reading) => {
     narrowerAngle: narrowerAngle,
     description: `${widerQuadrants}: ${widerAngle.toFixed(2)}°, ${narrowerQuadrants}: ${narrowerAngle.toFixed(2)}°`
   };
-};
+}; */
 
 // Function to calculate intersection point from crack meter readings
-const calculateIntersection = (reading) => {
+/* const calculateIntersection = (reading) => {
   if (!reading) return null;
   
   const [up, right, down, left] = reading.split(';').map(v => parseFloat(v));
   
   // Physical crack meter boundaries (in millimeters)
-/*   const METER_X_MIN = -20;  // Left boundary
-  const METER_X_MAX = 20;   // Right boundary
-  const METER_Y_MIN = -10;  // Top boundary
-  const METER_Y_MAX = 10;   // Bottom boundary */
   const { X_MIN: METER_X_MIN, X_MAX: METER_X_MAX, 
         Y_MIN: METER_Y_MIN, Y_MAX: METER_Y_MAX } = METER_BOUNDARIES;
   
@@ -577,10 +600,11 @@ const calculateIntersection = (reading) => {
   
   // Return in millimeters (physical coordinates)
   return { x: intersectionX, y: intersectionY };
-};
+}; */
 
   // Process data to calculate intersection points and normalized coordinates
-  const processedData = useMemo(() => {
+  const processedData = useProcessedData(rawData);
+/*   const processedData = useMemo(() => {
     const rawProcessed = rawData.map(entry => {
       const result = {
         date: entry.date,
@@ -591,13 +615,13 @@ const calculateIntersection = (reading) => {
       };
       
       // Calculate intersection points and quadrant angle analysis
-      const pianoterrenoPos = calculateIntersection(entry.Pianterreno);
-      const piano1Pos = calculateIntersection(entry['Piano 1']);
-      const piano2Pos = calculateIntersection(entry['Piano 2']);
+      const pianoterrenoPos = IntersectionCalculator.calculate(entry.Pianterreno);
+      const piano1Pos = IntersectionCalculator.calculate(entry['Piano 1']);
+      const piano2Pos = IntersectionCalculator.calculate(entry['Piano 2']);
       
-      const pianoterrenoAngles = calculateQuadrantAngles(entry.Pianterreno);
-      const piano1Angles = calculateQuadrantAngles(entry['Piano 1']);
-      const piano2Angles = calculateQuadrantAngles(entry['Piano 2']);
+      const pianoterrenoAngles = AngleAnalyzer.analyzeQuadrantAngles(entry.Pianterreno);
+      const piano1Angles = AngleAnalyzer.analyzeQuadrantAngles(entry['Piano 1']);
+      const piano2Angles = AngleAnalyzer.analyzeQuadrantAngles(entry['Piano 2']);
       
       if (pianoterrenoPos) {
         result.pianterreno_x = pianoterrenoPos.x;
@@ -655,18 +679,18 @@ const calculateIntersection = (reading) => {
         });
         
         return normalizedData;
-  }, []);
+  }, []); */
 
   const [selectedView, setSelectedView] = useState('timeline');
   const [selectedMeter, setSelectedMeter] = useState('all');
   const [selectedReading, setSelectedReading] = useState(null);
   // State for dataset download options
-  const [downloadFormat, setDownloadFormat] = useState('json');
+  /* const [downloadFormat, setDownloadFormat] = useState('json');
   const [includeImages, setIncludeImages] = useState(false);
-  const [isDownloading, setIsDownloading] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false); */
 
   // Helper function to construct image filename from meter and date
-  const getImageFilename = (meterName, date) => {
+/*   const getImageFilename = (meterName, date) => {
     const meterPrefix = meterName === 'Pianterreno' ? 'p0' :
                         meterName === 'Piano 1' ? 'p1' :
                         meterName === 'Piano 2' ? 'p2' : 'unknown';
@@ -676,10 +700,10 @@ const calculateIntersection = (reading) => {
     // Use PUBLIC_URL to handle both local and GitHub Pages paths
     const basePath = process.env.PUBLIC_URL || '';
     return `${basePath}/crack_images/${meterPrefix}_${dateString}.jpg`;
-  };
+  }; */
 
   // Handler to download the crack meter image
-    const downloadCrackImage = (meterName, date) => {
+/*     const downloadCrackImage = (meterName, date) => {
       const imagePath = getImageFilename(meterName, date);
       console.log('Attempting to download from:', imagePath); // ADD THIS LINE
       const filename = imagePath.split('/').pop(); // Extract just the filename
@@ -695,10 +719,10 @@ const calculateIntersection = (reading) => {
       
       // Cleanup
       document.body.removeChild(link);
-    };
+    }; */
 
     // Prepare dataset for export
-    const prepareExportData = (includeImageFilenames = false) => {
+    /* const prepareExportData = (includeImageFilenames = false) => {
       // Combine raw and processed data
       return processedData.map(row => {
         const rowData = {
@@ -751,15 +775,15 @@ const calculateIntersection = (reading) => {
         
         return rowData;
       });
-    };
+    }; */
 
     // Convert to JSON
-    const exportAsJSON = (data) => {
+ /*    const exportAsJSON = (data) => {
       return JSON.stringify(data, null, 2);
-    };
+    }; */
 
     // Convert to CSV
-    const exportAsCSV = (data) => {
+    /* const exportAsCSV = (data) => {
       if (data.length === 0) return '';
       
       // Get headers from first object
@@ -779,15 +803,15 @@ const calculateIntersection = (reading) => {
       );
       
       return [csvHeaders, ...csvRows].join('\n');
-    };
+    }; */
 
     // Convert to YAML
-    const exportAsYAML = (data) => {
+    /* const exportAsYAML = (data) => {
       return yaml.dump(data);
-    };
+    }; */
 
     // Convert to XLSX (using SheetJS which is already available)
-    const exportAsXLSX = (data) => {
+    /* const exportAsXLSX = (data) => {
       const worksheet = XLSX.utils.json_to_sheet(data);
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, 'Crack Data');
@@ -795,10 +819,10 @@ const calculateIntersection = (reading) => {
       // Generate binary string
       const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
       return wbout;
-    };
+    }; */
     
     // Fetch all crack meter images
-    const fetchAllImages = async () => {
+    /* const fetchAllImages = async () => {
       const images = {};
       
       // Get all unique dates and meters from the data
@@ -833,10 +857,10 @@ const calculateIntersection = (reading) => {
       }
       
       return images;
-    };
+    }; */
 
     // Create and download dataset with optional images
-    const downloadDataset = async () => {
+    /* const downloadDataset = async () => {
       setIsDownloading(true);
       
       try {
@@ -915,10 +939,10 @@ const calculateIntersection = (reading) => {
       } finally {
         setIsDownloading(false);
       }
-    };
+    }; */
 
   // Custom tooltip for charts
-  const CustomTooltip = ({ active, payload, label }) => {
+/*   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-white p-3 border border-gray-300 rounded shadow">
@@ -932,7 +956,7 @@ const calculateIntersection = (reading) => {
       );
     }
     return null;
-  };
+  }; */
 
   return (
     <div className="w-full max-w-6xl mx-auto p-6 bg-white">
@@ -977,37 +1001,30 @@ const calculateIntersection = (reading) => {
             </select>
           </div>
         )}
-        
+
         {selectedView === 'single' && (
           <div>
-            <label className="block text-sm font-medium mb-2">Reading:</label>
+            <label className="block text-sm font-medium mb-2">Select Reading:</label>
             <select 
-              value={selectedReading || ''} 
-              onChange={(e) => setSelectedReading(e.target.value || null)}
+              value={selectedReading || ''}
+              onChange={(e) => setSelectedReading(e.target.value)}
               className="border border-gray-300 rounded px-3 py-2"
             >
-              <option value="">Select a reading...</option>
+              <option value="">Choose a reading...</option>
               {processedData
-                .filter(d => d.rawPianterreno || d.rawPiano1 || d.rawPiano2)
-                .map((entry, index) => {
+                .flatMap(row => {
                   const readings = [];
-                  if (entry.rawPianterreno) readings.push(`Pianterreno: ${entry.rawPianterreno}`);
-                  if (entry.rawPiano1) readings.push(`Piano 1: ${entry.rawPiano1}`);
-                  if (entry.rawPiano2) readings.push(`Piano 2: ${entry.rawPiano2}`);
-                  
-                  return readings.map((reading, readingIndex) => {
-                    const meterName = reading.split(':')[0];
-                    const meterReading = reading.split(': ')[1];
-                    return (
-                      <option 
-                        key={`${index}-${readingIndex}`} 
-                        value={JSON.stringify({ date: entry.date, meter: meterName, reading: meterReading })}
-                      >
-                        {entry.date} - {reading}
-                      </option>
-                    );
-                  });
-                }).flat()}
+                  if (row.rawPianterreno) readings.push({ date: row.date, meter: 'Pianterreno', reading: row.rawPianterreno });
+                  if (row.rawPiano1) readings.push({ date: row.date, meter: 'Piano 1', reading: row.rawPiano1 });
+                  if (row.rawPiano2) readings.push({ date: row.date, meter: 'Piano 2', reading: row.rawPiano2 });
+                  return readings;
+                })
+                .map((item, idx) => (
+                  <option key={idx} value={JSON.stringify(item)}>
+                    {item.date} - {item.meter}
+                  </option>
+                ))
+              }
             </select>
           </div>
         )}
@@ -1016,1077 +1033,50 @@ const calculateIntersection = (reading) => {
       {/******** Timeline View ********/}
       {/* Timeline View */}
       {selectedView === 'timeline' && (
-        <div className="space-y-8">
-          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded">
-            <p className="text-sm text-blue-800">
-              <strong>Timeline shows normalized movement data:</strong> All floors start at (0, 0) relative to their first reading. 
-              This allows direct comparison of structural movement patterns across all floors.
-            </p>
-          </div>
-          
-          <div>
-            <h2 className="text-xl font-semibold mb-4">Horizontal Movement Over Time (X-axis)</h2>
-            <p className="text-sm text-gray-600 mb-2">
-              Positive values = crack expanding | Negative values = crack closing
-            </p>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={processedData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis label={{ value: 'Δ Position (mm)', angle: -90, position: 'insideLeft' }} />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend />
-                {(selectedMeter === 'all' || selectedMeter === 'pianterreno') && (
-                  <Line type="monotone" dataKey="pianterreno_norm_x" stroke="#8884d8" name="Pianterreno X" connectNulls={false} />
-                )}
-                {(selectedMeter === 'all' || selectedMeter === 'piano1') && (
-                  <Line type="monotone" dataKey="piano1_norm_x" stroke="#82ca9d" name="Piano 1 X" connectNulls={false} />
-                )}
-                {(selectedMeter === 'all' || selectedMeter === 'piano2') && (
-                  <Line type="monotone" dataKey="piano2_norm_x" stroke="#ffc658" name="Piano 2 X" connectNulls={false} />
-                )}
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-
-          <div>
-            <h2 className="text-xl font-semibold mb-4">Vertical Movement Over Time (Y-axis)</h2>
-            <p className="text-sm text-gray-600 mb-2">
-              Positive values = wall rising | Negative values = wall sinking
-            </p>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={processedData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis label={{ value: 'Δ Position (mm)', angle: -90, position: 'insideLeft' }} />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend />
-                {(selectedMeter === 'all' || selectedMeter === 'pianterreno') && (
-                  <Line type="monotone" dataKey="pianterreno_norm_y" stroke="#8884d8" name="Pianterreno Y" connectNulls={false} />
-                )}
-                {(selectedMeter === 'all' || selectedMeter === 'piano1') && (
-                  <Line type="monotone" dataKey="piano1_norm_y" stroke="#82ca9d" name="Piano 1 Y" connectNulls={false} />
-                )}
-                {(selectedMeter === 'all' || selectedMeter === 'piano2') && (
-                  <Line type="monotone" dataKey="piano2_norm_y" stroke="#ffc658" name="Piano 2 Y" connectNulls={false} />
-                )}
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+        <TimelineView 
+          processedData={processedData} 
+          selectedMeter={selectedMeter} 
+        />
       )}
 
       {/******** Single Reading View ********/} 
-      {selectedView === 'single' && (
-        <div>
-          <h2 className="text-xl font-semibold mb-4">Single Reading Visualization</h2>
-          
-          {/* Navigation and action buttons */}
-          <div className="mb-4 flex items-center gap-3">
-            <button
-              onClick={() => setSelectedView('movement')}
-              className="inline-flex items-center gap-2 px-3 py-1 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors text-sm"
-              title="Back to Movement Patterns"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="m12 19-7-7 7-7"/>
-                <path d="M19 12H5"/>
-              </svg>
-              Movement Patterns
-            </button>
-            
-            {selectedReading && (() => {
-              const parsedReading = JSON.parse(selectedReading);
-              return (
-                <button
-                  onClick={() => downloadCrackImage(parsedReading.meter, parsedReading.date)}
-                  className="inline-flex items-center gap-2 px-3 py-1 bg-blue-600 text-white hover:bg-blue-700 rounded transition-colors text-sm"
-                  title="Download crack meter image"
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                    <polyline points="7 10 12 15 17 10"/>
-                    <line x1="12" y1="15" x2="12" y2="3"/>
-                  </svg>
-                  Download Image
-                </button>
-              );
-            })()}
-          </div>
-          
-          {selectedReading ? (
-            (() => {
-              const parsedReading = JSON.parse(selectedReading);
-              const { date, meter, reading } = parsedReading;
-              const meterName = meter;
-              
-              const meterColor = getMeterColor(meterName);
-              
-              // Calculate intersection point and angle analysis
-              const intersection = calculateIntersection(reading);
-              const angleAnalysis = calculateQuadrantAngles(reading);
-              
-              // Calculate normalized intersection (relative to first reading of this meter)
-              let normalizedIntersection = null;
-              if (intersection !== null) {
-                const meterKey = meterName === 'Pianterreno' ? 'pianterreno' : 
-                                meterName === 'Piano 1' ? 'piano1' : 'piano2';
-                
-                // Find the first reading for this meter to use as origin
-                const meterData = processedData
-                  .filter(d => d[`${meterKey}_x`] !== undefined)
-                  .sort((a, b) => new Date(a.date) - new Date(b.date));
-                
-                if (meterData.length > 0) {
-                  const firstReading = meterData[0];
-                  const originX = firstReading[`${meterKey}_x`];
-                  const originY = firstReading[`${meterKey}_y`];
-                  
-                  // Calculate relative position from first reading
-                  let normX = intersection.x - originX;
-                  let normY = intersection.y - originY;
-                  
-                  // Apply floor-specific inversion to match P1 interpretation
-                  if (FLOOR_INTERPRETATIONS[meterKey].needsInversion) {
-                    normX = -normX;
-                    normY = -normY;
-                  }
-                  
-                  normalizedIntersection = {
-                    x: normX,
-                    y: normY
-                  };
-                }
-              }
-              
-              if (!intersection) {
-                return (
-                  <div className="text-red-500 p-4 border border-red-200 rounded">
-                    Unable to calculate intersection for this reading. Please check the data format.
-                    {normalizedIntersection !== null && (
-                      <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded">
-                        <div className="text-sm">
-                          <strong className="text-blue-800">Normalized Position:</strong>
-                          <span className="text-blue-700 font-mono ml-2">
-                            ({normalizedIntersection.x.toFixed(3)}, {normalizedIntersection.y.toFixed(3)}) mm
-                          </span>
-                          <div className="text-xs text-blue-600 mt-1">
-                            ○ Blue circle outline shows position relative to this meter's first reading
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              }
-              
-              return (
-                <div className="space-y-6">
-                  <div className="bg-gray-50 p-4 rounded">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div 
-                        className="w-4 h-4 rounded-full"
-                        style={{ backgroundColor: meterColor }}
-                      ></div>
-                      <h3 className="font-semibold">{meterName} - {date}</h3>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                      <div>
-                        <strong>Raw Reading:</strong> {reading}
-                      </div>
-                      <div>
-                        <strong>Intersection Point:</strong> ({intersection.x.toFixed(3)}, {intersection.y.toFixed(3)})
-                      </div>
-                      <div>
-                        <strong>Grid Coordinates:</strong> X: {intersection.x.toFixed(3)}mm, Y: {intersection.y.toFixed(3)}mm
-                      </div>
-                      {normalizedIntersection !== null && (
-                        <div>
-                          <strong>Normalized Grid Coordinates:</strong> X: {normalizedIntersection.x.toFixed(3)}mm, Y: {normalizedIntersection.y.toFixed(3)}mm
-                        </div>
-                      )}
-                    </div>
-                    {angleAnalysis && angleAnalysis.deviation > 0.1 && (
-                      <div className="mt-3 p-2 bg-orange-50 border border-orange-200 rounded">
-                        <div className="text-sm">
-                          <strong className="text-orange-800">Cross Angle Analysis:</strong> <span className="text-orange-700">{angleAnalysis.description}</span>
-                          <div className="text-xs text-orange-600 mt-1">
-                            Deviation from 90°: {angleAnalysis.deviation.toFixed(2)}°
-                            {angleAnalysis.deviation > 2.0 && " - Consider measurement verification"}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="border border-gray-300 rounded-lg p-4">
-                    <svg width="100%" height="600" viewBox="0 0 800 600">
-                      {/* Grid pattern with fine and coarse lines */}
-                      <defs>
-                        {/* Fine grid at 0.25mm intervals (lighter) */}
-                        <pattern id="fineGrid" width="66.67" height="50" patternUnits="userSpaceOnUse">
-                          <path d="M 66.67 0 L 0 0 0 50" fill="none" stroke="#f3f4f6" strokeWidth="1.5"/>
-                        </pattern>
-                        {/* Coarse grid at 0.5mm intervals (darker) */}
-                        <pattern id="coarseGrid" width="133.33" height="100" patternUnits="userSpaceOnUse">
-                          <path d="M 133.33 0 L 0 0 0 100" fill="none" stroke="#e5e7eb" strokeWidth="2"/>
-                        </pattern>
-                      </defs>
-                      {/* Draw fine grid first, then coarse on top */}
-                      <rect width="800" height="600" fill="url(#fineGrid)"/>
-                      <rect width="800" height="600" fill="url(#coarseGrid)"/>
-                      
-                      {/* Center lines */}
-                      <line x1="400" y1="0" x2="400" y2="600" stroke="#d1d5db" strokeWidth="2"/>
-                      <line x1="0" y1="300" x2="800" y2="300" stroke="#d1d5db" strokeWidth="2"/>
-                      
-                      {/* Scale markers and labels - matching other views */}
-                      <g stroke="#9ca3af" strokeWidth="1" fontSize="12" fill="#6b7280">
-                        {/* Horizontal markers */}
-                        {[DISPLAY_RANGE.X_MIN, -1, -0.5, 0.5, 1, DISPLAY_RANGE.X_MAX].map((val, idx) => {
-                          const xPos = toSVGX(val);
-                          return (
-                            <g key={`h-marker-${idx}`}>
-                              <line x1={xPos} y1="295" x2={xPos} y2="305"/>
-                              <text x={xPos} y="325" textAnchor="middle">
-                                {val > 0 ? '+' : ''}{val}
-                              </text>
-                            </g>
-                          );
-                        })}
-                        
-                      {/* Vertical markers */}
-                        {[DISPLAY_RANGE.Y_MIN, -1, -0.5, 0.5, 1, DISPLAY_RANGE.Y_MAX].map((val, idx) => {
-                          const yPos = toSVGY(val);
-                          return (
-                            <g key={`v-marker-${idx}`}>
-                              <line x1="390" y1={yPos} x2="410" y2={yPos}/>
-                              <text x="420" y={yPos + 8} textAnchor="start">
-                                {val > 0 ? '+' : ''}{val}
-                              </text>
-                            </g>
-                          );
-                        })}
-                      </g>
-                      
-                      {/* Draw the crack cross */}
-                      {(() => {
-                        const [up, right, down, left] = reading.split(';').map(v => parseFloat(v));
-                        
-                        // Physical crack meter boundaries (in millimeters)
-                        /* const METER_Y_MIN = -10;
-                        const METER_Y_MAX = 10;
-                        const METER_X_MIN = -20;
-                        const METER_X_MAX = 20; */
-                        const { X_MIN: METER_X_MIN, X_MAX: METER_X_MAX, 
-                                Y_MIN: METER_Y_MIN, Y_MAX: METER_Y_MAX } = METER_BOUNDARIES;
-                        
-                        // Line endpoints in physical coordinates (mm)
-                        const topPoint = { x: up, y: METER_Y_MIN };
-                        const bottomPoint = { x: down, y: METER_Y_MAX };
-                        const leftPoint = { x: METER_X_MIN, y: left };
-                        const rightPoint = { x: METER_X_MAX, y: right };
-                        
-                        // Calculate intersection in physical coordinates
-                        let gridX, gridY;
-                        
-                        if (Math.abs(topPoint.x - bottomPoint.x) < 1e-10) {
-                          // Vertical line
-                          const verticalX = topPoint.x;
-                          const horizontalSlope = (rightPoint.y - leftPoint.y) / (METER_X_MAX - METER_X_MIN);
-                          const intersectionY = leftPoint.y + horizontalSlope * (verticalX - METER_X_MIN);
-                          gridX = verticalX;
-                          gridY = intersectionY;
-                        } else if (Math.abs(leftPoint.y - rightPoint.y) < 1e-10) {
-                          // Horizontal line
-                          const horizontalY = leftPoint.y;
-                          const verticalSlope = (bottomPoint.x - topPoint.x) / (METER_Y_MAX - METER_Y_MIN);
-                          const intersectionX = topPoint.x + verticalSlope * (horizontalY - METER_Y_MIN);
-                          gridX = intersectionX;
-                          gridY = horizontalY;
-                        } else {
-                          // Normal case
-                          const m1 = (bottomPoint.y - topPoint.y) / (bottomPoint.x - topPoint.x);
-                          const b1 = topPoint.y - m1 * topPoint.x;
-                          const m2 = (rightPoint.y - leftPoint.y) / (rightPoint.x - leftPoint.x);
-                          const b2 = leftPoint.y - m2 * leftPoint.x;
-                          
-                          gridX = (b2 - b1) / (m1 - m2);
-                          gridY = m1 * gridX + b1;
-                        }
-                        
-                        // DISPLAY conversion functions (map physical mm to 800x600 SVG space)
-                        // Display range: X ∈ [-1.5, +1.5]mm, Y ∈ [-1.5, +1.5]mm
-                        const toSVGX = (x_mm) => 400 + x_mm * 266.67;  // 266.67px per mm
-                        const toSVGY = (y_mm) => 300 + y_mm * 200;     // 200px per mm
-                        
-                        // For drawing lines across the ENTIRE display
-                        const displayYMin = DISPLAY_RANGE.Y_MIN;
-                        const displayYMax = DISPLAY_RANGE.Y_MAX;
-                        const displayXMin = DISPLAY_RANGE.X_MIN;
-                        const displayXMax = DISPLAY_RANGE.X_MAX;
-                        
-                        // Calculate vertical line endpoints
-                        let topDisplayX, bottomDisplayX;
-                        
-                        if (Math.abs(topPoint.x - bottomPoint.x) < 1e-10) {
-                          // Truly vertical line - same x-coordinate throughout
-                          topDisplayX = up;
-                          bottomDisplayX = down;  // Same as up
-                        } else {
-                          // Sloped line - calculate where it crosses display top and bottom
-                          const verticalSlope = (bottomPoint.y - topPoint.y) / (bottomPoint.x - topPoint.x);
-                          const verticalIntercept = topPoint.y - verticalSlope * topPoint.x;
-                          
-                          // x = (y - b) / m
-                          topDisplayX = (displayYMin - verticalIntercept) / verticalSlope;
-                          bottomDisplayX = (displayYMax - verticalIntercept) / verticalSlope;
-                        }
-                        
-                        // Calculate horizontal line endpoints
-                        let leftDisplayY, rightDisplayY;
-                        
-                        if (Math.abs(leftPoint.y - rightPoint.y) < 1e-10) {
-                          // Truly horizontal line - same y-coordinate throughout
-                          leftDisplayY = left;
-                          rightDisplayY = right;  // Same as left
-                        } else {
-                          // Sloped line - calculate where it crosses display left and right
-                          const horizontalSlope = (rightPoint.y - leftPoint.y) / (rightPoint.x - leftPoint.x);
-                          const horizontalIntercept = leftPoint.y - horizontalSlope * leftPoint.x;
-                          
-                          // y = mx + b
-                          leftDisplayY = horizontalSlope * displayXMin + horizontalIntercept;
-                          rightDisplayY = horizontalSlope * displayXMax + horizontalIntercept;
-                        }
-                        
-                        // Convert to SVG coordinates
-                        const topX_svg = toSVGX(topDisplayX);
-                        const topY_svg = toSVGY(displayYMin);
-                        const bottomX_svg = toSVGX(bottomDisplayX);
-                        const bottomY_svg = toSVGY(displayYMax);
-                        
-                        const leftX_svg = toSVGX(displayXMin);
-                        const leftY_svg = toSVGY(leftDisplayY);
-                        const rightX_svg = toSVGX(displayXMax);
-                        const rightY_svg = toSVGY(rightDisplayY);
-                        
-                        const intersectionX_svg = toSVGX(gridX);
-                        const intersectionY_svg = toSVGY(gridY);
-                        
-                        return (
-                          <>
-                            {/* Vertical line - across entire display - DASHED for actual position */}
-                            <line 
-                              x1={topX_svg} y1={topY_svg} 
-                              x2={bottomX_svg} y2={bottomY_svg} 
-                              stroke="#ff6b6b" 
-                              strokeWidth="1.5"
-                              strokeDasharray="3,3"
-                              opacity="0.6"
-                            />
-
-                            {/* Horizontal line - across entire display - DASHED for actual position */}
-                            <line 
-                              x1={leftX_svg} y1={leftY_svg} 
-                              x2={rightX_svg} y2={rightY_svg} 
-                              stroke="#ff6b6b" 
-                              strokeWidth="1.5"
-                              strokeDasharray="3,3"
-                              opacity="0.6"
-                            />
-                            
-                            {/* Intersection point (absolute) - DASHED CIRCLE with simple tooltip */}
-                            <circle 
-                              cx={intersectionX_svg} 
-                              cy={intersectionY_svg} 
-                              r="8" 
-                              fill="white"
-                              stroke={meterColor} 
-                              strokeWidth="2"
-                              strokeDasharray="3,2"
-                              style={{ cursor: 'pointer' }}
-                              onMouseEnter={() => {
-                                setHoveredPoint({
-                                  show: true,
-                                  isRaw: true,
-                                  meter: meterName,
-                                  color: meterColor,
-                                  rawX: intersection.x,
-                                  rawY: intersection.y
-                                });
-                              }}
-                              onMouseLeave={() => setHoveredPoint(null)}
-                            />
-
-                            {/* Normalized intersection marker - SOLID DOT + RED CROSS with detailed tooltip */}
-                            {normalizedIntersection !== null && (
-                              <g transform={`translate(${toSVGX(normalizedIntersection.x)}, ${toSVGY(normalizedIntersection.y)})`}>
-                                {/* Red cross at normalized position */}
-                                <line 
-                                  x1="-15" y1="0" 
-                                  x2="15" y2="0" 
-                                  stroke="#dc2626" 
-                                  strokeWidth="3"
-                                />
-                                <line 
-                                  x1="0" y1="-15" 
-                                  x2="0" y2="15" 
-                                  stroke="#dc2626" 
-                                  strokeWidth="3"
-                                />
-                                {/* Solid floor-colored dot with hover */}
-                                <circle 
-                                  cx="0" 
-                                  cy="0" 
-                                  r="8" 
-                                  fill={meterColor} 
-                                  stroke="white"
-                                  strokeWidth="2"
-                                  style={{ cursor: 'pointer' }}
-                                  onMouseEnter={() => {
-                                    // Calculate days since first reading for this meter
-                                    const meterKey = meterName === 'Pianterreno' ? 'pianterreno' : 
-                                                    meterName === 'Piano 1' ? 'piano1' : 'piano2';
-                                    const firstReading = processedData
-                                      .filter(d => d[`${meterKey}_x`] !== undefined)
-                                      .sort((a, b) => new Date(a.date) - new Date(b.date))[0];
-                                    
-                                    const daysSinceFirst = firstReading ? 
-                                      Math.round((new Date(date) - new Date(firstReading.date)) / (1000 * 60 * 60 * 24)) : 0;
-                                    
-                                    setHoveredPoint({
-                                      show: true,
-                                      meter: meterName,
-                                      color: meterColor,
-                                      date: date,
-                                      daysSinceFirst: daysSinceFirst,
-                                      rawX: intersection.x,
-                                      rawY: intersection.y,
-                                      normX: normalizedIntersection?.x || 0,
-                                      normY: normalizedIntersection?.y || 0,
-                                      reading: reading,
-                                      angleAnalysis: angleAnalysis,
-                                      isNormalized: true  // Flag to identify this is normalized position
-                                    });
-                                  }}
-                                  onMouseLeave={() => setHoveredPoint(null)}
-                                />
-                                {/* Coordinate label */}
-                                <text 
-                                  x="0" 
-                                  y="-22" 
-                                  textAnchor="middle" 
-                                  fontSize="10" 
-                                  fill={meterColor} 
-                                  fontWeight="bold"
-                                  stroke="white"
-                                  strokeWidth="2"
-                                  paintOrder="stroke"
-                                  style={{ pointerEvents: 'none' }}
-                                >
-                                  ({normalizedIntersection.x.toFixed(3)}, {normalizedIntersection.y.toFixed(3)})
-                                </text>
-                              </g>
-                            )}
-
-                            {/* Tooltip for normalized position (detailed) */}
-                            {hoveredPoint && hoveredPoint.show && hoveredPoint.isNormalized && (
-                              <g transform={`translate(${toSVGX(hoveredPoint.normX)}, ${toSVGY(hoveredPoint.normY) - 90})`}>
-                                {/* Tooltip background */}
-                                <rect 
-                                  x="-110" y="-45" 
-                                  width="220" height="85" 
-                                  fill="white" 
-                                  stroke={hoveredPoint.color}
-                                  strokeWidth="2" 
-                                  rx="4"
-                                  filter="drop-shadow(0 2px 4px rgba(0,0,0,0.2))"
-                                />
-                                
-                                {/* Header */}
-                                <text x="0" y="-25" textAnchor="middle" fontSize="11" fontWeight="bold" fill={hoveredPoint.color}>
-                                  {hoveredPoint.meter} - {hoveredPoint.date}
-                                </text>
-                                
-                                {/* Days since first */}
-                                <text x="0" y="-10" textAnchor="middle" fontSize="10" fill="#666">
-                                  Day {hoveredPoint.daysSinceFirst} from first reading
-                                </text>
-                                
-                                {/* Raw position */}
-                                <text x="0" y="3" textAnchor="middle" fontSize="9" fill="#888">
-                                  Raw: ({hoveredPoint.rawX.toFixed(3)}, {hoveredPoint.rawY.toFixed(3)}) mm
-                                </text>
-                                
-                                {/* Normalized position */}
-                                <text x="0" y="16" textAnchor="middle" fontSize="10" fill="#333">
-                                  Normalized: ({hoveredPoint.normX.toFixed(3)}, {hoveredPoint.normY.toFixed(3)}) mm
-                                </text>
-                                
-                                {/* Interpretation */}
-                                <text x="0" y="30" textAnchor="middle" fontSize="9" fontWeight="bold" fill="#000">
-                                  {(() => {
-                                    const x = hoveredPoint.normX;
-                                    const y = hoveredPoint.normY;
-                                    
-                                    if (Math.abs(x) < 0.01 && Math.abs(y) < 0.01) return 'No significant movement';
-                                    
-                                    let interpretation = '';
-                                    if (Math.abs(x) >= 0.01) {
-                                      interpretation += x > 0 ? 'Expanding' : 'Closing';
-                                    }
-                                    if (Math.abs(x) >= 0.01 && Math.abs(y) >= 0.01) {
-                                      interpretation += ' & ';
-                                    }
-                                    if (Math.abs(y) >= 0.01) {
-                                      interpretation += y > 0 ? 'Rising' : 'Sinking';
-                                    }
-                                    
-                                    return interpretation;
-                                  })()}
-                                </text>
-                              </g>
-                            )}
-
-                            {/* Tooltip for raw position (simple) */}
-                            {hoveredPoint && hoveredPoint.show && hoveredPoint.isRaw && (
-                              <g transform={`translate(${toSVGX(hoveredPoint.rawX)}, ${toSVGY(hoveredPoint.rawY) - 50})`}>
-                                {/* Tooltip background */}
-                                <rect 
-                                  x="-95" y="-30" 
-                                  width="190" height="50" 
-                                  fill="white" 
-                                  stroke={hoveredPoint.color}
-                                  strokeWidth="2" 
-                                  rx="4"
-                                  filter="drop-shadow(0 2px 4px rgba(0,0,0,0.2))"
-                                />
-                                
-                                {/* Header */}
-                                <text x="0" y="-12" textAnchor="middle" fontSize="11" fontWeight="bold" fill={hoveredPoint.color}>
-                                  Raw Reading Position
-                                </text>
-                                
-                                {/* Coordinates */}
-                                <text x="0" y="2" textAnchor="middle" fontSize="10" fill="#333">
-                                  ({hoveredPoint.rawX.toFixed(3)}, {hoveredPoint.rawY.toFixed(3)}) mm
-                                </text>
-                                
-                                {/* Instruction */}
-                                <text x="0" y="15" textAnchor="middle" fontSize="9" fill="#666" fontStyle="italic">
-                                  Hover over normalized position (solid dot)
-                                </text>
-                                <text x="0" y="26" textAnchor="middle" fontSize="9" fill="#666" fontStyle="italic">
-                                  for detailed movement analysis
-                                </text>
-                              </g>
-                            )}
-
-                            {/* Physical meter boundary readings shown on display edges */}
-                            {(() => {
-                              const [up, right, down, left] = reading.split(';').map(v => parseFloat(v));
-                              
-                            // Display boundaries
-                            const DISPLAY_X_MIN = DISPLAY_RANGE.X_MIN;
-                            const DISPLAY_X_MAX = DISPLAY_RANGE.X_MAX;
-                            const DISPLAY_Y_MIN = DISPLAY_RANGE.Y_MIN;
-                            const DISPLAY_Y_MAX = DISPLAY_RANGE.Y_MAX;
-                              
-                              const boundaryMarkers = [];
-                              
-                              // Top edge: show "up" reading (if visible)
-                              if (up >= DISPLAY_X_MIN && up <= DISPLAY_X_MAX) {
-                                boundaryMarkers.push({ x: up, y: DISPLAY_Y_MIN, label: 'top' });
-                              }
-                              
-                              // Bottom edge: show "down" reading (if visible)
-                              if (down >= DISPLAY_X_MIN && down <= DISPLAY_X_MAX) {
-                                boundaryMarkers.push({ x: down, y: DISPLAY_Y_MAX, label: 'bottom' });
-                              }
-                              
-                              // Left edge: show "left" reading (if visible)
-                              if (left >= DISPLAY_Y_MIN && left <= DISPLAY_Y_MAX) {
-                                boundaryMarkers.push({ x: DISPLAY_X_MIN, y: left, label: 'left' });
-                              }
-                              
-                              // Right edge: show "right" reading (if visible)
-                              if (right >= DISPLAY_Y_MIN && right <= DISPLAY_Y_MAX) {
-                                boundaryMarkers.push({ x: DISPLAY_X_MAX, y: right, label: 'right' });
-                              }
-                              
-                              return boundaryMarkers.map((marker, idx) => (
-                                <circle
-                                  key={`boundary-reading-${idx}`}
-                                  cx={toSVGX(marker.x)}
-                                  cy={toSVGY(marker.y)}
-                                  r="6"
-                                  fill="none"
-                                  stroke="#ff6b6b"
-                                  strokeWidth="2"
-                                  strokeDasharray="3,3"
-                                  opacity="0.6"
-                                />
-                              ));
-                            })()}
-
-                            {/* Boundary intersection labels - showing actual reading values */}
-                            <text x={toSVGX(up)} y="15" textAnchor="middle" fontSize="12" fill="#dc2626" fontWeight="bold">
-                              ↑{up}
-                            </text>
-                            <text x={toSVGX(down)} y="590" textAnchor="middle" fontSize="12" fill="#dc2626" fontWeight="bold">
-                              ↓{down}
-                            </text>
-                            <text x="10" y={toSVGY(left) + 4} textAnchor="start" fontSize="12" fill="#dc2626" fontWeight="bold">
-                              ←{left}
-                            </text>
-                            <text x="790" y={toSVGY(right) + 4} textAnchor="end" fontSize="12" fill="#dc2626" fontWeight="bold">
-                              →{right}
-                            </text>
-                            
-                            {/* Intersection coordinate label */}
-                            <text 
-                              x={intersectionX_svg} 
-                              y={intersectionY_svg - 15} 
-                              textAnchor="middle" 
-                              fontSize="12" 
-                              fill={meterColor} 
-                              fontWeight="bold"
-                              stroke="white"
-                              strokeWidth="3"
-                              paintOrder="stroke"
-                            >
-                              ({gridX.toFixed(3)}, {gridY.toFixed(3)})
-                            </text>
-                            
-                            {/* Quadrant angle labels for non-orthogonal crosses */}
-                            {angleAnalysis && angleAnalysis.deviation > 0.1 && (
-                              <>
-                                <text x="200" y="150" textAnchor="middle" fontSize="12" fill="#7c3aed" fontWeight="bold"
-                                      stroke="white" strokeWidth="3" paintOrder="stroke">
-                                  NW: {angleAnalysis.widerQuadrants?.includes('NW') ? 
-                                    angleAnalysis.widerAngle.toFixed(1) : angleAnalysis.narrowerAngle.toFixed(1)}°
-                                </text>
-                                <text x="600" y="150" textAnchor="middle" fontSize="12" fill="#7c3aed" fontWeight="bold"
-                                      stroke="white" strokeWidth="3" paintOrder="stroke">
-                                  NE: {angleAnalysis.widerQuadrants?.includes('NE') ? 
-                                    angleAnalysis.widerAngle.toFixed(1) : angleAnalysis.narrowerAngle.toFixed(1)}°
-                                </text>
-                                <text x="200" y="450" textAnchor="middle" fontSize="12" fill="#7c3aed" fontWeight="bold"
-                                      stroke="white" strokeWidth="3" paintOrder="stroke">
-                                  SW: {angleAnalysis.widerQuadrants?.includes('SW') ? 
-                                    angleAnalysis.widerAngle.toFixed(1) : angleAnalysis.narrowerAngle.toFixed(1)}°
-                                </text>
-                                <text x="600" y="450" textAnchor="middle" fontSize="12" fill="#7c3aed" fontWeight="bold"
-                                      stroke="white" strokeWidth="3" paintOrder="stroke">
-                                  SE: {angleAnalysis.widerQuadrants?.includes('SE') ? 
-                                    angleAnalysis.widerAngle.toFixed(1) : angleAnalysis.narrowerAngle.toFixed(1)}°
-                                </text>
-                              </>
-                            )}
-                          </>
-                        );
-                      })()}
-                    </svg>
-
-                    {/* Legend */}
-                    <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded">
-                      <div className="text-sm font-semibold mb-2">Symbol Legend:</div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                        <div className="flex items-center gap-2">
-                          <svg width="50" height="30" viewBox="0 0 50 30">
-                            {/* Dashed red cross - hairline */}
-                            <line x1="10" y1="15" x2="40" y2="15" stroke="#dc2626" strokeWidth="1.5" strokeDasharray="6,3" opacity="0.6" />
-                            <line x1="25" y1="5" x2="25" y2="25" stroke="#dc2626" strokeWidth="1.5" strokeDasharray="6,3" opacity="0.6" />
-                            {/* Dashed circle */}
-                            <circle cx="25" cy="15" r="6" fill="white" stroke={meterColor} strokeWidth="2" strokeDasharray="3,2" />
-                          </svg>
-                          <span><strong>Hairline dashed cross + dashed circle:</strong> Raw reading position</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <svg width="50" height="30" viewBox="0 0 50 30">
-                            {/* Solid red cross */}
-                            <line x1="10" y1="15" x2="40" y2="15" stroke="#dc2626" strokeWidth="3" />
-                            <line x1="25" y1="5" x2="25" y2="25" stroke="#dc2626" strokeWidth="3" />
-                            {/* Solid dot */}
-                            <circle cx="25" cy="15" r="6" fill={meterColor} stroke="white" strokeWidth="2" />
-                          </svg>
-                          <span><strong>Solid cross + solid dot:</strong> Normalized position (movement from origin)</span>
-                        </div>
-                      </div>
-                      <div className="mt-2 text-xs text-gray-600 italic">
-                        * Hover over markers for detailed information. Normalized position shows structural movement analysis.
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="bg-blue-50 p-4 rounded border border-blue-200">
-                    <h4 className="font-semibold text-blue-800 mb-2">Reading Analysis</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <strong>Measurement Format:</strong> [up, right, down, left]<br/>
-                        <strong>Cross Position:</strong> {intersection.x.toFixed(3)}mm horizontal, {intersection.y.toFixed(3)}mm vertical
-                      </div>
-                      <div>
-                        <strong>Interpretation (Normalized):</strong><br/>
-                        {normalizedIntersection !== null ? (
-                          <>
-                            {(() => {
-                              // Define meterKey for this section
-                              const meterKey = meterName === 'Pianterreno' ? 'pianterreno' : 
-                                              meterName === 'Piano 1' ? 'piano1' : 'piano2';
-                              
-                              return (
-                                <>
-                                  {/* Base interpretation on normalized coordinates (movement from first reading) */}
-                                  {normalizedIntersection.x === 0 && normalizedIntersection.y === 0 ? 
-                                    'No change from initial position - stable crack' :
-                                    Math.abs(normalizedIntersection.x) < 0.1 && Math.abs(normalizedIntersection.y) < 0.1 ? 
-                                    'Minimal change from initial position - stable crack' :
-                                    <>
-                                      {normalizedIntersection.x > 0.1 ? 'Crack expanding ' : 
-                                      normalizedIntersection.x < -0.1 ? 'Crack closing ' : 'No horizontal change '}
-                                      {normalizedIntersection.y > 0.1 ? '& wall rising' : 
-                                      normalizedIntersection.y < -0.1 ? '& wall sinking' : 
-                                      normalizedIntersection.x !== 0 ? '& no vertical change' : '& no vertical change'}
-                                      {Math.abs(normalizedIntersection.x) > 1 || Math.abs(normalizedIntersection.y) > 1 ? 
-                                        ' - significant change (requires attention)' : ''}
-                                    </>
-                                  }
-                                  <br/>
-                                  <span className="text-xs text-gray-600 mt-1">
-                                    {FLOOR_INTERPRETATIONS[meterKey].needsInversion ? 
-                                      '* Coordinates inverted to standard interpretation' : 
-                                      '* Standard interpretation'}
-                                  </span>
-                                </>
-                              );
-                            })()}
-                          </>
-                        ) : (
-                          // Fallback to absolute coordinates if normalized not available
-                          Math.abs(intersection.x) < 0.1 && Math.abs(intersection.y) < 0.1 ? 
-                            'Crack positioned near center - minimal displacement' :
-                            Math.abs(intersection.x) > 1 || Math.abs(intersection.y) > 1 ?
-                            'Significant crack displacement detected' :
-                            'Moderate crack displacement from center'
-                        )}
-                      </div>
-                    </div>
-                    
-                    {angleAnalysis && (
-                      <div className="mt-3 pt-3 border-t border-blue-200">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                          <div>
-                            <strong>Cross Orthogonality:</strong><br/>
-                            {angleAnalysis.deviation < 0.5 ? 
-                              <span className="text-green-700">✓ Excellent (≤0.5° deviation)</span> :
-                              angleAnalysis.deviation < 1.0 ?
-                              <span className="text-blue-700">◯ Good (≤1.0° deviation)</span> :
-                              angleAnalysis.deviation < 2.0 ?
-                              <span className="text-yellow-700">⚠ Fair (≤2.0° deviation)</span> :
-                              <span className="text-red-700">⚠ Poor (&gt;2.0° deviation)</span>
-                            }
-                          </div>
-                          <div>
-                            <strong>Quadrant Angles:</strong><br/>
-                            <span className="font-mono text-xs">{angleAnalysis.description}</span>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })()
-          ) : (
-            <div className="text-gray-500 p-8 text-center border-2 border-dashed border-gray-200 rounded">
-              Please select a reading from the dropdown above to visualize the crack position.
-            </div>
-          )}
-        </div>
+      {selectedView === 'single' && selectedReading && (
+        <SingleReadingView
+          processedData={processedData}
+          selectedReading={selectedReading}
+          hoveredPoint={hoveredPoint}
+          setHoveredPoint={setHoveredPoint}
+        />
       )}
 
       {/******** Normalized Movement Patterns View ********/}
       {selectedView === 'normalized' && (
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold">Normalized Movement Patterns</h2>
-            <button
-              onClick={() => setSelectedView('movement')}
-              className="px-3 py-1 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded text-sm font-medium transition-colors"
-            >
-              ↔ Raw View
-            </button>
-          </div>
-          <div className="mb-4 text-sm text-gray-600">
-            <p>• Each meter's first reading set as origin (0, 0)</p>
-            <p>• Shows movement from origin with floor-specific corrections for unified analysis</p>
-            <p>• <strong>Click any dot</strong> to view detailed crack position visualization</p>
-          </div>
-          
-          <div style={{ width: '100%', height: '600px', position: 'relative' }}>
-            <SVGGrid>
-              <MovementPatternRenderer 
-                processedData={processedData}
-                selectedMeter={selectedMeter}
-                useNormalized={true}
-                onPointClick={handleMovementPointClick}
-                hoveredPoint={hoveredPoint}
-                setHoveredPoint={setHoveredPoint}
-              />
-            </SVGGrid>
-            
-            {/* Legend */}
-            <div className="mt-4 flex justify-center space-x-6">
-              {(selectedMeter === 'all' 
-                ? Object.values(METER_CONFIGS).map(c => ({ name: c.displayName, color: c.color }))
-                : [METER_CONFIGS[selectedMeter]].map(c => ({ name: c.displayName, color: c.color }))
-              ).map(item => (
-                <div key={item.name} className="flex items-center space-x-2">
-                  <div 
-                    className="w-4 h-4 rounded-full border-2 border-white"
-                    style={{ backgroundColor: item.color }}
-                  ></div>
-                  <span className="text-sm font-medium">{item.name}</span>
-                  <span className="text-xs text-gray-500">(from origin)</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+        <NormalizedMovementView
+          processedData={processedData}
+          selectedMeter={selectedMeter}
+          onPointClick={handleMovementPointClick}
+          hoveredPoint={hoveredPoint}
+          setHoveredPoint={setHoveredPoint}
+          setSelectedView={setSelectedView}
+        />
       )}
 
       {/******** Movement Patterns View ********/}
       {selectedView === 'movement' && (
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold">Movement Patterns</h2>
-            <button
-              onClick={() => setSelectedView('normalized')}
-              className="px-3 py-1 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded text-sm font-medium transition-colors"
-            >
-              ↔ Normalized View
-            </button>
-          </div>
-          <div className="mb-4 text-sm text-gray-600">
-            <p>• Transparency gradient: oldest (transparent) → newest (solid)</p>
-            <p>• Lines show movement direction with days between measurements</p>
-            <p>• <strong>Note:</strong> This view shows raw positions that not consistent across floors. For consistent analysis across floors, use the Normalized View</p>
-            <p>• <strong>Click any dot</strong> to view detailed crack position visualization</p>
-          </div>
-          
-          <div style={{ width: '100%', height: '600px', position: 'relative' }}>
-            <SVGGrid>
-              <MovementPatternRenderer 
-                processedData={processedData}
-                selectedMeter={selectedMeter}
-                useNormalized={false}
-                onPointClick={handleMovementPointClick}
-                hoveredPoint={hoveredPoint}
-                setHoveredPoint={setHoveredPoint}
-              />
-            </SVGGrid>
-            
-            {/* Legend */}
-            <div className="mt-4 flex justify-center space-x-6">
-              {(selectedMeter === 'all' 
-                ? Object.values(METER_CONFIGS).map(c => ({ name: c.displayName, color: c.color }))
-                : [METER_CONFIGS[selectedMeter]].map(c => ({ name: c.displayName, color: c.color }))
-              ).map(item => (
-                <div key={item.name} className="flex items-center space-x-2">
-                  <div 
-                    className="w-4 h-4 rounded-full border-2 border-white"
-                    style={{ backgroundColor: item.color }}
-                  ></div>
-                  <span className="text-sm font-medium">{item.name}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+        <MovementPatternsView
+          processedData={processedData}
+          selectedMeter={selectedMeter}
+          onPointClick={handleMovementPointClick}
+          hoveredPoint={hoveredPoint}
+          setHoveredPoint={setHoveredPoint}
+          setSelectedView={setSelectedView}
+        />
       )}
 
       {/******** Raw Data View ********/}
       {selectedView === 'data' && (
-        <div>
-          <h2 className="text-xl font-semibold mb-4">Processed Data Table</h2>
-          {/* Dataset Download Section */}
-          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <h3 className="font-semibold text-blue-900 mb-3">Download Dataset</h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-              {/* Format Selector */}
-              <div>
-                <label className="block text-sm font-medium text-blue-800 mb-2">
-                  Export Format:
-                </label>
-                <div className="space-y-2">
-                  {['json', 'csv', 'xlsx', 'yaml'].map(format => (
-                    <label key={format} className="flex items-center space-x-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="format"
-                        value={format}
-                        checked={downloadFormat === format}
-                        onChange={(e) => setDownloadFormat(e.target.value)}
-                        className="cursor-pointer"
-                      />
-                      <span className="text-sm text-gray-700 uppercase">{format}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-              
-              {/* Include Images Checkbox */}
-              <div>
-                <label className="flex items-center space-x-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={includeImages}
-                    onChange={(e) => setIncludeImages(e.target.checked)}
-                    className="cursor-pointer"
-                  />
-                  <span className="text-sm font-medium text-blue-800">
-                    Include crack meter images (ZIP)
-                  </span>
-                </label>
-                {includeImages && (
-                  <p className="text-xs text-blue-600 mt-1 ml-6">
-                    Will download as ZIP with data file + images folder
-                  </p>
-                )}
-              </div>
-              
-              {/* Download Button */}
-              <div>
-                <button
-                  onClick={downloadDataset}
-                  disabled={isDownloading}
-                  className={`w-full px-4 py-2 rounded font-medium transition-colors ${
-                    isDownloading
-                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                      : 'bg-blue-600 text-white hover:bg-blue-700'
-                  }`}
-                >
-                  {isDownloading ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
-                      </svg>
-                      Preparing...
-                    </span>
-                  ) : (
-                    <span className="flex items-center justify-center gap-2">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                        <polyline points="7 10 12 15 17 10"/>
-                        <line x1="12" y1="15" x2="12" y2="3"/>
-                      </svg>
-                      Download Dataset
-                    </span>
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-          <div className="mb-2 text-sm text-gray-600">
-            <span className="inline-block w-4 h-4 bg-gray-50 border border-gray-300 align-middle mr-1"></span> Raw Data (direct calculations from readings)
-            <span className="inline-block w-4 h-4 bg-slate-100 border border-gray-300 align-middle mr-1 ml-4"></span> Normalized Data (consistent across floors for analysis and interpretation)
-            <div className="mt-1 text-xs">
-              <strong>Note:</strong> Only normalized positions should be used for structural interpretation as they apply corrections for unified analysis across all floors.
-            </div>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-full border-collapse border border-gray-300">
-              <thead>
-                <tr className="bg-gray-100">
-                  <th rowSpan="2" className="border border-gray-300 p-2">Date</th>
-                  <th colSpan="4" className="border border-gray-300 p-2 bg-white">
-                    <span className="inline-block w-3 h-3 rounded-full mr-2" style={{ backgroundColor: '#8884d8' }}></span>
-                    Pianterreno
-                  </th>
-                  <th colSpan="4" className="border border-gray-300 p-2 bg-white">
-                    <span className="inline-block w-3 h-3 rounded-full mr-2" style={{ backgroundColor: '#82ca9d' }}></span>
-                    Piano 1
-                  </th>
-                  <th colSpan="4" className="border border-gray-300 p-2 bg-white">
-                    <span className="inline-block w-3 h-3 rounded-full mr-2" style={{ backgroundColor: '#ffc658' }}></span>
-                    Piano 2
-                  </th>
-                </tr>
-                <tr className="bg-gray-100">
-                  {/* Pianterreno columns */}
-                  <th className="border border-gray-300 p-2 bg-gray-50">Raw Reading</th>
-                  <th className="border border-gray-300 p-2 bg-gray-50">Position</th>
-                  <th className="border border-gray-300 p-2 bg-slate-100">Normalized</th>
-                  <th className="border border-gray-300 p-2 bg-gray-50">Angles</th>
-                  {/* Piano 1 columns */}
-                  <th className="border border-gray-300 p-2 bg-gray-50">Raw Reading</th>
-                  <th className="border border-gray-300 p-2 bg-gray-50">Position</th>
-                  <th className="border border-gray-300 p-2 bg-slate-100">Normalized</th>
-                  <th className="border border-gray-300 p-2 bg-gray-50">Angles</th>
-                  {/* Piano 2 columns */}
-                  <th className="border border-gray-300 p-2 bg-gray-50">Raw Reading</th>
-                  <th className="border border-gray-300 p-2 bg-gray-50">Position</th>
-                  <th className="border border-gray-300 p-2 bg-slate-100">Normalized</th>
-                  <th className="border border-gray-300 p-2 bg-gray-50">Angles</th>
-                </tr>
-              </thead>
-              <tbody>
-                {processedData.map((row, index) => (
-                  <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}>
-                    <td className="border border-gray-300 p-2 font-mono">{row.date}</td>
-                    
-                    {/* Pianterreno columns */}
-                    <td className="border border-gray-300 p-2 font-mono bg-gray-50">{row.rawPianterreno || '—'}</td>
-                    <td className="border border-gray-300 p-2 font-mono bg-gray-50">
-                      {row.pianterreno_x !== undefined ? 
-                        `(${row.pianterreno_x.toFixed(3)}, ${row.pianterreno_y.toFixed(3)})` : '—'}
-                    </td>
-                    <td className="border border-gray-300 p-2 font-mono bg-slate-100">
-                      {row.pianterreno_norm_x !== undefined ? 
-                        `(${row.pianterreno_norm_x.toFixed(3)}, ${row.pianterreno_norm_y.toFixed(3)})` : '—'}
-                    </td>
-                    <td className="border border-gray-300 p-2 text-xs bg-gray-50">
-                      {row.pianterreno_angle_analysis || '—'}
-                    </td>
-                    
-                    {/* Piano 1 columns */}
-                    <td className="border border-gray-300 p-2 font-mono bg-gray-50">{row.rawPiano1 || '—'}</td>
-                    <td className="border border-gray-300 p-2 font-mono bg-gray-50">
-                      {row.piano1_x !== undefined ? 
-                        `(${row.piano1_x.toFixed(3)}, ${row.piano1_y.toFixed(3)})` : '—'}
-                    </td>
-                    <td className="border border-gray-300 p-2 font-mono bg-slate-100">
-                      {row.piano1_norm_x !== undefined ? 
-                        `(${row.piano1_norm_x.toFixed(3)}, ${row.piano1_norm_y.toFixed(3)})` : '—'}
-                    </td>
-                    <td className="border border-gray-300 p-2 text-xs bg-gray-50">
-                      {row.piano1_angle_analysis || '—'}
-                    </td>
-                    
-                    {/* Piano 2 columns */}
-                    <td className="border border-gray-300 p-2 font-mono bg-gray-50">{row.rawPiano2 || '—'}</td>
-                    <td className="border border-gray-300 p-2 font-mono bg-gray-50">
-                      {row.piano2_x !== undefined ? 
-                        `(${row.piano2_x.toFixed(3)}, ${row.piano2_y.toFixed(3)})` : '—'}
-                    </td>
-                    <td className="border border-gray-300 p-2 font-mono bg-slate-100">
-                      {row.piano2_norm_x !== undefined ? 
-                        `(${row.piano2_norm_x.toFixed(3)}, ${row.piano2_norm_y.toFixed(3)})` : '—'}
-                    </td>
-                    <td className="border border-gray-300 p-2 text-xs bg-gray-50">
-                      {row.piano2_angle_analysis || '—'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
+        <DataTableView processedData={processedData} />
+)}
 
       {/******** Summary Statistics ********/}
       <div className="mt-8 p-4 bg-gray-50 rounded">
