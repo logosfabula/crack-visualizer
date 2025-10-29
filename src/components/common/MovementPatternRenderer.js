@@ -2,12 +2,6 @@ import React from 'react';
 import { METER_CONFIGS } from '../../constants/meterConfigs';
 import { toSVGX, toSVGY } from '../../utils/coordinateConverters';
 
-// Helper to get meter color by display name
-const getMeterColor = (meterDisplayName) => {
-  const config = Object.values(METER_CONFIGS).find(c => c.displayName === meterDisplayName);
-  return config?.color || '#2563eb';
-};
-
 // ADD 'export' before 'const' here!
 export const MovementPatternRenderer = ({ 
   processedData, 
