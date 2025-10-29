@@ -10,6 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.14.2] - 2025-10-29
+### Added
+- Specialized files according to SOLID-compliant code structure
+### Changed
+- Main component, functions extracted to specialized files
+
 ## [0.13.2] - 2025-10-27
 ### Added
 - Logos for light and dark themes

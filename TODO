@@ -1,3 +1,5 @@
+v0.14.0 
+[o] Refactoring SOLID del codice
 
 v0.13.2 
 [o] Logo (icona webapp e logo)
@@ -51,6 +53,9 @@ Alta Priorità
 [ ] Migliorare la responsività mobile per l'uso sul campo
 [ ] Creare funzionalità di generazione report PDF
 [ ] Aggiungere notifiche email per avvisi di soglia
+[ ] Unit testing infrastructure + core tests
+[ ] Integration tests + error handling
+[ ] Performance optimization + accessibility
 
 Media Priorità
 
@@ -72,7 +77,6 @@ Debito Tecnico
 
 [ ] Ottimizzare le performance di rendering SVG per dataset grandi
 [ ] Aggiungere test unitari completi
-[ ] Aggiungere test end-to-end con Cypress o Playwright
 [ ] Migliorare gestione errori e feedback utente
 [ ] Aggiungere stati di caricamento per operazioni asincrone
 
@@ -83,3 +87,15 @@ Documentazione
 [ ] Creare linee guida per contribuire (CONTRIBUTING.md)
 [ ] Aggiungere guida alla risoluzione dei problemi
 [ ] Documentare il processo di deployment
+
+1.0.0 milestone's should-haves:
+
+- Comprehensive unit tests (>80% coverage)
+- Integration tests for key workflows
+- Error boundaries and graceful degradation
+- Production-ready build optimization
+- Documentation (API docs, architecture diagrams)
+- Accessibility compliance
+- Performance benchmarks met
+- Security audit passed
+- Browser compatibility tested
