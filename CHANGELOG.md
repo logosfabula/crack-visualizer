@@ -10,7 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.14.2] - 2025-10-29
+## [0.14.1] - 2025-10-30
+### Changed
+- Single reading view information
+
+## [0.14.0] - 2025-10-29
 ### Added
 - Specialized files according to SOLID-compliant code structure
 ### Changed
