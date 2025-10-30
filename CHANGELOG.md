@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.14.2] - 2025-10-30
+### Changed
+- Missing table in Data view fixed
+
 ## [0.14.1] - 2025-10-30
 ### Changed
 - Single reading view information
