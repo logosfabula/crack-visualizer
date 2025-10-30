@@ -237,9 +237,6 @@ export const SingleReadingView = ({
               <strong>Raw Reading:</strong> {reading}
             </div>
             <div>
-              <strong>Intersection Point:</strong> ({intersection.x.toFixed(3)}, {intersection.y.toFixed(3)})
-            </div>
-            <div>
               <strong>Grid Coordinates:</strong> X: {intersection.x.toFixed(3)}mm, Y: {intersection.y.toFixed(3)}mm
             </div>
             {normalizedIntersection !== null && (
@@ -575,14 +572,14 @@ export const SingleReadingView = ({
           {/* Legend */}
           <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded">
             <div className="text-sm font-semibold mb-2">Symbol Legend:</div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
               <div className="flex items-center gap-2">
                 <svg width="50" height="30" viewBox="0 0 50 30">
                   <line x1="10" y1="15" x2="40" y2="15" stroke="#dc2626" strokeWidth="1.5" strokeDasharray="6,3" opacity="0.6" />
                   <line x1="25" y1="5" x2="25" y2="25" stroke="#dc2626" strokeWidth="1.5" strokeDasharray="6,3" opacity="0.6" />
                   <circle cx="25" cy="15" r="6" fill="white" stroke={meterColor} strokeWidth="2" strokeDasharray="3,2" />
                 </svg>
-                <span>Dashed red cross + outline circle - raw crack position</span>
+                <span> Raw crack position</span>
               </div>
               <div className="flex items-center gap-2">
                 <svg width="50" height="30" viewBox="0 0 50 30">
@@ -590,13 +587,13 @@ export const SingleReadingView = ({
                   <line x1="25" y1="5" x2="25" y2="25" stroke="#dc2626" strokeWidth="2" />
                   <circle cx="25" cy="15" r="6" fill={meterColor} stroke="white" strokeWidth="2" />
                 </svg>
-                <span>Solid dot + red cross - normalized position</span>
+                <span> Normalized position</span>
               </div>
               <div className="flex items-center gap-2">
                 <svg width="50" height="30" viewBox="0 0 50 30">
                   <circle cx="25" cy="15" r="5" fill="none" stroke="#ff6b6b" strokeWidth="2" strokeDasharray="3,3" opacity="0.6" />
                 </svg>
-                <span>Dashed red circles - cross intersections at physical meter edges</span>
+                <span> Cross intersections at physical meter edges</span>
               </div>
             </div>
             <div className="mt-2 text-xs text-gray-600">
