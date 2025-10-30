@@ -110,13 +110,88 @@ export const DataTableView = ({ processedData }) => {
       
       <div className="overflow-x-auto">
         <table className="min-w-full border-collapse border border-gray-300">
-          {/* COPY THE ENTIRE TABLE STRUCTURE FROM ORIGINAL FILE */}
-          {/* This includes thead and tbody with all the floor columns */}
           <thead>
-            {/* ... */}
+            <tr className="bg-gray-100">
+              <th rowSpan="2" className="border border-gray-300 p-2">Date</th>
+              <th colSpan="4" className="border border-gray-300 p-2 bg-white">
+                <span className="inline-block w-3 h-3 rounded-full mr-2" style={{ backgroundColor: '#8884d8' }}></span>
+                Pianterreno
+              </th>
+              <th colSpan="4" className="border border-gray-300 p-2 bg-white">
+                <span className="inline-block w-3 h-3 rounded-full mr-2" style={{ backgroundColor: '#82ca9d' }}></span>
+                Piano 1
+              </th>
+              <th colSpan="4" className="border border-gray-300 p-2 bg-white">
+                <span className="inline-block w-3 h-3 rounded-full mr-2" style={{ backgroundColor: '#ffc658' }}></span>
+                Piano 2
+              </th>
+            </tr>
+            <tr className="bg-gray-100">
+              {/* Pianterreno columns */}
+              <th className="border border-gray-300 p-2 bg-gray-50">Raw Reading</th>
+              <th className="border border-gray-300 p-2 bg-gray-50">Position</th>
+              <th className="border border-gray-300 p-2 bg-slate-100">Normalized</th>
+              <th className="border border-gray-300 p-2 bg-gray-50">Angles</th>
+              {/* Piano 1 columns */}
+              <th className="border border-gray-300 p-2 bg-gray-50">Raw Reading</th>
+              <th className="border border-gray-300 p-2 bg-gray-50">Position</th>
+              <th className="border border-gray-300 p-2 bg-slate-100">Normalized</th>
+              <th className="border border-gray-300 p-2 bg-gray-50">Angles</th>
+              {/* Piano 2 columns */}
+              <th className="border border-gray-300 p-2 bg-gray-50">Raw Reading</th>
+              <th className="border border-gray-300 p-2 bg-gray-50">Position</th>
+              <th className="border border-gray-300 p-2 bg-slate-100">Normalized</th>
+              <th className="border border-gray-300 p-2 bg-gray-50">Angles</th>
+            </tr>
           </thead>
           <tbody>
-            {/* ... */}
+            {processedData.map((row, index) => (
+              <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}>
+                <td className="border border-gray-300 p-2 font-mono">{row.date}</td>
+                
+                {/* Pianterreno columns */}
+                <td className="border border-gray-300 p-2 font-mono bg-gray-50">{row.rawPianterreno || '—'}</td>
+                <td className="border border-gray-300 p-2 font-mono bg-gray-50">
+                  {row.pianterreno_x !== undefined ? 
+                    `(${row.pianterreno_x.toFixed(3)}, ${row.pianterreno_y.toFixed(3)})` : '—'}
+                </td>
+                <td className="border border-gray-300 p-2 font-mono bg-slate-100">
+                  {row.pianterreno_norm_x !== undefined ? 
+                    `(${row.pianterreno_norm_x.toFixed(3)}, ${row.pianterreno_norm_y.toFixed(3)})` : '—'}
+                </td>
+                <td className="border border-gray-300 p-2 text-xs bg-gray-50">
+                  {row.pianterreno_angle_analysis || '—'}
+                </td>
+                
+                {/* Piano 1 columns */}
+                <td className="border border-gray-300 p-2 font-mono bg-gray-50">{row.rawPiano1 || '—'}</td>
+                <td className="border border-gray-300 p-2 font-mono bg-gray-50">
+                  {row.piano1_x !== undefined ? 
+                    `(${row.piano1_x.toFixed(3)}, ${row.piano1_y.toFixed(3)})` : '—'}
+                </td>
+                <td className="border border-gray-300 p-2 font-mono bg-slate-100">
+                  {row.piano1_norm_x !== undefined ? 
+                    `(${row.piano1_norm_x.toFixed(3)}, ${row.piano1_norm_y.toFixed(3)})` : '—'}
+                </td>
+                <td className="border border-gray-300 p-2 text-xs bg-gray-50">
+                  {row.piano1_angle_analysis || '—'}
+                </td>
+                
+                {/* Piano 2 columns */}
+                <td className="border border-gray-300 p-2 font-mono bg-gray-50">{row.rawPiano2 || '—'}</td>
+                <td className="border border-gray-300 p-2 font-mono bg-gray-50">
+                  {row.piano2_x !== undefined ? 
+                    `(${row.piano2_x.toFixed(3)}, ${row.piano2_y.toFixed(3)})` : '—'}
+                </td>
+                <td className="border border-gray-300 p-2 font-mono bg-slate-100">
+                  {row.piano2_norm_x !== undefined ? 
+                    `(${row.piano2_norm_x.toFixed(3)}, ${row.piano2_norm_y.toFixed(3)})` : '—'}
+                </td>
+                <td className="border border-gray-300 p-2 text-xs bg-gray-50">
+                  {row.piano2_angle_analysis || '—'}
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
