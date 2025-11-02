@@ -16,7 +16,7 @@ export const TimelineView = ({ processedData, selectedMeter }) => {
     <div className="space-y-8">
       <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded">
         <p className="text-sm text-blue-800">
-          <strong>Timeline shows normalized movement data:</strong> All floors start at (0, 0) relative to their first reading. 
+          <strong>Timeline shows normalized movement data:</strong> All floors are made start at (0, 0) and subsequent readings are shifted according to the first reading. 
           This allows direct comparison of structural movement patterns across all floors.
         </p>
       </div>
