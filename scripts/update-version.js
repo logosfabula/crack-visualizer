@@ -21,12 +21,19 @@ console.log(`\n📦 Updating project to version ${newVersion}...\n`);
 // =============================================================================
 function getCommitsSinceLastTag() {
   try {
-    // Get the last tag
-    const lastTag = execSync('git describe --tags --abbrev=0 2>/dev/null', { encoding: 'utf8' })
-      .toString()
-      .trim();
+    // Try to get the last tag
+    let lastTag;
+    try {
+      lastTag = execSync('git describe --tags --abbrev=0 2>/dev/null', { encoding: 'utf8' })
+        .toString()
+        .trim();
+    } catch (e) {
+      lastTag = null;
+    }
     
     if (lastTag) {
+      console.log(`📚 Last tag found: ${lastTag}`);
+      
       // Get commits since last tag
       const commits = execSync(`git log ${lastTag}..HEAD --pretty=format:"%s"`, { encoding: 'utf8' })
         .toString()
@@ -34,14 +41,21 @@ function getCommitsSinceLastTag() {
         .split('\n')
         .filter(line => line.trim() !== '');
       
-      console.log(`📚 Found ${commits.length} commits since ${lastTag}\n`);
+      console.log(`📚 Found ${commits.length} commits since ${lastTag}:`);
+      commits.forEach(c => console.log(`   - ${c.substring(0, 70)}${c.length > 70 ? '...' : ''}`));
+      console.log();
+      
       return commits;
     } else {
-      console.log('📚 No previous tags found - this appears to be the first release\n');
+      console.log('⚠️  No previous tags found!');
+      console.log('   This appears to be the first versioned release.');
+      console.log('   The CHANGELOG will have empty sections.\n');
+      console.log('💡 To initialize: git tag v<current-version> && git push origin v<current-version>\n');
       return [];
     }
   } catch (error) {
-    console.log('📚 No previous tags found - this appears to be the first release\n');
+    console.log('⚠️  Error getting commits:', error.message);
+    console.log('   The CHANGELOG will have empty sections.\n');
     return [];
   }
 }
