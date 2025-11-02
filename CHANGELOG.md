@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.15.4] - 2025-11-02
+### Changed
+- another minor improvement in version bumping script
 ## [0.15.3] - 2025-11-02
 ### Changed
 - updated TODO file
