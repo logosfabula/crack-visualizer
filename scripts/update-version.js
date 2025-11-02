@@ -162,39 +162,32 @@ try {
   const commits = getCommitsSinceLastTag();
   const sections = parseCommits(commits);
 
-  // Format sections
-  const addedSection = sections.added.length > 0 
-    ? formatSection(sections.added) 
-    : '- ';
+  // Build the version entry dynamically, only including non-empty sections
+  let newEntry = `## [${newVersion}] - ${today}\n`;
   
-  const changedSection = sections.changed.length > 0 
-    ? formatSection(sections.changed) 
-    : '- ';
+  // Add sections only if they have content
+  if (sections.added.length > 0) {
+    newEntry += `### Added\n${formatSection(sections.added)}\n\n`;
+  }
   
-  const fixedSection = sections.fixed.length > 0 
-    ? formatSection(sections.fixed) 
-    : '- ';
+  if (sections.changed.length > 0) {
+    newEntry += `### Changed\n${formatSection(sections.changed)}\n\n`;
+  }
   
-  const removedSection = sections.removed.length > 0 
-    ? `### Removed\n${formatSection(sections.removed)}\n` 
-    : '';
+  if (sections.fixed.length > 0) {
+    newEntry += `### Fixed\n${formatSection(sections.fixed)}\n\n`;
+  }
+  
+  if (sections.removed.length > 0) {
+    newEntry += `### Removed\n${formatSection(sections.removed)}\n\n`;
+  }
 
-  // Create new version entry with populated sections
-  let newEntry = `## [${newVersion}] - ${today}
-### Added
-${addedSection}
-
-### Changed
-${changedSection}
-
-### Fixed
-${fixedSection}
-
-`;
-
-  // Add Removed section only if there are items
-  if (removedSection) {
-    newEntry += `${removedSection}\n`;
+  // If no sections at all, add a placeholder
+  if (sections.added.length === 0 && 
+      sections.changed.length === 0 && 
+      sections.fixed.length === 0 && 
+      sections.removed.length === 0) {
+    newEntry += `### Changed\n- Version bump\n\n`;
   }
 
   newEntry += '---\n\n';
@@ -210,11 +203,16 @@ ${fixedSection}
     
     fs.writeFileSync(changelogPath, changelog);
     console.log('✅ CHANGELOG.md updated with commits:');
-    console.log(`   📝 Added: ${sections.added.length} items`);
-    console.log(`   📝 Changed: ${sections.changed.length} items`);
-    console.log(`   📝 Fixed: ${sections.fixed.length} items`);
-    if (sections.removed.length > 0) {
-      console.log(`   📝 Removed: ${sections.removed.length} items`);
+    if (sections.added.length > 0) console.log(`   📝 Added: ${sections.added.length} items`);
+    if (sections.changed.length > 0) console.log(`   📝 Changed: ${sections.changed.length} items`);
+    if (sections.fixed.length > 0) console.log(`   📝 Fixed: ${sections.fixed.length} items`);
+    if (sections.removed.length > 0) console.log(`   📝 Removed: ${sections.removed.length} items`);
+    
+    if (sections.added.length === 0 && 
+        sections.changed.length === 0 && 
+        sections.fixed.length === 0 && 
+        sections.removed.length === 0) {
+      console.log('   ℹ️  No tagged commits found - added placeholder');
     }
     console.log();
   } else {
