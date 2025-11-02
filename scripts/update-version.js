@@ -167,19 +167,19 @@ try {
   
   // Add sections only if they have content
   if (sections.added.length > 0) {
-    newEntry += `### Added\n${formatSection(sections.added)}\n\n`;
+    newEntry += `### Added\n${formatSection(sections.added)}\n`;
   }
   
   if (sections.changed.length > 0) {
-    newEntry += `### Changed\n${formatSection(sections.changed)}\n\n`;
+    newEntry += `### Changed\n${formatSection(sections.changed)}\n`;
   }
   
   if (sections.fixed.length > 0) {
-    newEntry += `### Fixed\n${formatSection(sections.fixed)}\n\n`;
+    newEntry += `### Fixed\n${formatSection(sections.fixed)}\n`;
   }
   
   if (sections.removed.length > 0) {
-    newEntry += `### Removed\n${formatSection(sections.removed)}\n\n`;
+    newEntry += `### Removed\n${formatSection(sections.removed)}\n`;
   }
 
   // If no sections at all, add a placeholder
@@ -187,10 +187,8 @@ try {
       sections.changed.length === 0 && 
       sections.fixed.length === 0 && 
       sections.removed.length === 0) {
-    newEntry += `### Changed\n- Version bump\n\n`;
+    newEntry += `### Changed\n- Version bump\n`;
   }
-
-  newEntry += '---\n\n';
 
   // Insert after the [Unreleased] section
   const unreleasedSection = '## [Unreleased]\n(No unreleased changes)\n\n---\n\n';
