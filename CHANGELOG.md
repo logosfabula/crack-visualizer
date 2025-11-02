@@ -10,6 +10,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.15.1] - 2025-11-02
+### Added
+- 
+
+### Changed
+- updated project structure section in README.md
+
+### Fixed
+- 
+
+---
+
 ## [0.15.0] - 2025-11-02
 ### Added
 - scripted version bump
