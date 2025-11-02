@@ -27,7 +27,9 @@
     "copy-docs": "copyfiles METHOD.md LICENSE.md README.md public",
     "prebuild": "npm run copy-docs",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d build -t"
+    "deploy": "gh-pages -d build -t",
+    "version": "node scripts/update-version.js && git add CHANGELOG.md README.md TODO.md",
+    "postversion": "git push && git push --tags && echo '\n✅ Version updated and pushed to remote!\n'"
   },
   "eslintConfig": {
     "extends": [
