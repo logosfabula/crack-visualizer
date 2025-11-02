@@ -1,6 +1,11 @@
-v0.15.0 
+v0.16.0 
 [ ] Revisione del linguaggio: coerenza generale e glossario
 [ ] CI/CD automatically replace v.number in README and add entry in CHANGELOG and TODO
+
+v0.15.0 
+[o] Estrarre sezioni Footer e Interpretation Notes dal main component in componenti dedicate
+[o] CI/CD script di aggiornamento automatico della versione ("npm version [patch|minor|major]")
+
 
 v0.14.0 
 [o] Refactoring SOLID del codice
