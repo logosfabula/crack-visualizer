@@ -109,20 +109,64 @@ TODO: move this info into the data tier
 - **Tailwind CSS** (via CDN for styling)
 
 ## Project Structure
-
 ```
 crack-visualizer/
-├── public/crack_images/            # complete actual readings set (pictures)
+├── .github/
+│   └── workflows/
+│       └── deploy.yml             # CI/CD: Auto-deploy to GitHub Pages
+├── public/
+│   ├── crack_images/              # Complete crack meter readings images
+│   ├── README.md                  # Synced copy of main README
+│   ├── METHOD.md                  # Synced copy of methodology doc
+│   └── LICENSE.md                 # Synced copy of license
 ├── src/
+│   ├── components/
+│   │   ├── common/                # Reusable UI components
+│   │   │   ├── SVGGrid.js         # Grid visualization component
+│   │   │   └── MovementPatternRenderer.js  # Movement patterns renderer
+│   │   ├── views/                 # Main view components
+│   │   │   ├── TimelineView.js    # Timeline chart view
+│   │   │   ├── MovementPatternsView.js     # Raw movement patterns
+│   │   │   ├── NormalizedMovementView.js   # Normalized movements
+│   │   │   ├── SingleReadingView.js        # Individual reading detail
+│   │   │   └── DataTableView.js   # Tabular data display
+│   │   ├── Footer.jsx             # Footer with links and version
+│   │   └── InterpretationNotes.jsx # Measurement interpretation guide
+│   ├── services/
+│   │   ├── calculations/          # Calculation services
+│   │   │   ├── IntersectionCalculator.js   # Crack position calculator
+│   │   │   └── AngleAnalyzer.js   # Quadrant angle analysis
+│   │   ├── data/
+│   │   │   └── DataProcessor.js   # Data processing & normalization
+│   │   └── export/
+│   │       ├── ExportService.js   # Data export orchestrator
+│   │       └── formatters/        # Export format handlers
+│   │           ├── JSONFormatter.js
+│   │           ├── CSVFormatter.js
+│   │           ├── XLSXFormatter.js
+│   │           └── YAMLFormatter.js
+│   ├── hooks/
+│   │   └── useProcessedData.js    # Data processing React hook
+│   ├── utils/
+│   │   └── coordinateConverters.js # SVG coordinate utilities
+│   ├── constants/
+│   │   ├── meterConfigs.js        # Meter configuration constants
+│   │   ├── floorInterpretations.js # Floor interpretation flags
+│   │   └── boundaries.js          # Physical & display boundaries
 │   ├── data/
-│   │   └── crackData.json          # Measurement data
-│   ├── CrackMovementVisualizer.js  # Main component
-│   └── App.js
-├── package.json
-├── LICENSE
-├── METHOD.md
-└── README.md
-
+│   │   └── crackData.json         # Crack meter measurement dataset
+│   ├── CrackMovementVisualizer.js # Main application component
+│   ├── App.js                     # Root application wrapper
+│   └── index.js                   # React entry point
+├── scripts/
+│   ├── update-version.js          # Automated version bump script
+│   └── validate-images.js         # CI/CD: Validate crack images
+├── CHANGELOG.md                   # Version history (Keep a Changelog)
+├── TODO.md                        # Development roadmap
+├── METHOD.md                      # Mathematical methodology
+├── LICENSE.md                     # MIT License with disclaimers
+├── README.md                      # This file
+└── package.json                   # Project configuration & scripts
 ```
 
 ## Mathematical Method
