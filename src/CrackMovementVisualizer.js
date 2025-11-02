@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import rawData from './data/crackData.json';
 
+// Package info
+import packageJson from '../package.json';
+
 // Constants
 import { METER_CONFIGS } from './constants/meterConfigs';
 
@@ -13,6 +16,10 @@ import { DataTableView } from './components/views/DataTableView';
 
 // Hooks
 import { useProcessedData } from './hooks/useProcessedData';
+
+// Sections
+import InterpretationNotes from './components/InterpretationNotes';
+import Footer from './components/Footer';
 
 const CrackMovementVisualizer = () => {
   const [hoveredPoint, setHoveredPoint] = useState(null);
@@ -152,7 +159,7 @@ const CrackMovementVisualizer = () => {
       {/******** Raw Data View ********/}
       {selectedView === 'data' && (
         <DataTableView processedData={processedData} />
-)}
+      )}
 
       {/******** Summary Statistics ********/}
       <div className="mt-8 p-4 bg-gray-50 rounded">
@@ -245,8 +252,6 @@ const CrackMovementVisualizer = () => {
                         <div className="font-medium text-gray-700">Normalized Position Change:</div>
                         {(() => {
                           // Get normalized positions for first and last readings
-                          //const firstNormX = meterData[0][`${meter.dataKeys[0].replace('_x', '_norm_x')}`] || 0; // unused -> warning
-                          //const firstNormY = meterData[0][`${meter.dataKeys[1].replace('_y', '_norm_y')}`] || 0; // unused -> warning
                           const lastNormX = meterData[meterData.length - 1][`${meter.dataKeys[0].replace('_x', '_norm_x')}`];
                           const lastNormY = meterData[meterData.length - 1][`${meter.dataKeys[1].replace('_y', '_norm_y')}`];
                           
@@ -686,71 +691,10 @@ const CrackMovementVisualizer = () => {
           })()}
         </div>
         
-        <p className="text-xs text-gray-600 mt-4">
-          Distances calculated using intersection method from boundary measurements [up, right, down, left] (<a href={`${process.env.PUBLIC_URL}/METHOD.md`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 underline italic">see Method</a>)<br/>
-          * Total path distance includes all intermediate movements, not just start-to-end displacement<br/>
-          * All measurements in millimeters based on crack meter grid scale<br/>
-          <br/>
-          <strong>Structural Movement Interpretation (Normalized Data):</strong><br/>
-          • <strong>All floors use consistent interpretation after normalization</strong> (<a href={`${process.env.PUBLIC_URL}/METHOD.md`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 underline italic">see Method</a>)<strong>:</strong><br/>
-          • <strong>Horizontal movement:</strong> Left (−X) = crack closing, Right (+X) = crack expanding<br/>
-          • <strong>Vertical movement:</strong> Up (−Y) = wall sinking, Down (+Y) = wall rising<br/>
-          • <strong>Direct displacement</strong> shows net structural change from start to end position<br/>
-          • P0 and P2 raw readings are inverted during normalization to match P1's crack meter orientation
- </p>
+        <InterpretationNotes />
 
-        {/******** Footer with Links ********/}
-        <div className="mt-6 pt-4 border-t border-gray-300">
-          <div className="flex flex-wrap items-center justify-center gap-4 text-sm">
-            
-            {/* FIRST LINK - README */}
-            <a href={`${process.env.PUBLIC_URL}/README.md`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-blue-600 hover:text-blue-800 hover:underline transition-colors">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                <polyline points="14 2 14 8 20 8"/>
-              </svg>
-              README
-            </a>
-            
-            <span className="text-gray-400">|</span>
-            
-            {/* SECOND LINK - METHOD */}
-            <a href={`${process.env.PUBLIC_URL}/METHOD.md`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-blue-600 hover:text-blue-800 hover:underline transition-colors">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
-              </svg>
-              Method
-            </a>
-            
-            <span className="text-gray-400">|</span>
-            
-            {/* THIRD LINK - LICENSE */}
-            <a href={`${process.env.PUBLIC_URL}/LICENSE.md`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-blue-600 hover:text-blue-800 hover:underline transition-colors">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-              </svg>
-              License
-            </a>
-            
-            <span className="text-gray-400">|</span>
-            
-            {/* FOURTH LINK - GITHUB REPO */}
-            <a href="https://github.com/logosfabula/crack-visualizer" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-blue-600 hover:text-blue-800 hover:underline transition-colors">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-              </svg>
-              GitHub Repo
-            </a>            
-          </div>
-          
-          <div className="mt-3 text-center text-xs text-gray-500">
-            v{require('../package.json').version} | 
-            © 2025 logosfabula | For monitoring purposes only | Not a professional engineering tool
-          </div>
+        <Footer version={packageJson.version} />
 
-        </div>
       </div>
     </div>
   );
