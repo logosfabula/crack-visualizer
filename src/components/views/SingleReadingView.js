@@ -413,42 +413,58 @@ export const SingleReadingView = ({
             
             {/* Tooltip for normalized position (detailed) */}
             {hoveredPoint && hoveredPoint.show && hoveredPoint.isNormalized && (
-              <g transform={`translate(${toSVGX(hoveredPoint.normX)}, ${toSVGY(hoveredPoint.normY) - 90})`}>
+              <g transform={`translate(${toSVGX(hoveredPoint.normX)}, ${toSVGY(hoveredPoint.normY) - 80})`}>
                 <rect 
-                  x="-110" y="-45" 
-                  width="220" height="85" 
+                  x="-95" y="-40" 
+                  width="190" height="75" 
                   fill="white" 
                   stroke={hoveredPoint.color}
                   strokeWidth="2" 
                   rx="4"
                   filter="drop-shadow(0 2px 4px rgba(0,0,0,0.2))"
                 />
-                <text x="0" y="-25" textAnchor="middle" fontSize="11" fontWeight="bold" fill={hoveredPoint.color}>
+                
+                {/* Meter name and date */}
+                <text x="0" y="-20" textAnchor="middle" fontSize="11" fontWeight="bold" fill={hoveredPoint.color}>
                   {hoveredPoint.meter} - {hoveredPoint.date}
                 </text>
-                <text x="0" y="-10" textAnchor="middle" fontSize="10" fill="#666">
+                
+                {/* Days since first */}
+                <text x="0" y="-5" textAnchor="middle" fontSize="10" fill="#666">
                   Day {hoveredPoint.daysSinceFirst} from first reading
                 </text>
-                <text x="0" y="3" textAnchor="middle" fontSize="9" fill="#888">
-                  Raw: ({hoveredPoint.rawX.toFixed(3)}, {hoveredPoint.rawY.toFixed(3)}) mm
+                
+                {/* Normalized difference - CHANGED FROM "Normalized:" TO "Δ Position:" */}
+                <text x="0" y="8" textAnchor="middle" fontSize="10" fill="#333">
+                  Δ Position: ({hoveredPoint.normX.toFixed(3)}, {hoveredPoint.normY.toFixed(3)}) mm
                 </text>
-                <text x="0" y="16" textAnchor="middle" fontSize="10" fill="#333">
-                  Normalized: ({hoveredPoint.normX.toFixed(3)}, {hoveredPoint.normY.toFixed(3)}) mm
-                </text>
-                <text x="0" y="30" textAnchor="middle" fontSize="9" fontWeight="bold" fill="#000">
+                
+                {/* Interpretation */}
+                <text x="0" y="22" textAnchor="middle" fontSize="9" fontWeight="bold" fill="#000">
                   {(() => {
                     const x = hoveredPoint.normX;
                     const y = hoveredPoint.normY;
-                    if (Math.abs(x) < 0.05 && Math.abs(y) < 0.05) return 'No movement from origin';
                     
-                    let dir = '';
-                    if (Math.abs(y) > 0.05) dir += y < 0 ? 'Closing' : 'Opening';
-                    if (Math.abs(x) > 0.05) {
-                      if (dir) dir += ' + ';
-                      dir += x < 0 ? 'Left' : 'Right';
+                    if (Math.abs(x) < 0.01 && Math.abs(y) < 0.01) return 'No significant movement';
+                    
+                    let interpretation = '';
+                    if (Math.abs(x) >= 0.01) {
+                      interpretation += x > 0 ? 'Expanding' : 'Closing';
                     }
-                    return dir || 'Minimal movement';
+                    if (Math.abs(x) >= 0.01 && Math.abs(y) >= 0.01) {
+                      interpretation += ' & ';
+                    }
+                    if (Math.abs(y) >= 0.01) {
+                      interpretation += y > 0 ? 'Rising' : 'Sinking';
+                    }
+                    
+                    return interpretation;
                   })()}
+                </text>
+                
+                {/* Note about normalized data */}
+                <text x="0" y="32" textAnchor="middle" fontSize="8" fill="#888" fontStyle="italic">
+                  *Normalized data (unified across floors)
                 </text>
               </g>
             )}
