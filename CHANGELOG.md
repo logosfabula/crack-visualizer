@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.15.7] - 2025-11-29
+### Fixed
+- single reading view tooltip now consistent with other views
 ## [0.15.6] - 2025-11-29
 ### Added
 - 2025/11 readings
