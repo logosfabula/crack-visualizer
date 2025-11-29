@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.15.6] - 2025-11-29
+### Added
+- 2025/11 readings
+### Changed
+- 2025/11 readings
 ## [0.15.5] - 2025-11-02
 ### Changed
 - clean formatting of TODO.md and CHANGELOG.md
