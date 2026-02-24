@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.15.10] - 2026-02-24
+### Changed
+- ETAs caption improved
 ## [0.15.9] - 2026-02-24
 ### Changed
 - footer and license copyright date updated
