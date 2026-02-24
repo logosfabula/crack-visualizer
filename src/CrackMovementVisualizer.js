@@ -349,7 +349,7 @@ const CrackMovementVisualizer = () => {
 
                       <div>
                         <div className="font-medium text-gray-700">ETA to Displacement Thresholds:</div>
-                        <div className="text-xs text-gray-500 mb-1">Based on direct displacement at current average rate (linear projection)</div>
+                        <div className="text-xs text-gray-500 mb-1">Based on direct displacement at current average rate (linear projection from first reading)</div>
                         {(() => {
                           // Calculate ETAs based on direct displacement and weekly rate
                           const currentDisplacement = directDistance;
