@@ -1,6 +1,6 @@
 # Crack Movement Visualizer
 
-![Version](https://img.shields.io/badge/version-0.15.7-blue)
+![Version](https://img.shields.io/badge/version-0.15.8-blue)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE.md)
 
 A React-based application for visualizing and analyzing crack meter data from structural monitoring systems.
@@ -99,7 +99,7 @@ The system accounts for different crack meter orientations. In this case:
 - **Piano 1 (P1)**: Standard interpretation  
 - **Piano 2 (P2)**: Inverted interpretation
 
-The flags for standard/inverted interpretations of each floor are harcoded in the main component at current version (v0.15.7)
+The flags for standard/inverted interpretations of each floor are harcoded in the main component at current version (v0.15.8)
 TODO: move this info into the data tier
 
 ## Technology Stack
