@@ -49,7 +49,7 @@ const Footer = ({ version }) => {
       
       <div className="mt-3 text-center text-xs text-gray-500">
         v{version} | 
-        © 2025 logosfabula | For monitoring purposes only | Not a professional engineering tool
+        © 2025-2026 logosfabula | For monitoring purposes only | Not a professional engineering tool
       </div>
     </div>
   );
