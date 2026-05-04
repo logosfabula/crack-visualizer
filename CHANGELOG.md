@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.15.15] - 2026-05-04
+### Changed
+- update GitHub Actions to Node 24 compatible versions
 ## [0.15.14] - 2026-05-04
 ### Added
 - 2026/05 readings
