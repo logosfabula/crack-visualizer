@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.15.16] - 2026-05-08
+### Added
+- urgent TODO: time-weighted readings for timeline view and ETA calculation
 ## [0.15.15] - 2026-05-04
 ### Changed
 - update GitHub Actions to Node 24 compatible versions
