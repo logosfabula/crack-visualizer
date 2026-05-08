@@ -1,4 +1,7 @@
 ##### v0.16.0 
+- [ ] **URGENTE**: Ponderazione temporale dei reading
+  - Timeline view: visualizzare i punti con spaziatura proporzionale agli intervalli temporali reali (non equispaziati)
+  - Calcolo ETA: pesare il rate medio in base agli intervalli temporali tra reading consecutivi (reading più ravvicinati nel tempo hanno peso minore di reading distanziati)
 - [ ] Revisione del linguaggio: coerenza generale e glossario
 - [ ] CI/CD automatically replace v.number in README and add entry in CHANGELOG and TODO
 
