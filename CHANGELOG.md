@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.15.17] - 2026-08-26
+### Added
+- 2026/08 readings
+### Changed
+- normalize May 2026 image extensions to lowercase .jpg
 ## [0.15.16] - 2026-05-08
 ### Added
 - urgent TODO: time-weighted readings for timeline view and ETA calculation
