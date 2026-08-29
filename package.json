@@ -31,7 +31,7 @@
     "prebuild": "npm run copy-docs",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build -t",
-    "version": "node scripts/update-version.js && git add CHANGELOG.md README.md TODO.md",
+    "version": "node scripts/update-version.js && npm run copy-docs && git add CHANGELOG.md README.md TODO.md public/README.md public/LICENSE.md public/METHOD.md",
     "postversion": "git push && git push --tags && echo '\n✅ Version updated and pushed to remote!\n'"
   },
   "eslintConfig": {
