@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.17.1] - 2026-08-29
+### Added
+- document new ETA prediction method in METHOD.md and README.md
+### Changed
+- document exact-zero Theil-Sen slope finding for Piano 2 in TODO.md
 ## [0.17.0] - 2026-08-29
 ### Added
 - switch for time-proportional reading spacing in Timeline view
