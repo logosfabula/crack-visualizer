@@ -16,10 +16,20 @@ import { DataTableView } from './components/views/DataTableView';
 
 // Hooks
 import { useProcessedData } from './hooks/useProcessedData';
+import { useETAPredictions } from './hooks/useETAPredictions';
 
 // Sections
 import InterpretationNotes from './components/InterpretationNotes';
 import Footer from './components/Footer';
+
+// Common components
+import { ActivityHeatMeter } from './components/common/ActivityHeatMeter';
+
+// ETA estimator registry (Theil-Sen, Secant, ...)
+import { ETA_ESTIMATORS, DEFAULT_ETA_METHOD } from './services/calculations/estimators';
+
+// Utils
+import { formatDurationFromDays } from './utils/formatDuration';
 
 const CrackMovementVisualizer = () => {
   const [hoveredPoint, setHoveredPoint] = useState(null);
@@ -37,9 +47,11 @@ const CrackMovementVisualizer = () => {
 
   // Process data to calculate intersection points and normalized coordinates
   const processedData = useProcessedData(rawData);
+  const etaPredictions = useETAPredictions(processedData);
   const [selectedView, setSelectedView] = useState('timeline');
   const [selectedMeter, setSelectedMeter] = useState('all');
   const [selectedReading, setSelectedReading] = useState(null);
+  const [selectedETAMethod, setSelectedETAMethod] = useState(DEFAULT_ETA_METHOD);
 
   return (
     <div className="w-full max-w-6xl mx-auto p-6 bg-white">
@@ -163,37 +175,39 @@ const CrackMovementVisualizer = () => {
 
       {/******** Summary Statistics ********/}
       <div className="mt-8 p-4 bg-gray-50 rounded">
-        <h3 className="font-semibold mb-4">Movement Summary</h3>
+        <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+          <h3 className="font-semibold">Movement Summary</h3>
+          <div>
+            <label className="text-sm font-medium mr-2">ETA Method:</label>
+            <select
+              value={selectedETAMethod}
+              onChange={(e) => setSelectedETAMethod(e.target.value)}
+              className="border border-gray-300 rounded px-2 py-1 text-sm"
+            >
+              {Object.values(ETA_ESTIMATORS).map(estimator => (
+                <option key={estimator.id} value={estimator.id}>{estimator.label}</option>
+              ))}
+            </select>
+          </div>
+        </div>
         <div className="space-y-4">
           {(() => {
-            const meters = Object.values(METER_CONFIGS).map(config => ({
+            const meters = Object.entries(METER_CONFIGS).map(([key, config]) => ({
+              key,
               name: config.displayName,
               dataKeys: config.rawDataKeys,
               color: config.color
             }));
 
-            //let grandTotalDistance = 0;
-            const meterResults = meters.map(meter => {
+            // Pass 1: plain per-floor stats, no JSX yet — needed so the
+            // activity heat-meter can scale relative to the group max.
+            const meterStats = meters.map(meter => {
               const meterData = processedData
                 .filter(d => d[meter.dataKeys[0]] !== undefined && d[meter.dataKeys[1]] !== undefined)
                 .sort((a, b) => new Date(a.date) - new Date(b.date));
 
               if (meterData.length === 0) {
-                return {
-                  component: (
-                    <div key={meter.name} className="p-3 border border-gray-200 rounded">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div 
-                          className="w-4 h-4 rounded-full"
-                          style={{ backgroundColor: meter.color }}
-                        ></div>
-                        <strong>{meter.name}:</strong>
-                        <span className="text-gray-500">No measurements</span>
-                      </div>
-                    </div>
-                  ),
-                  totalDistance: 0
-                };
+                return { meter, empty: true };
               }
 
               // Calculate total distance traveled
@@ -206,23 +220,64 @@ const CrackMovementVisualizer = () => {
                 totalDistance += Math.sqrt(dx * dx + dy * dy);
               }
 
-              //grandTotalDistance += totalDistance; // unused -> warning
               const firstDate = meterData[0].date;
               const lastDate = meterData[meterData.length - 1].date;
-              const firstPosition = `(${meterData[0][meter.dataKeys[0]].toFixed(3)}, ${meterData[0][meter.dataKeys[1]].toFixed(3)})`;
-              const lastPosition = `(${meterData[meterData.length - 1][meter.dataKeys[0]].toFixed(3)}, ${meterData[meterData.length - 1][meter.dataKeys[1]].toFixed(3)})`;
-              
+
               // Calculate direct displacement (straight line from start to end)
               const directDx = meterData[meterData.length - 1][meter.dataKeys[0]] - meterData[0][meter.dataKeys[0]];
               const directDy = meterData[meterData.length - 1][meter.dataKeys[1]] - meterData[0][meter.dataKeys[1]];
               const directDistance = Math.sqrt(directDx * directDx + directDy * directDy);
-              
-              // Calculate weekly movement rate based on direct displacement
+
               const startDate = new Date(firstDate);
               const endDate = new Date(lastDate);
               const daysDiff = (endDate - startDate) / (1000 * 60 * 60 * 24);
               const weeksDiff = daysDiff / 7;
-              const weeklyMovement = weeksDiff > 0 ? directDistance / weeksDiff : 0;
+              const totalPathRatePerWeek = weeksDiff > 0 ? totalDistance / weeksDiff : 0;
+
+              return {
+                meter, empty: false, meterData, totalDistance, firstDate, lastDate,
+                directDx, directDy, directDistance, weeksDiff, totalPathRatePerWeek
+              };
+            });
+
+            const maxTotalPathRate = Math.max(
+              0.0001,
+              ...meterStats.filter(s => !s.empty).map(s => s.totalPathRatePerWeek)
+            );
+
+            // Pass 2: render, using the group max computed above.
+            const meterResults = meterStats.map(stats => {
+              if (stats.empty) {
+                return {
+                  component: (
+                    <div key={stats.meter.name} className="p-3 border border-gray-200 rounded">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div
+                          className="w-4 h-4 rounded-full"
+                          style={{ backgroundColor: stats.meter.color }}
+                        ></div>
+                        <strong>{stats.meter.name}:</strong>
+                        <span className="text-gray-500">No measurements</span>
+                      </div>
+                    </div>
+                  ),
+                  totalDistance: 0
+                };
+              }
+
+              const {
+                meter, meterData, totalDistance, firstDate, lastDate,
+                directDx, directDy, directDistance, totalPathRatePerWeek
+              } = stats;
+
+              const etaResult = etaPredictions[meter.key];
+              const estimator = ETA_ESTIMATORS[selectedETAMethod];
+              const methodResult = etaResult && !etaResult.insufficientData
+                ? etaResult.estimates[selectedETAMethod]
+                : null;
+
+              const firstPosition = `(${meterData[0][meter.dataKeys[0]].toFixed(3)}, ${meterData[0][meter.dataKeys[1]].toFixed(3)})`;
+              const lastPosition = `(${meterData[meterData.length - 1][meter.dataKeys[0]].toFixed(3)}, ${meterData[meterData.length - 1][meter.dataKeys[1]].toFixed(3)})`;
 
               return {
                 component: (
@@ -338,90 +393,56 @@ const CrackMovementVisualizer = () => {
                       </div>
                       
                       <div>
-                        <div className="font-medium text-gray-700">Weekly Rate (Direct):</div>
+                        <div className="font-medium text-gray-700">Trend Rate ({estimator.label}):</div>
                         <div className="text-lg font-semibold" style={{ color: meter.color }}>
-                          {weeklyMovement.toFixed(4)} mm/week
+                          {methodResult
+                            ? `${methodResult.rateMmPerWeek.toFixed(4)} mm/week`
+                            : 'Insufficient data'}
                         </div>
                         <div className="text-gray-500 text-xs">
-                          Based on straight-line displacement
+                          {etaResult && !etaResult.insufficientData
+                            ? estimator.describe({ n: etaResult.n, rawReadingCount: etaResult.rawReadingCount })
+                            : ''}
                         </div>
                       </div>
 
                       <div>
                         <div className="font-medium text-gray-700">ETA to Displacement Thresholds:</div>
-                        <div className="text-xs text-gray-500 mb-1">Based on direct displacement at current average rate (linear projection from first reading)</div>
+                        <div className="text-xs text-gray-500 mb-1">{estimator.methodology}</div>
                         {(() => {
-                          // Calculate ETAs based on direct displacement and weekly rate
-                          const currentDisplacement = directDistance;
-                          const rate = weeklyMovement;
-                          
-                          if (rate < 0.0001) {
-                            return <div className="text-sm text-gray-500">Insufficient movement to calculate</div>;
+                          if (!methodResult) {
+                            return <div className="text-sm text-gray-500">Insufficient data to calculate</div>;
                           }
-                          
-                          const formatTime = (weeks) => {
-                            const totalDays = Math.round(weeks * 7);
-                            
-                            const years = Math.floor(totalDays / 365);
-                            const remainingAfterYears = totalDays % 365;
-                            const weeksRemaining = Math.floor(remainingAfterYears / 7);
-                            const days = remainingAfterYears % 7;
-                            
-                            // Build format string
-                            const parts = [];
-                            if (years > 0) parts.push(`${years}y`);
-                            if (weeksRemaining > 0) parts.push(`${weeksRemaining}w`);
-                            if (days > 0 || parts.length === 0) parts.push(`${days}d`);
-                            
-                            return parts.join(' ');
-                          };
-                          
-                          const calculateETA = (threshold) => {
-                            if (currentDisplacement >= threshold) {
-                              // Already reached - show when it was reached
-                              const totalWeeks = threshold / rate;
-                              return (
-                                <span className="text-green-700">
-                                  ✓ Reached (after {formatTime(totalWeeks)} from first reading)
-                                </span>
-                              );
-                            }
-                            
-                            // Not reached yet - show both total and remaining time
-                            const totalWeeksToThreshold = threshold / rate;
-                            const remainingMM = threshold - currentDisplacement;
-                            const remainingWeeks = remainingMM / rate;
-                            
-                            return (
-                              <span>
-                                {formatTime(remainingWeeks)} remaining
-                                <span className="text-gray-500 text-xs ml-1">
-                                  ({formatTime(totalWeeksToThreshold)} from first reading)
-                                </span>
-                              </span>
-                            );
-                          };
-                          
+
                           return (
                             <div className="text-sm space-y-1">
-                              <div className="flex justify-between items-start">
-                                <span className="text-gray-600">1mm:</span>
-                                <span className="font-mono text-right" style={{ color: meter.color }}>
-                                  {calculateETA(1)}
-                                </span>
-                              </div>
-                              <div className="flex justify-between items-start">
-                                <span className="text-gray-600">2mm:</span>
-                                <span className="font-mono text-right" style={{ color: meter.color }}>
-                                  {calculateETA(2)}
-                                </span>
-                              </div>
-                              <div className="flex justify-between items-start">
-                                <span className="text-gray-600">5mm:</span>
-                                <span className="font-mono text-right" style={{ color: meter.color }}>
-                                  {calculateETA(5)}
-                                </span>
-                              </div>
+                              {methodResult.thresholds.map(t => (
+                                <div key={t.threshold} className="flex justify-between items-start">
+                                  <span className="text-gray-600">{t.threshold}mm:</span>
+                                  <span className="font-mono text-right" style={{ color: meter.color }}>
+                                    {t.alreadyReached ? (
+                                      <span className="text-green-700">✓ Reached</span>
+                                    ) : !t.reached ? (
+                                      <span className="text-gray-500">not reached on current trend</span>
+                                    ) : (
+                                      <>
+                                        {formatDurationFromDays(t.remainingDays)} remaining
+                                        <span className="text-gray-500 text-xs ml-1">
+                                          ({formatDurationFromDays(t.totalDaysFromFirstReading)} from first reading)
+                                        </span>
+                                        {t.bootstrap && (
+                                          <span className="text-gray-500 text-xs ml-1 block">
+                                            {t.bootstrap.p5Date && t.bootstrap.p95Date
+                                              ? `range: ${t.bootstrap.p5Date.toISOString().split('T')[0]} – ${t.bootstrap.p95Date.toISOString().split('T')[0]}`
+                                              : ''}
+                                            {` (reached in ${Math.round(t.bootstrap.reachedFraction * 100)}% of resampled trends)`}
+                                          </span>
+                                        )}
+                                      </>
+                                    )}
+                                  </span>
+                                </div>
+                              ))}
                             </div>
                           );
                         })()}
@@ -429,11 +450,16 @@ const CrackMovementVisualizer = () => {
                       <div>
                         <div className="font-medium text-gray-700">Weekly Rate (Total Path):</div>
                         <div className="text-lg font-semibold" style={{ color: meter.color }}>
-                          {(totalDistance / weeksDiff || 0).toFixed(4)} mm/week
+                          {totalPathRatePerWeek.toFixed(4)} mm/week
                         </div>
-                        <div className="text-gray-500 text-xs">
-                          Based on cumulative path distance
+                        <div className="text-gray-500 text-xs mb-2">
+                          Based on cumulative path distance (direction-agnostic activity, not a projection)
                         </div>
+                        <ActivityHeatMeter
+                          rateMmPerWeek={totalPathRatePerWeek}
+                          maxRateMmPerWeek={maxTotalPathRate}
+                          color={meter.color}
+                        />
                       </div> {/* End of grid */}
 
                       {/* Overall Interpretation */}
@@ -490,8 +516,8 @@ const CrackMovementVisualizer = () => {
                 ),
                 totalDistance: totalDistance,
                 meterName: meter.name,
-                meterColor: meter.color,  // ADD THIS LINE
-                weeklyMovement: weeklyMovement,
+                meterColor: meter.color,
+                etaResult: etaResult,
                 directDisplacement: directDistance,
                 movementDirectionX: directDx,
                 movementDirectionY: directDy
@@ -576,37 +602,31 @@ const CrackMovementVisualizer = () => {
                     <div>
                       <div className="font-medium text-blue-700 mb-2">Top 5 Soonest ETAs:</div>
                       {(() => {
-                        // Collect all ETA data from all meters
+                        // Collect all not-yet-reached, trend-projected thresholds from all meters
                         const allETAs = [];
-                        
+
                         meterResults.forEach(result => {
-                          if (result.weeklyMovement && result.weeklyMovement >= 0.0001) {
-                            const currentDisplacement = result.directDisplacement;
-                            const rate = result.weeklyMovement;
-                            
-                            // Check each threshold
-                            [1, 2, 5].forEach(threshold => {
-                              if (currentDisplacement < threshold) {
-                                const remainingMM = threshold - currentDisplacement;
-                                const remainingWeeks = remainingMM / rate;
-                                
-                                allETAs.push({
-                                  meterName: result.meterName,
-                                  meterColor: result.meterColor,
-                                  threshold: threshold,
-                                  remainingWeeks: remainingWeeks,
-                                  currentDisplacement: currentDisplacement
-                                });
-                              }
-                            });
-                          }
+                          if (!result.etaResult || result.etaResult.insufficientData) return;
+                          const methodResult = result.etaResult.estimates[selectedETAMethod];
+                          if (!methodResult) return;
+
+                          methodResult.thresholds.forEach(t => {
+                            if (!t.alreadyReached && t.reached) {
+                              allETAs.push({
+                                meterName: result.meterName,
+                                threshold: t.threshold,
+                                remainingDays: t.remainingDays,
+                                reachedFraction: t.bootstrap ? t.bootstrap.reachedFraction : null
+                              });
+                            }
+                          });
                         });
-                        
+
                         // Sort by soonest first and take top 5
                         const topETAs = allETAs
-                          .sort((a, b) => a.remainingWeeks - b.remainingWeeks)
+                          .sort((a, b) => a.remainingDays - b.remainingDays)
                           .slice(0, 5);
-                        
+
                         if (topETAs.length === 0) {
                           return (
                             <div className="text-gray-500 text-sm">
@@ -614,32 +634,16 @@ const CrackMovementVisualizer = () => {
                             </div>
                           );
                         }
-                        
-                        // Format time helper
-                        const formatTime = (weeks) => {
-                          const totalDays = Math.round(weeks * 7);
-                          const years = Math.floor(totalDays / 365);
-                          const remainingAfterYears = totalDays % 365;
-                          const weeksRemaining = Math.floor(remainingAfterYears / 7);
-                          const days = remainingAfterYears % 7;
-                          
-                          const parts = [];
-                          if (years > 0) parts.push(`${years}y`);
-                          if (weeksRemaining > 0) parts.push(`${weeksRemaining}w`);
-                          if (days > 0 || parts.length === 0) parts.push(`${days}d`);
-                          
-                          return parts.join(' ');
-                        };
-                        
+
                         return (
                           <div className="space-y-1">
-                            {topETAs.map((eta, index) => (
-                              <div 
+                            {topETAs.map((eta) => (
+                              <div
                                 key={`${eta.meterName}-${eta.threshold}`}
                                 className="flex items-center justify-between text-xs"
                               >
                                 <div className="flex items-center gap-1.5">
-                                  <div 
+                                  <div
                                     className="w-2 h-2 rounded-full flex-shrink-0 bg-blue-500"
                                   ></div>
                                   <span className="font-medium text-black-700">
@@ -647,20 +651,28 @@ const CrackMovementVisualizer = () => {
                                   </span>
                                   <span className="text-black-600">→ {eta.threshold}mm:</span>
                                 </div>
-                                <span 
+                                <span
                                   className="font-mono font-semibold text-right ml-2 text-black-600"
                                 >
-                                  {formatTime(eta.remainingWeeks)}
+                                  {formatDurationFromDays(eta.remainingDays)}
+                                  {eta.reachedFraction !== null && (
+                                    <span className="text-gray-500 font-normal ml-1">
+                                      ({Math.round(eta.reachedFraction * 100)}%)
+                                    </span>
+                                  )}
                                 </span>
                               </div>
-                              
+
                             ))}
                             {topETAs.length < 5 && (
                               <div className="text-xs text-blue-600 mt-1">
                                 Showing {topETAs.length} upcoming threshold{topETAs.length !== 1 ? 's' : ''}
                               </div>
                             )}
-                            <div className="text-xs text-blue-600 mt-1">Considering current per-floor avg linear rate (no accelerations)</div>
+                            <div className="text-xs text-blue-600 mt-1">
+                              {ETA_ESTIMATORS[selectedETAMethod].label} trend per floor
+                              {topETAs.some(e => e.reachedFraction !== null) && '; % = share of bootstrap resamples that reach the threshold at all'}
+                            </div>
                           </div>
                         );
                       })()}
