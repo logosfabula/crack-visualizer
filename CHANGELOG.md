@@ -10,6 +10,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.17.0] - 2026-08-29
+### Added
+- switch for time-proportional reading spacing in Timeline view
+### Changed
+- mark Timeline spacing item done in TODO.md
+- sync public docs automatically during version bump
+- sync public/README.md version references to 0.16.1
 ## [0.16.1] - 2026-08-29
 ### Changed
 - sync public/README.md version references to 0.16.0
