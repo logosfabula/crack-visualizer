@@ -27,16 +27,19 @@ export class DataProcessor {
         result.pianterreno_x = pianoterrenoPos.x;
         result.pianterreno_y = pianoterrenoPos.y;
         result.pianterreno_angle_analysis = pianoterrenoAngles?.description || '—';
+        result.pianterreno_angle_deviation = pianoterrenoAngles?.deviation ?? 0;
       }
       if (piano1Pos) {
         result.piano1_x = piano1Pos.x;
         result.piano1_y = piano1Pos.y;
         result.piano1_angle_analysis = piano1Angles?.description || '—';
+        result.piano1_angle_deviation = piano1Angles?.deviation ?? 0;
       }
       if (piano2Pos) {
         result.piano2_x = piano2Pos.x;
         result.piano2_y = piano2Pos.y;
         result.piano2_angle_analysis = piano2Angles?.description || '—';
+        result.piano2_angle_deviation = piano2Angles?.deviation ?? 0;
       }
       
       return result;
