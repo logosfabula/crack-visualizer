@@ -38,4 +38,14 @@ describe('SecantEstimator.compute', () => {
     expect(SecantEstimator.describe({ rawReadingCount: 5 })).toMatch(/3 intermediate readings ignored/);
     expect(SecantEstimator.describe({ rawReadingCount: 2 })).toBe('Uses the first and last reading');
   });
+
+  test('direction is the raw first-to-last vector, ignoring intermediate swings', () => {
+    const readings = [
+      { t: 0, x: 0, y: 0 },
+      { t: 50, x: -100, y: 100 }, // wild swing, should be ignored
+      { t: 100, x: 0.5, y: -0.3 }
+    ];
+    const result = SecantEstimator.compute({ readings, tNow: 100, thresholds: [] });
+    expect(result.direction).toEqual({ x: 0.5, y: -0.3 });
+  });
 });

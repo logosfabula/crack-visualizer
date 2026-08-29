@@ -8,6 +8,7 @@ import { BOOTSTRAP_ITERATIONS, MAX_EXTRAPOLATION_MULTIPLE } from '../../../const
 export class TheilSenEstimator {
   static id = 'theilsen';
   static label = 'Weighted Theil-Sen';
+  static directionLabel = 'the fitted trend';
 
   static methodology = 'Weighted Theil-Sen trend on normalized (x, y) vs. real elapsed time, projected from today; range is a 90% bootstrap interval.';
 
@@ -44,7 +45,8 @@ export class TheilSenEstimator {
 
     return {
       rateMmPerWeek: Math.hypot(fit.x.slope, fit.y.slope) * 7,
-      thresholdResults
+      thresholdResults,
+      direction: { x: fit.x.slope, y: fit.y.slope }
     };
   }
 }

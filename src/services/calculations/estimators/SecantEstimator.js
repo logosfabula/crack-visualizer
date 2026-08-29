@@ -7,6 +7,7 @@ import { RATE_EPSILON_MM_PER_WEEK } from '../../../constants/regressionConfig';
 export class SecantEstimator {
   static id = 'secant';
   static label = 'Secant (first → last reading)';
+  static directionLabel = 'the net change from first to last reading';
 
   static methodology = 'Straight-line rate from the first reading to the last, projected forward from today. No confidence range: a 2-point fit has nothing to resample.';
 
@@ -23,7 +24,9 @@ export class SecantEstimator {
   static compute({ readings, tNow, thresholds }) {
     const first = readings[0];
     const last = readings[readings.length - 1];
-    const directDistance = Math.hypot(last.x - first.x, last.y - first.y);
+    const directDx = last.x - first.x;
+    const directDy = last.y - first.y;
+    const directDistance = Math.hypot(directDx, directDy);
     const daysDiff = last.t - first.t;
     const rateMmPerDay = daysDiff > 0 ? directDistance / daysDiff : 0;
     const rateMmPerWeek = rateMmPerDay * 7;
@@ -38,6 +41,6 @@ export class SecantEstimator {
         : { threshold, reached: false, etaT: null };
     });
 
-    return { rateMmPerWeek, thresholdResults };
+    return { rateMmPerWeek, thresholdResults, direction: { x: directDx, y: directDy } };
   }
 }

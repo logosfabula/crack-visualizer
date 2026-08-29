@@ -465,44 +465,59 @@ const CrackMovementVisualizer = () => {
                       {/* Overall Interpretation */}
                       <div className="mt-3 pt-3 border-t border-gray-200">
                         {(() => {
-                          // Use normalized coordinates for interpretation
-                          const lastNormX = meterData[meterData.length - 1][`${meter.dataKeys[0].replace('_x', '_norm_x')}`];
-                          const lastNormY = meterData[meterData.length - 1][`${meter.dataKeys[1].replace('_y', '_norm_y')}`];
-                          
+                          if (!methodResult) {
+                            return (
+                              <div>
+                                <div className="font-medium text-gray-700 mb-1">Overall Movement Direction ({estimator.label}):</div>
+                                <div className="text-sm text-gray-500">Insufficient data</div>
+                              </div>
+                            );
+                          }
+
+                          // Direction per the selected method's own trend, not just
+                          // the raw last reading — Theil-Sen can (correctly) show no
+                          // consistent direction even when the last single reading
+                          // sits away from the origin.
+                          const dirX = methodResult.direction.x;
+                          const dirY = methodResult.direction.y;
+
                           // Build descriptive text
                           let description = "";
 
-                          if (lastNormX === 0 && lastNormY === 0) {
-                            description = "Normalized data shows no structural movement.";
+                          if (dirX === 0 && dirY === 0) {
+                            description = `Based on ${estimator.directionLabel}, normalized data shows no structural movement.`;
                           } else {
-                            description = "Normalized data shows";
-                            
-                            // Horizontal movement
-                            if (Math.abs(lastNormX) > 0.01) {
-                              description += lastNormX > 0 ? " outward horizontal movement" : " inward horizontal movement";
+                            description = `Based on ${estimator.directionLabel}, normalized data shows`;
+
+                            // Horizontal movement. No magnitude threshold here: unlike
+                            // a raw displacement, `direction` for a fitted method is a
+                            // rate (e.g. mm/day), so a fixed mm-scale cutoff doesn't
+                            // apply — any nonzero fitted slope is a real detected trend.
+                            if (dirX !== 0) {
+                              description += dirX > 0 ? " outward horizontal movement" : " inward horizontal movement";
                             }
-                            
+
                             // Add connector ONLY if both movements exist
-                            if (Math.abs(lastNormX) > 0.01 && Math.abs(lastNormY) > 0.01) {
+                            if (dirX !== 0 && dirY !== 0) {
                               description += " and";
                             }
-                            
+
                             // Vertical movement
-                            if (Math.abs(lastNormY) > 0.01) {
-                              description += lastNormY > 0 ? " upward vertical movement" : " downward vertical movement";
+                            if (dirY !== 0) {
+                              description += dirY > 0 ? " upward vertical movement" : " downward vertical movement";
                             }
-                            
+
                             description += ".";
                           }
-                          
+
                           return (
                             <div>
-                              <div className="font-medium text-gray-700 mb-1">Overall Movement Direction:</div>
+                              <div className="font-medium text-gray-700 mb-1">Overall Movement Direction ({estimator.label}):</div>
                               <div className="text-sm font-semibold mb-2" style={{ color: meter.color }}>
-                                {lastNormX === 0 && lastNormY === 0 ? 'No movement detected' :
-                                lastNormX === 0 ? (lastNormY > 0 ? '↑ Wall Rising' : '↓ Wall Sinking') :
-                                lastNormY === 0 ? (lastNormX > 0 ? '→ Crack Expanding' : '← Crack Closing') :
-                                `${lastNormX > 0 ? '→ Expanding' : '← Closing'} & ${lastNormY > 0 ? '↑ Rising' : '↓ Sinking'}`}
+                                {dirX === 0 && dirY === 0 ? 'No movement detected' :
+                                dirX === 0 ? (dirY > 0 ? '↑ Wall Rising' : '↓ Wall Sinking') :
+                                dirY === 0 ? (dirX > 0 ? '→ Crack Expanding' : '← Crack Closing') :
+                                `${dirX > 0 ? '→ Expanding' : '← Closing'} & ${dirY > 0 ? '↑ Rising' : '↓ Sinking'}`}
                               </div>
                               <div className="text-xs text-gray-600 italic">
                                 {description}

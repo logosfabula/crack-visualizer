@@ -78,7 +78,7 @@ export const useETAPredictions = (processedData) => {
           };
         });
 
-        estimates[estimator.id] = { rateMmPerWeek: raw.rateMmPerWeek, thresholds };
+        estimates[estimator.id] = { rateMmPerWeek: raw.rateMmPerWeek, thresholds, direction: raw.direction };
       });
 
       results[meterKey] = {
