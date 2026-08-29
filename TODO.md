@@ -12,7 +12,7 @@
   - Selettore "ETA Method" nella sezione Movement Summary; governa Trend Rate, pannello ETA per piano e Top 5 Soonest ETAs; l'Activity Heat Meter resta indipendente dal metodo selezionato
   - ETA per soglia mostra di nuovo "(X from first reading)" oltre al tempo rimanente da oggi (richiesto esplicitamente — coerenza con la UI precedente)
   - Test unitari: `TheilSen.test.js`, `ETASolver.test.js`, `dedupeConsecutiveReadings.test.js`, `SecantEstimator.test.js` (25 test totali)
-- [ ] **URGENTE**: Timeline view — visualizzare i punti con spaziatura proporzionale agli intervalli temporali reali (non equispaziati) — causa: Recharts usa asse X categoriale su `date` (stringa), quindi i punti sono equispaziati per indice, non per tempo reale (`TimelineView.js`). Non ancora affrontato.
+- [x] Timeline view: aggiunto uno switch ("Space readings proportionally to time") per passare dalla spaziatura equidistante (asse categoriale, comportamento originale, resta il default) a una spaziatura proporzionale ai giorni reali (asse numerico su timestamp, con `domain={['dataMin','dataMax']}` e tick formattati come date) — `TimelineView.js`. **Bug trovato in fase di test**: con spaziatura proporzionale il tooltip mostrava il timestamp grezzo invece della data, perché `Tooltip`'s `labelFormatter` non viene applicato automaticamente quando si usa un `content` personalizzato — Recharts lo passa come prop e tocca al componente custom invocarlo. Fix in `CustomTooltip.js` (accetta e applica `labelFormatter` se presente)
 - [ ] Revisione del linguaggio: coerenza generale e glossario
 - [ ] CI/CD automatically replace v.number in README and add entry in CHANGELOG and TODO
 
