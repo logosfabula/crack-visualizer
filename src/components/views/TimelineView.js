@@ -1,37 +1,62 @@
-import React from 'react';
-import { 
-  LineChart, 
-  Line, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  Legend, 
-  ResponsiveContainer 
+import React, { useState } from 'react';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer
 } from 'recharts';
 import { CustomTooltip } from '../common/CustomTooltip';
 
+const formatDateTick = (timestamp) => new Date(timestamp).toISOString().split('T')[0];
+
 export const TimelineView = ({ processedData, selectedMeter }) => {
+  const [proportionalSpacing, setProportionalSpacing] = useState(false);
+
+  // Recharts' category axis spaces points by index, not by date, unless
+  // given a numeric dataKey and told to treat it as a continuous scale.
+  const chartData = processedData.map(d => ({
+    ...d,
+    dateTimestamp: new Date(d.date).getTime()
+  }));
+
+  const xAxisProps = proportionalSpacing
+    ? { dataKey: 'dateTimestamp', type: 'number', domain: ['dataMin', 'dataMax'], tickFormatter: formatDateTick }
+    : { dataKey: 'date', type: 'category' };
+
   return (
     <div className="space-y-8">
       <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded">
         <p className="text-sm text-blue-800">
-          <strong>Timeline shows normalized movement data:</strong> All floors are made start at (0, 0) and subsequent readings are shifted according to the first reading. 
+          <strong>Timeline shows normalized movement data:</strong> All floors are made start at (0, 0) and subsequent readings are shifted according to the first reading.
           This allows direct comparison of structural movement patterns across all floors.
         </p>
       </div>
-      
+
+      <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer w-fit">
+        <input
+          type="checkbox"
+          checked={proportionalSpacing}
+          onChange={(e) => setProportionalSpacing(e.target.checked)}
+          className="cursor-pointer"
+        />
+        Space readings proportionally to time (instead of one evenly-spaced tick per reading)
+      </label>
+
       <div>
         <h2 className="text-xl font-semibold mb-4">Horizontal Movement Over Time (X-axis)</h2>
         <p className="text-sm text-gray-600 mb-2">
           Positive values = crack expanding | Negative values = crack closing
         </p>
         <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={processedData}>
+          <LineChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="date" />
+            <XAxis {...xAxisProps} />
             <YAxis label={{ value: 'Δ Position (mm)', angle: -90, position: 'insideLeft' }} />
-            <Tooltip content={<CustomTooltip />} />
+            <Tooltip content={<CustomTooltip />} labelFormatter={proportionalSpacing ? formatDateTick : undefined} />
             <Legend />
             {(selectedMeter === 'all' || selectedMeter === 'pianterreno') && (
               <Line type="monotone" dataKey="pianterreno_norm_x" stroke="#8884d8" name="Pianterreno X" connectNulls={false} />
@@ -52,11 +77,11 @@ export const TimelineView = ({ processedData, selectedMeter }) => {
           Positive values = wall rising | Negative values = wall sinking
         </p>
         <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={processedData}>
+          <LineChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="date" />
+            <XAxis {...xAxisProps} />
             <YAxis label={{ value: 'Δ Position (mm)', angle: -90, position: 'insideLeft' }} />
-            <Tooltip content={<CustomTooltip />} />
+            <Tooltip content={<CustomTooltip />} labelFormatter={proportionalSpacing ? formatDateTick : undefined} />
             <Legend />
             {(selectedMeter === 'all' || selectedMeter === 'pianterreno') && (
               <Line type="monotone" dataKey="pianterreno_norm_y" stroke="#8884d8" name="Pianterreno Y" connectNulls={false} />
