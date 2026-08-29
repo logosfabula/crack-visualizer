@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.16.1] - 2026-08-29
+### Changed
+- sync public/README.md version references to 0.16.0
 ## [0.16.0] - 2026-08-29
 ### Added
 - ETA method selector and activity heat-meter to Movement Summary
