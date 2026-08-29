@@ -48,6 +48,8 @@ This application helps monitor and visualize crack meter readings from structura
 - 📈 **Normalized Data**: Floor-specific corrections for consistent analysis
 - 📋 **Data Tables**: Complete raw and normalized measurement history
 - 📊 **Statistical Summary**: Movement rates, displacement analysis, and trends
+- ⏳ **ETA Predictions**: Threshold-crossing estimates via a selectable weighted-regression or legacy secant method, with confidence ranges — see METHOD.md
+- 🔥 **Activity Indicator**: Relative gauge of cumulative movement per floor, independent of ETA trend
 
 ## Installation
 
@@ -229,8 +231,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Support and Resources
 
-- **Issues**: [GitHub Issues](https://github.com/yourusername/crack-visualizer/issues)
-- **Documentation**: See `updated_crack_meter_method.md` for technical details
+- **Issues**: [GitHub Issues](https://github.com/logosfabula/crack-visualizer/issues)
+- **Documentation**: See `METHOD.md` for technical details
 - **Professional Help**: For structural concerns, consult:
   - Licensed structural engineers
   - Licensed architects  
