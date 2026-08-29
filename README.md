@@ -173,7 +173,7 @@ crack-visualizer/
 
 ## Mathematical Method
 
-The application uses the intersection method described in `updated_crack_meter_method.md`:
+The application uses the intersection method described in `METHOD.md`:
 
 1. Converts 4 boundary measurements to line endpoints
 2. Calculates line equations for vertical and horizontal components
