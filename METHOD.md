@@ -340,6 +340,30 @@ The system generates two types of coordinate data for each measurement:
 
 **Critical:** Only use **normalized data** for structural interpretation and comparison across floors.
 
+## ETA Prediction Method
+
+ETA predictions estimate when a floor's net displacement will cross the 1mm, 2mm, and 5mm thresholds. Two methods are available, selectable from a dropdown in the dashboard's Movement Summary section.
+
+### Weighted Theil-Sen Regression (default)
+
+- **Independent trends per axis**: `x(t)` and `y(t)` are fitted separately on normalized coordinates, where `t` is real elapsed time (days) since the floor's first reading — not reading index, so uneven gaps between visits are represented correctly.
+- **Robust estimator**: the slope is the weighted median of every pairwise slope between readings, not a mean — a single unusual reading can't dominate the fit the way it would with ordinary least squares.
+- **Quality weighting**: each reading is weighted by a function of its quadrant-angle deviation (see Angle Analysis above) — a reading with a less-than-perpendicular reconstructed cross (e.g. from an awkward photo angle) counts for less, but is never discarded outright.
+- **Duplicate readings**: consecutive readings with an identical value (common when real movement is slower than the ~0.25mm reading precision) are collapsed to one point before fitting, so a long static stretch doesn't get counted as repeated evidence of zero movement.
+- **ETA from the fitted trend**: the crossing time for a threshold is found by solving where the fitted 2D line intersects the threshold's displacement circle. If the fitted trend has no directional slope at all, or its closest approach to the origin never reaches the threshold, or the crossing would fall implausibly far outside the observed monitoring window (beyond 10× its span), the result is reported as "not reached on current trend" rather than a forced number.
+- **"Already reached" status** is always read from the last actual observed measurement, never from the fitted trend — the trend is only used to project forward from today.
+- **Confidence range**: a bootstrap resampling of the fit (500 replicates) gives a 90% range for the ETA date, along with what share of resampled trends reach the threshold at all — useful when the point estimate is near the boundary of "will this happen."
+
+**A fitted slope of exactly zero is a real result, not a bug.** With few readings at coarse (~0.25mm) precision, a floor that oscillates without a consistent direction can easily produce readings that repeat exact values on different dates, which pulls the robust trend to precisely zero — correctly reported as "not reached," even if the floor shows real cumulative movement (see Activity vs. ETA below).
+
+### Secant (legacy baseline)
+
+The original method (pre-v0.16.0): a straight line between only the first and last reading, ignoring every reading in between. Kept as a selectable comparison, not a recommendation — it can't distinguish a floor that moved steadily from one that oscillated back to nearly the same place, since it never looks at the readings in between. It has no confidence range (a two-point fit has nothing to resample).
+
+### Activity vs. ETA — two different questions
+
+A floor can show "not reached on current trend" for every threshold while still being the most active floor being monitored — these aren't in conflict. **ETA** answers "is this floor's *net* displacement trending toward a threshold." **Activity** (the relative bar shown alongside Weekly Rate, Total Path) answers "how much has this floor moved in total, regardless of direction" — a floor that moves back and forth a great deal without net progress scores high on activity and can still show no projected ETA. The activity indicator is relative to the other floors currently monitored, not an absolute or literature-backed scale.
+
 ## Applications
 
 ### Unified Multi-Floor Monitoring
@@ -355,7 +379,7 @@ The system generates two types of coordinate data for each measurement:
 
 ### Alert and Threshold Systems
 - **Universal thresholds**: Same displacement limits for all floors (e.g., 1mm, 2mm, 5mm)
-- **ETA predictions**: Estimate time to reach critical thresholds based on current rates
+- **ETA predictions**: Estimate time to reach critical thresholds, via a selectable weighted-regression or legacy secant method (see ETA Prediction Method above)
 - **Most active meter**: Automatically identify which floor shows greatest movement
 - **Automated warnings**: Flag rapid changes or threshold exceedances
 
