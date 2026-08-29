@@ -10,6 +10,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.16.0] - 2026-08-29
+### Added
+- ETA method selector and activity heat-meter to Movement Summary
+- weighted Theil-Sen ETA regression with pluggable estimator methods (Theil-Sen, Secant)
+### Changed
+- sync public docs with root README/LICENSE
+- update TODO.md for v0.16.0 ETA rework
+### Fixed
+- repair test setup and replace dead App.test.js placeholder
 ## [0.15.17] - 2026-08-26
 ### Added
 - 2026/08 readings

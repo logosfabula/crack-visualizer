@@ -1,6 +1,6 @@
 {
   "name": "crack-visualizer",
-  "version": "0.15.17",
+  "version": "0.16.0",
   "private": true,
   "homepage": "https://logosfabula.github.io/crack-visualizer",
   "dependencies": {
