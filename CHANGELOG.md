@@ -10,6 +10,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.17.2] - 2026-08-29
+### Added
+- backlog item: synthetic 2017 datapoint for P0 ETA regression
+### Changed
+- document Overall Movement Direction fix in TODO.md
+### Fixed
+- make Overall Movement Direction reflect the selected ETA method
 ## [0.17.1] - 2026-08-29
 ### Added
 - document new ETA prediction method in METHOD.md and README.md
