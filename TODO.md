@@ -88,6 +88,7 @@
 - [ ] Aggiungere toggle unità di misura (mm/pollici)
 - [ ] Implementare importazione dati da CSV/Excel
 - [ ] Aggiungere vista di confronto tra più periodi temporali
+- [ ] Valutare l'aggiunta di un datapoint sintetico al 2017-01-01 per Pianterreno (P0), con lo stesso valore della sua prima lettura reale, per rappresentare nel fit il ricordo di famiglia che la crepa esisteva già allora (memoria: `p0-crack-predates-2017`). Semanticamente è comunque una lettura, per quanto approssimata. **Punto aperto, non risolto**: verificato numericamente che un simile punto, dato pieno peso in Theil-Sen, riduce lo slope stimato a ~18% del valore attuale (ETA proiettate ~5.5× più lontane) — le coppie che lo coinvolgono hanno Δt enorme (~7 anni) e trascinano la mediana pesata verso il basso più di quanto l'informazione reale giustifichi. Da riconsiderare con un meccanismo che rifletta la bassa confidenza del punto (peso esplicito ridotto, o un framework bayesiano con incertezza) invece di un punto a peso pieno, prima di implementare
 
 #### Bassa Priorità
 
@@ -117,7 +118,7 @@
 - [ ] Aggiungere guida alla risoluzione dei problemi
 - [ ] Documentare il processo di deployment
 - [ ] METODO.md: chiarire che `toSVGX`/`toSVGY` nell'esempio di conversione mm→pixel operano in realtà sul `DISPLAY_RANGE` zoomato (±1.5mm), non sui confini fisici del crack-meter (±20/±10mm) — la Single Reading View estrapola le linee della croce fino al bordo del riquadro ±1.5mm, cosa non descritta nel METODO
-- [ ] METODO.md: documentare il nuovo metodo di calcolo dell'ETA (regressione Theil-Sen pesata per ortogonalità + intervallo di confidenza bootstrap, v0.16.0) — il METODO descrive ancora implicitamente il vecchio approccio a secante, mai stato esplicito nemmeno su quello
+- [x] METODO.md: documentare il nuovo metodo di calcolo dell'ETA (regressione Theil-Sen pesata per ortogonalità + intervallo di confidenza bootstrap, v0.16.0)
 
 #### 1.0.0 milestone's should-haves:
 
