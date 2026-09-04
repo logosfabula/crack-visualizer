@@ -7,6 +7,11 @@ const activateOnKey = (fn) => (e) => {
   }
 };
 
+const TONE_CLASSES = {
+  info: 'bg-blue-50 border-blue-200 text-blue-800 hover:bg-blue-100',
+  warning: 'bg-orange-50 border-orange-200 text-orange-800 hover:bg-orange-100'
+};
+
 // A collapsed-by-default info note: shows a compact label with an icon that
 // signals both "there's more here" and "click to see it". Clicking it
 // replaces it in place with the full content, styled as the box it always
@@ -14,8 +19,12 @@ const activateOnKey = (fn) => (e) => {
 // itself clickable to collapse back to the compact label. Plain
 // role="button" divs rather than real <button> elements, since some
 // callers' content includes links, which can't legally nest inside one.
-export const InfoDisclosure = ({ label, children, defaultOpen = false }) => {
+// `tone`: 'info' (default, blue) for neutral explanatory notes, 'warning'
+// (orange) for alert-level content that still deserves the same
+// collapse-in-place behavior without losing its severity color.
+export const InfoDisclosure = ({ label, children, defaultOpen = false, tone = 'info', className = 'mb-4' }) => {
   const [open, setOpen] = useState(defaultOpen);
+  const toneClasses = TONE_CLASSES[tone];
 
   if (open) {
     return (
@@ -24,7 +33,7 @@ export const InfoDisclosure = ({ label, children, defaultOpen = false }) => {
         tabIndex={0}
         onClick={() => setOpen(false)}
         onKeyDown={activateOnKey(() => setOpen(false))}
-        className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded text-sm text-blue-800 hover:bg-blue-100 transition-colors cursor-pointer"
+        className={`${className} p-3 border rounded text-sm transition-colors cursor-pointer ${toneClasses}`}
       >
         {children}
       </div>
@@ -37,7 +46,7 @@ export const InfoDisclosure = ({ label, children, defaultOpen = false }) => {
       tabIndex={0}
       onClick={() => setOpen(true)}
       onKeyDown={activateOnKey(() => setOpen(true))}
-      className="mb-4 inline-flex items-center gap-1.5 text-sm text-blue-800 bg-blue-50 border border-blue-200 rounded px-3 py-1.5 hover:bg-blue-100 transition-colors w-fit cursor-pointer select-none"
+      className={`${className} inline-flex items-center gap-1.5 text-sm border rounded px-3 py-1.5 transition-colors w-fit cursor-pointer select-none ${toneClasses}`}
     >
       <span aria-hidden="true">ⓘ</span>
       <span className="font-medium">{label}</span>

@@ -6,6 +6,17 @@ import { METER_CONFIGS } from '../../constants/meterConfigs';
 import { FLOOR_INTERPRETATIONS } from '../../constants/floorInterpretations';
 import { METER_BOUNDARIES, DISPLAY_RANGE } from '../../constants/boundaries';
 import { toSVGX, toSVGY } from '../../utils/coordinateConverters';
+import { InfoDisclosure } from '../common/InfoDisclosure';
+
+// Signals scope, not cause: angle deviation reflects the reading/capture
+// process (freehand photo angle and/or transcription), never a diagnosis
+// of which — the two are geometrically indistinguishable from one reading.
+const CameraScopeIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="inline-block align-text-bottom">
+    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+    <circle cx="12" cy="13" r="4"/>
+  </svg>
+);
 
 // Helper to get meter color by display name
 const getMeterColor = (meterDisplayName) => {
@@ -246,26 +257,26 @@ export const SingleReadingView = ({
             )}
           </div>
           {angleAnalysis && angleAnalysis.deviation > 0.1 && (
-            <div className="mt-3 p-2 pr-8 bg-orange-50 border border-orange-200 rounded relative">
-              <div className="text-sm">
-                <strong className="text-orange-800">Cross Angle Analysis:</strong> <span className="text-orange-700">{angleAnalysis.description}</span>
-                <div className="text-xs text-orange-600 mt-1">
-                  Deviation from 90°: {angleAnalysis.deviation.toFixed(2)}°
-                  {angleAnalysis.deviation > 2.0 && " - Consider measurement verification"}
-                </div>
+            <InfoDisclosure
+              tone="warning"
+              className="mt-3"
+              label={
+                <>
+                  Cross Angle Analysis <CameraScopeIcon />
+                  <span className="font-bold" aria-hidden="true">!</span>
+                  <span className="sr-only">— scope: reading/shooting issue, not necessarily structural</span>
+                </>
+              }
+            >
+              <strong>Cross Angle Analysis:</strong> {angleAnalysis.description}
+              <div className="text-xs mt-1">
+                Deviation from 90°: {angleAnalysis.deviation.toFixed(2)}°
+                {angleAnalysis.deviation > 2.0 && " - Consider measurement verification"}
               </div>
-              <div
-                className="absolute bottom-1.5 right-1.5 flex items-center gap-0.5 text-orange-700"
-                title="Scope: this flags a reading/shooting issue — camera angle or transcription at capture time (photos are taken freehand) — not necessarily real structural movement."
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-                  <circle cx="12" cy="13" r="4"/>
-                </svg>
-                <span className="font-bold text-xs leading-none" aria-hidden="true">!</span>
-                <span className="sr-only">Scope: reading/shooting issue, not necessarily structural</span>
+              <div className="text-xs mt-1 italic">
+                Scope: this flags a reading/shooting issue — camera angle or transcription at capture time (photos are taken freehand) — not necessarily real structural movement.
               </div>
-            </div>
+            </InfoDisclosure>
           )}
         </div>
         
