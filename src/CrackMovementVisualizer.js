@@ -25,7 +25,7 @@ import Footer from './components/Footer';
 // Common components
 import { ActivityHeatMeter } from './components/common/ActivityHeatMeter';
 import { RateComparisonBar } from './components/common/RateComparisonBar';
-import { ComponentRateChart } from './components/common/ComponentRateChart';
+import { RateComparisonSummary } from './components/common/RateComparisonSummary';
 
 // ETA estimator registry (Theil-Sen, Secant, ...)
 import { ETA_ESTIMATORS, DEFAULT_ETA_METHOD } from './services/calculations/estimators';
@@ -753,13 +753,18 @@ const CrackMovementVisualizer = () => {
                     {(() => {
                       const chartData = meterResults
                         .filter(r => r.componentRates)
-                        .map(r => ({ name: r.meterName, horizontal: r.componentRates.x, vertical: r.componentRates.y }));
+                        .map(r => ({
+                          name: r.meterName,
+                          color: r.meterColor,
+                          horizontal: r.componentRates.x,
+                          vertical: r.componentRates.y
+                        }));
 
                       if (chartData.length === 0) {
                         return <div className="text-gray-500 text-sm">Insufficient data</div>;
                       }
 
-                      return <ComponentRateChart data={chartData} />;
+                      return <RateComparisonSummary data={chartData} />;
                     })()}
                   </div>
 
