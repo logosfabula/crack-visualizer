@@ -25,6 +25,7 @@ import Footer from './components/Footer';
 import { ActivityHeatMeter, getActivityAssessment } from './components/common/ActivityHeatMeter';
 import { VectorRateArrow, RATE_ARROW_COLORS } from './components/common/VectorRateArrow';
 import { VectorRateArrowGrid } from './components/common/VectorRateArrowGrid';
+import { ResizableFigure } from './components/common/ResizableFigure';
 import { MovementIcon } from './components/common/MovementIcon';
 
 // ETA estimator registry (Theil-Sen, Secant, ...)
@@ -510,14 +511,14 @@ const CrackMovementVisualizer = () => {
                           <div className="font-medium text-gray-700 mb-1">Horizontal vs. Vertical Rate ({estimator.label}):</div>
                           {componentRates ? (
                             <>
-                              <div className="max-w-[270px]">
+                              <ResizableFigure label={`${meter.name} horizontal vs. vertical rate`}>
                                 <VectorRateArrow
                                   horizontalRate={componentRates.x}
                                   verticalRate={componentRates.y}
                                   scaleMax={rateScaleMax}
                                   id={meter.key}
                                 />
-                              </div>
+                              </ResizableFigure>
                               <div className="text-xs font-mono space-x-3">
                                 <span style={{ color: RATE_ARROW_COLORS.horizontal }}>
                                   H {componentRates.x.toFixed(4)} mm/wk
