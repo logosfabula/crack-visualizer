@@ -467,45 +467,18 @@ const CrackMovementVisualizer = () => {
                       </div>
 
                       <div>
-                        <div className="font-medium text-gray-700">ETA to Displacement Thresholds ({ETA_COMPONENT_LABELS[selectedComponent]}):</div>
-                        <div className="text-xs text-gray-500 mb-1">{estimator.methodology}</div>
-                        {(() => {
-                          if (!methodResult) {
-                            return <div className="text-sm text-gray-500">Insufficient data to calculate</div>;
-                          }
-
-                          return (
-                            <div className="text-sm space-y-1">
-                              {methodResult.thresholds.map(t => (
-                                <div key={t.threshold} className="flex justify-between items-start">
-                                  <span className="text-gray-600">{t.threshold}mm:</span>
-                                  <span className="font-mono text-right" style={{ color: meter.color }}>
-                                    {t.alreadyReached ? (
-                                      <span className="text-green-700">✓ Reached</span>
-                                    ) : !t.reached ? (
-                                      <span className="text-gray-500">not reached on current trend</span>
-                                    ) : (
-                                      <>
-                                        {formatDurationFromDays(t.remainingDays)} remaining
-                                        <span className="text-gray-500 text-xs ml-1">
-                                          ({formatDurationFromDays(t.totalDaysFromFirstReading)} from first reading)
-                                        </span>
-                                        {t.bootstrap && (
-                                          <span className="text-gray-500 text-xs ml-1 block">
-                                            {t.bootstrap.p5Date && t.bootstrap.p95Date
-                                              ? `range: ${t.bootstrap.p5Date.toISOString().split('T')[0]} – ${t.bootstrap.p95Date.toISOString().split('T')[0]}`
-                                              : ''}
-                                            {` (reached in ${Math.round(t.bootstrap.reachedFraction * 100)}% of resampled trends)`}
-                                          </span>
-                                        )}
-                                      </>
-                                    )}
-                                  </span>
-                                </div>
-                              ))}
-                            </div>
-                          );
-                        })()}
+                        <div className="font-medium text-gray-700">Weekly Rate (Total Path):</div>
+                        <div className="text-lg font-semibold" style={{ color: meter.color }}>
+                          {totalPathRatePerWeek.toFixed(4)} mm/week
+                        </div>
+                        <div className="text-gray-500 text-xs mb-2">
+                          Based on cumulative path distance (direction-agnostic activity, not a projection)
+                        </div>
+                        <ActivityHeatMeter
+                          rateMmPerWeek={totalPathRatePerWeek}
+                          maxRateMmPerWeek={maxTotalPathRate}
+                          color={meter.color}
+                        />
                       </div>
 
                       {/* Overall Interpretation */}
@@ -606,18 +579,45 @@ const CrackMovementVisualizer = () => {
                         </div>
 
                         <div className="flex-[2] min-w-[280px]">
-                          <div className="font-medium text-gray-700 mb-1">Weekly Rate (Total Path):</div>
-                          <div className="text-lg font-semibold" style={{ color: meter.color }}>
-                            {totalPathRatePerWeek.toFixed(4)} mm/week
-                          </div>
-                          <div className="text-gray-500 text-xs mb-2">
-                            Based on cumulative path distance (direction-agnostic activity, not a projection)
-                          </div>
-                          <ActivityHeatMeter
-                            rateMmPerWeek={totalPathRatePerWeek}
-                            maxRateMmPerWeek={maxTotalPathRate}
-                            color={meter.color}
-                          />
+                          <div className="font-medium text-gray-700 mb-1">ETA to Displacement Thresholds ({ETA_COMPONENT_LABELS[selectedComponent]}):</div>
+                          <div className="text-xs text-gray-500 mb-1">{estimator.methodology}</div>
+                          {(() => {
+                            if (!methodResult) {
+                              return <div className="text-sm text-gray-500">Insufficient data to calculate</div>;
+                            }
+
+                            return (
+                              <div className="text-sm space-y-1">
+                                {methodResult.thresholds.map(t => (
+                                  <div key={t.threshold} className="flex justify-between items-start">
+                                    <span className="text-gray-600">{t.threshold}mm:</span>
+                                    <span className="font-mono text-right" style={{ color: meter.color }}>
+                                      {t.alreadyReached ? (
+                                        <span className="text-green-700">✓ Reached</span>
+                                      ) : !t.reached ? (
+                                        <span className="text-gray-500">not reached on current trend</span>
+                                      ) : (
+                                        <>
+                                          {formatDurationFromDays(t.remainingDays)} remaining
+                                          <span className="text-gray-500 text-xs ml-1">
+                                            ({formatDurationFromDays(t.totalDaysFromFirstReading)} from first reading)
+                                          </span>
+                                          {t.bootstrap && (
+                                            <span className="text-gray-500 text-xs ml-1 block">
+                                              {t.bootstrap.p5Date && t.bootstrap.p95Date
+                                                ? `range: ${t.bootstrap.p5Date.toISOString().split('T')[0]} – ${t.bootstrap.p95Date.toISOString().split('T')[0]}`
+                                                : ''}
+                                              {` (reached in ${Math.round(t.bootstrap.reachedFraction * 100)}% of resampled trends)`}
+                                            </span>
+                                          )}
+                                        </>
+                                      )}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            );
+                          })()}
                         </div>
                       </div>
                     </div>
