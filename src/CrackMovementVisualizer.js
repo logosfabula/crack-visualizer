@@ -447,6 +447,7 @@ const CrackMovementVisualizer = () => {
                         <div className="text-gray-500 text-xs mb-2">
                           Based on cumulative path distance (direction-agnostic activity, not a projection)
                         </div>
+                        <div className="text-xs font-medium text-gray-600 mb-1">Activity Gauge</div>
                         <ActivityHeatMeter
                           rateMmPerWeek={totalPathRatePerWeek}
                           maxRateMmPerWeek={maxTotalPathRate}
