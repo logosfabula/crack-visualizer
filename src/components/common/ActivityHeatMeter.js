@@ -6,14 +6,22 @@ import React from 'react';
 // an absolute scale — there's no literature-backed threshold for "how much
 // weekly wobble is concerning" for this crack/building type, so this only
 // ever answers "more or less active than the others right now."
-export const ActivityHeatMeter = ({ rateMmPerWeek, maxRateMmPerWeek, color }) => {
-  const fraction = maxRateMmPerWeek > 0 ? Math.min(1, rateMmPerWeek / maxRateMmPerWeek) : 0;
-  const percent = Math.round(fraction * 100);
+const activityFraction = (rateMmPerWeek, maxRateMmPerWeek) =>
+  maxRateMmPerWeek > 0 ? Math.min(1, rateMmPerWeek / maxRateMmPerWeek) : 0;
 
-  const label = fraction < 0.01 ? 'No measurable activity'
-    : fraction < 0.34 ? 'Lower activity'
-    : fraction < 0.67 ? 'Moderate activity'
-    : 'Highest activity';
+// Exported so callers (e.g. the "Activity Gauge: <assessment>" title) can
+// show the same word the bar itself represents, without duplicating the
+// threshold logic.
+export const getActivityAssessment = (rateMmPerWeek, maxRateMmPerWeek) => {
+  const fraction = activityFraction(rateMmPerWeek, maxRateMmPerWeek);
+  return fraction < 0.01 ? 'No measurable'
+    : fraction < 0.34 ? 'Lower'
+    : fraction < 0.67 ? 'Moderate'
+    : 'Highest';
+};
+
+export const ActivityHeatMeter = ({ rateMmPerWeek, maxRateMmPerWeek, color }) => {
+  const percent = Math.round(activityFraction(rateMmPerWeek, maxRateMmPerWeek) * 100);
 
   return (
     <div>
@@ -23,8 +31,8 @@ export const ActivityHeatMeter = ({ rateMmPerWeek, maxRateMmPerWeek, color }) =>
           style={{ width: `${percent}%`, backgroundColor: color }}
         />
       </div>
-      <div className="text-xs text-gray-500 mt-1">
-        {label} <span className="text-gray-400">(relative to the other floors, by cumulative path)</span>
+      <div className="text-xs text-gray-400 mt-1">
+        relative to the other floors, by cumulative path
       </div>
     </div>
   );

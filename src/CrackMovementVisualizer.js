@@ -23,7 +23,7 @@ import InterpretationNotes from './components/InterpretationNotes';
 import Footer from './components/Footer';
 
 // Common components
-import { ActivityHeatMeter } from './components/common/ActivityHeatMeter';
+import { ActivityHeatMeter, getActivityAssessment } from './components/common/ActivityHeatMeter';
 import { VectorRateArrow, RATE_ARROW_COLORS } from './components/common/VectorRateArrow';
 import { VectorRateArrowGrid } from './components/common/VectorRateArrowGrid';
 import { MovementIcon } from './components/common/MovementIcon';
@@ -447,7 +447,9 @@ const CrackMovementVisualizer = () => {
                         <div className="text-gray-500 text-xs mb-2">
                           Based on cumulative path distance (direction-agnostic activity, not a projection)
                         </div>
-                        <div className="text-xs font-medium text-gray-600 mb-1">Activity Gauge</div>
+                        <div className="text-xs font-medium text-gray-600 mb-1">
+                          Activity Gauge: <span style={{ color: meter.color }}>{getActivityAssessment(totalPathRatePerWeek, maxTotalPathRate)}</span>
+                        </div>
                         <ActivityHeatMeter
                           rateMmPerWeek={totalPathRatePerWeek}
                           maxRateMmPerWeek={maxTotalPathRate}
