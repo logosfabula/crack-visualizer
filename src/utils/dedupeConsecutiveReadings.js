@@ -23,5 +23,15 @@ export const dedupeConsecutiveReadings = (readings) => {
       result.push({ ...reading, runLength: 1 });
     }
   }
+  // t=0 is the regression's time origin by definition (every other t is
+  // "days since the first reading") — if the very first reading is itself
+  // part of a leading run, the loop above just replaced it with the run's
+  // later member, silently shortening the observed window by however long
+  // that leading flat stretch lasted. A trailing run has no such problem
+  // (keeping its later member already preserves the true last reading),
+  // so only the leading edge needs restoring.
+  if (result.length > 0 && result[0].t !== readings[0].t) {
+    result[0] = { ...readings[0], runLength: result[0].runLength };
+  }
   return result;
 };
