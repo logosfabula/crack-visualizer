@@ -364,6 +364,14 @@ The original method (pre-v0.16.0): a straight line between only the first and la
 
 A floor can show "not reached on current trend" for every threshold while still being the most active floor being monitored — these aren't in conflict. **ETA** answers "is this floor's *net* displacement trending toward a threshold." **Activity** (the relative bar shown alongside Weekly Rate, Total Path) answers "how much has this floor moved in total, regardless of direction" — a floor that moves back and forth a great deal without net progress scores high on activity and can still show no projected ETA. The activity indicator is relative to the other floors currently monitored, not an absolute or literature-backed scale.
 
+### Horizontal vs. Vertical Component Analysis
+
+Both methods fit `x(t)` and `y(t)` independently, so either axis can be analyzed on its own instead of as a combined 2D displacement — useful for judging whether, say, sinking (vertical) or outward wall pull (horizontal) is the stronger driver for a given crack.
+
+- **"Displacement Component" selector** (Combined 2D / Horizontal only / Vertical only), alongside the ETA Method selector, governs Trend Rate, the ETA threshold panel, and Top 5 Soonest ETAs. In single-axis mode, the threshold crossing is solved on that axis's own linear fit (`a + b·t = ±threshold`) rather than the 2D quadratic — the two agree exactly when the other axis has no movement at all, since the 2D magnitude then reduces to the single axis.
+- **Horizontal vs. Vertical Rate** is shown at all times, independent of the selector, as the two signed per-axis rates (mm/week) side by side, with a note on which one currently has the larger magnitude — so the relative-strength comparison doesn't require switching the selector back and forth.
+- Single-axis "already reached" status uses that axis's own absolute displacement (`|x|` or `|y|`) from the last observed reading, consistent with how the combined mode uses `hypot(x, y)`.
+
 ## Applications
 
 ### Unified Multi-Floor Monitoring
