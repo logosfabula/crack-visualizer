@@ -128,8 +128,7 @@ crack-visualizer/
 │   │   │   └── MovementPatternRenderer.js  # Movement patterns renderer
 │   │   ├── views/                 # Main view components
 │   │   │   ├── TimelineView.js    # Timeline chart view
-│   │   │   ├── MovementPatternsView.js     # Raw movement patterns
-│   │   │   ├── NormalizedMovementView.js   # Normalized movements
+│   │   │   ├── MovementPatternsView.js     # Movement patterns (raw/normalized toggle, defaults to normalized)
 │   │   │   ├── SingleReadingView.js        # Individual reading detail
 │   │   │   └── DataTableView.js   # Tabular data display
 │   │   ├── Footer.jsx             # Footer with links and version
