@@ -48,4 +48,31 @@ describe('SecantEstimator.compute', () => {
     const result = SecantEstimator.compute({ readings, tNow: 100, thresholds: [] });
     expect(result.direction).toEqual({ x: 0.5, y: -0.3 });
   });
+
+  test('horizontal/vertical component solves a linear crossing on that axis\'s own first-to-last rate', () => {
+    const readings = [
+      { t: 0, x: 0, y: 0 },
+      { t: 100, x: 0.5, y: -1 } // x: 0.005mm/day, y: -0.01mm/day
+    ];
+    const horizontal = SecantEstimator.compute({ readings, tNow: 100, thresholds: [1], component: 'horizontal' });
+    const vertical = SecantEstimator.compute({ readings, tNow: 100, thresholds: [1], component: 'vertical' });
+
+    expect(horizontal.thresholdResults[0].etaT).toBeCloseTo(200, 6); // 1 / 0.005
+    expect(vertical.thresholdResults[0].etaT).toBeCloseTo(100, 6); // 1 / 0.01
+    expect(horizontal.rateMmPerWeek).toBeCloseTo(0.035, 6);
+    expect(vertical.rateMmPerWeek).toBeCloseTo(0.07, 6);
+  });
+
+  test('componentRates reports signed per-axis mm/week regardless of the requested component', () => {
+    const readings = [
+      { t: 0, x: 0, y: 0 },
+      { t: 100, x: 0.5, y: -1 }
+    ];
+    const combined = SecantEstimator.compute({ readings, tNow: 100, thresholds: [], component: 'combined' });
+    const vertical = SecantEstimator.compute({ readings, tNow: 100, thresholds: [], component: 'vertical' });
+
+    expect(combined.componentRates.x).toBeCloseTo(0.035, 6);
+    expect(combined.componentRates.y).toBeCloseTo(-0.07, 6);
+    expect(vertical.componentRates).toEqual(combined.componentRates);
+  });
 });

@@ -1,5 +1,6 @@
 import { RegressionAnalyzer } from '../RegressionAnalyzer';
 import { ETASolver } from '../ETASolver';
+import { LinearThresholdSolver } from '../LinearThresholdSolver';
 import { BootstrapEstimator } from '../BootstrapEstimator';
 import { BOOTSTRAP_ITERATIONS, MAX_EXTRAPOLATION_MULTIPLE } from '../../../constants/regressionConfig';
 
@@ -19,7 +20,11 @@ export class TheilSenEstimator {
   }
 
   // readings: deduplicated [{ t, x, y, deviation }], sorted by t.
-  static compute({ readings, tNow, thresholds }) {
+  // component: 'combined' (default) | 'horizontal' | 'vertical' — combined
+  // solves the 2D magnitude crossing; horizontal/vertical fit the same
+  // regression but solve a single axis's own linear threshold crossing,
+  // since x(t) and y(t) are already fitted independently.
+  static compute({ readings, tNow, thresholds, component = 'combined' }) {
     const fit = RegressionAnalyzer.fitFloor(readings);
     if (!fit) return null;
 
@@ -32,21 +37,31 @@ export class TheilSenEstimator {
     const y = readings.map(r => r.y);
     const weights = fit.weights;
 
+    const axis = component === 'horizontal' ? 'x' : component === 'vertical' ? 'y' : null;
+
     const thresholdResults = thresholds.map(threshold => {
-      const etaT = ETASolver.solveThresholdCrossing(
-        fit.x.intercept, fit.x.slope, fit.y.intercept, fit.y.slope, threshold, tNow, maxT
-      );
-      const bootstrap = BootstrapEstimator.run({
-        t, x, y, weights, threshold, tNow, maxT, iterations: BOOTSTRAP_ITERATIONS
-      });
+      let etaT, bootstrap;
+      if (axis) {
+        const axisFit = fit[axis];
+        etaT = LinearThresholdSolver.solveThresholdCrossing(axisFit.intercept, axisFit.slope, threshold, tNow, maxT);
+        bootstrap = BootstrapEstimator.run({ t, x, y, weights, threshold, tNow, maxT, iterations: BOOTSTRAP_ITERATIONS, axis });
+      } else {
+        etaT = ETASolver.solveThresholdCrossing(
+          fit.x.intercept, fit.x.slope, fit.y.intercept, fit.y.slope, threshold, tNow, maxT
+        );
+        bootstrap = BootstrapEstimator.run({ t, x, y, weights, threshold, tNow, maxT, iterations: BOOTSTRAP_ITERATIONS });
+      }
 
       return { threshold, reached: etaT !== null, etaT, bootstrap };
     });
 
     return {
-      rateMmPerWeek: Math.hypot(fit.x.slope, fit.y.slope) * 7,
+      rateMmPerWeek: axis ? Math.abs(fit[axis].slope) * 7 : Math.hypot(fit.x.slope, fit.y.slope) * 7,
       thresholdResults,
-      direction: { x: fit.x.slope, y: fit.y.slope }
+      direction: { x: fit.x.slope, y: fit.y.slope },
+      // Signed per-axis rates (mm/week), independent of `component` — used
+      // for the always-visible horizontal-vs-vertical rate comparison.
+      componentRates: { x: fit.x.slope * 7, y: fit.y.slope * 7 }
     };
   }
 }
