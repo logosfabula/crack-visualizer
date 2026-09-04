@@ -510,7 +510,7 @@ const CrackMovementVisualizer = () => {
                           <div className="font-medium text-gray-700 mb-1">Horizontal vs. Vertical Rate ({estimator.label}):</div>
                           {componentRates ? (
                             <>
-                              <div className="max-w-[180px]">
+                              <div className="max-w-[270px]">
                                 <VectorRateArrow
                                   horizontalRate={componentRates.x}
                                   verticalRate={componentRates.y}
