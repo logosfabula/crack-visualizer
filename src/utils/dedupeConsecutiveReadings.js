@@ -6,14 +6,21 @@
 // reading precision) generates C(k,2) "zero movement" pairs that all
 // restate the same one observation, which can swamp genuine signal from
 // the readings that actually changed. Input must already be sorted by t.
+//
+// The collapsed point carries `runLength`, the count of raw readings it
+// absorbed — a run reconfirmed many times over is stronger evidence that a
+// stretch is genuinely flat (not just under-sampled) than two readings far
+// apart would be, even though it must still count as exactly one point
+// toward the pairwise-slope count. See computeConfirmationWeight in
+// regressionConfig.js for how that count is used.
 export const dedupeConsecutiveReadings = (readings) => {
   const result = [];
   for (const reading of readings) {
     const last = result[result.length - 1];
     if (last && last.x === reading.x && last.y === reading.y) {
-      result[result.length - 1] = reading;
+      result[result.length - 1] = { ...reading, runLength: last.runLength + 1 };
     } else {
-      result.push(reading);
+      result.push({ ...reading, runLength: 1 });
     }
   }
   return result;

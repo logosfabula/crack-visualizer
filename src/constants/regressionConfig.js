@@ -40,3 +40,18 @@ export const computeReadingWeight = (deviationDegrees) => {
   const deviation = deviationDegrees ?? 0;
   return 1 / (1 + Math.pow(deviation / ANGLE_DEVIATION_HALF_WEIGHT, 2));
 };
+
+// Boost for a point that absorbed several reconfirming readings during
+// dedupeConsecutiveReadings (a run of k identical readings collapsed to
+// one point with runLength = k). k independent checks that a stretch held
+// flat is stronger evidence it's genuinely flat, not just under-sampled —
+// but it must never multiply the point's influence linearly, or reconfirm
+// count reintroduces the exact pairwise-slope inflation dedup exists to
+// prevent (see dedupeConsecutiveReadings.js). Scaled as sqrt(k): matches
+// how the standard error of a mean shrinks with the square root of
+// independent observations, so it has diminishing returns rather than
+// letting one long run dominate. Pairwise weight in TheilSen.fit is
+// min(weight_i, weight_j), so a boosted point still can't outweigh a
+// pairing with a lower-confidence point — the boost only compounds when
+// BOTH points in a pair are well-confirmed.
+export const computeConfirmationWeight = (runLength) => Math.sqrt(runLength ?? 1);
