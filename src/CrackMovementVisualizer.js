@@ -26,6 +26,7 @@ import Footer from './components/Footer';
 import { ActivityHeatMeter } from './components/common/ActivityHeatMeter';
 import { VectorRateArrow, RATE_ARROW_COLORS } from './components/common/VectorRateArrow';
 import { VectorRateArrowGrid } from './components/common/VectorRateArrowGrid';
+import { MovementIcon } from './components/common/MovementIcon';
 
 // ETA estimator registry (Theil-Sen, Secant, ...)
 import { ETA_ESTIMATORS, DEFAULT_ETA_METHOD } from './services/calculations/estimators';
@@ -466,39 +467,6 @@ const CrackMovementVisualizer = () => {
                       </div>
 
                       <div>
-                        <div className="font-medium text-gray-700">Horizontal vs. Vertical Rate ({estimator.label}):</div>
-                        {componentRates ? (
-                          <>
-                            <div className="max-w-[180px]">
-                              <VectorRateArrow
-                                horizontalRate={componentRates.x}
-                                verticalRate={componentRates.y}
-                                scaleMax={rateScaleMax}
-                                id={meter.key}
-                              />
-                            </div>
-                            <div className="text-xs font-mono space-x-3">
-                              <span style={{ color: RATE_ARROW_COLORS.horizontal }}>
-                                H {componentRates.x.toFixed(4)} mm/wk
-                              </span>
-                              <span style={{ color: RATE_ARROW_COLORS.vertical }}>
-                                V {componentRates.y.toFixed(4)} mm/wk
-                              </span>
-                            </div>
-                            <div className="text-gray-500 text-xs mt-1">
-                              {Math.abs(componentRates.x) > Math.abs(componentRates.y)
-                                ? 'Horizontal component is currently the stronger driver'
-                                : Math.abs(componentRates.y) > Math.abs(componentRates.x)
-                                  ? 'Vertical component is currently the stronger driver'
-                                  : 'Horizontal and vertical rates are comparable'}
-                            </div>
-                          </>
-                        ) : (
-                          <div className="text-sm text-gray-500">Insufficient data</div>
-                        )}
-                      </div>
-
-                      <div>
                         <div className="font-medium text-gray-700">ETA to Displacement Thresholds ({ETA_COMPONENT_LABELS[selectedComponent]}):</div>
                         <div className="text-xs text-gray-500 mb-1">{estimator.methodology}</div>
                         {(() => {
@@ -555,7 +523,7 @@ const CrackMovementVisualizer = () => {
                       </div> {/* End of grid */}
 
                       {/* Overall Interpretation */}
-                      <div className="mt-3 pt-3 border-t border-gray-200">
+                      <div className="mt-3 pt-3 border-t border-gray-200 grid grid-cols-1 md:grid-cols-2 gap-4">
                         {(() => {
                           if (!methodResult) {
                             return (
@@ -617,6 +585,39 @@ const CrackMovementVisualizer = () => {
                             </div>
                           );
                         })()}
+
+                        <div>
+                          <div className="font-medium text-gray-700 mb-1">Horizontal vs. Vertical Rate ({estimator.label}):</div>
+                          {componentRates ? (
+                            <>
+                              <div className="max-w-[180px]">
+                                <VectorRateArrow
+                                  horizontalRate={componentRates.x}
+                                  verticalRate={componentRates.y}
+                                  scaleMax={rateScaleMax}
+                                  id={meter.key}
+                                />
+                              </div>
+                              <div className="text-xs font-mono space-x-3">
+                                <span style={{ color: RATE_ARROW_COLORS.horizontal }}>
+                                  H {componentRates.x.toFixed(4)} mm/wk
+                                </span>
+                                <span style={{ color: RATE_ARROW_COLORS.vertical }}>
+                                  V {componentRates.y.toFixed(4)} mm/wk
+                                </span>
+                              </div>
+                              <div className="text-gray-500 text-xs mt-1">
+                                {Math.abs(componentRates.x) > Math.abs(componentRates.y)
+                                  ? 'Horizontal component is currently the stronger driver'
+                                  : Math.abs(componentRates.y) > Math.abs(componentRates.x)
+                                    ? 'Vertical component is currently the stronger driver'
+                                    : 'Horizontal and vertical rates are comparable'}
+                              </div>
+                            </>
+                          ) : (
+                            <div className="text-sm text-gray-500">Insufficient data</div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -747,7 +748,8 @@ const CrackMovementVisualizer = () => {
                                 meterName: result.meterName,
                                 threshold: t.threshold,
                                 remainingDays: t.remainingDays,
-                                reachedFraction: t.bootstrap ? t.bootstrap.reachedFraction : null
+                                reachedFraction: t.bootstrap ? t.bootstrap.reachedFraction : null,
+                                direction: methodResult.direction
                               });
                             }
                           });
@@ -774,9 +776,12 @@ const CrackMovementVisualizer = () => {
                                 className="flex items-center justify-between text-xs"
                               >
                                 <div className="flex items-center gap-1.5">
-                                  <div
-                                    className="w-2 h-2 rounded-full flex-shrink-0 bg-blue-500"
-                                  ></div>
+                                  <MovementIcon
+                                    dirX={eta.direction.x}
+                                    dirY={eta.direction.y}
+                                    component={selectedComponent}
+                                    size={18}
+                                  />
                                   <span className="font-medium text-black-700">
                                     {eta.meterName}
                                   </span>
