@@ -24,8 +24,8 @@ import Footer from './components/Footer';
 
 // Common components
 import { ActivityHeatMeter } from './components/common/ActivityHeatMeter';
-import { RateComparisonBar } from './components/common/RateComparisonBar';
-import { RateComparisonSummary } from './components/common/RateComparisonSummary';
+import { VectorRateArrow, RATE_ARROW_COLORS } from './components/common/VectorRateArrow';
+import { VectorRateArrowGrid } from './components/common/VectorRateArrowGrid';
 
 // ETA estimator registry (Theil-Sen, Secant, ...)
 import { ETA_ESTIMATORS, DEFAULT_ETA_METHOD } from './services/calculations/estimators';
@@ -33,6 +33,7 @@ import { ETA_COMPONENTS, DEFAULT_ETA_COMPONENT } from './constants/regressionCon
 
 // Utils
 import { formatDurationFromDays } from './utils/formatDuration';
+import { niceCeil } from './utils/niceCeil';
 
 const ETA_COMPONENT_LABELS = {
   [ETA_COMPONENTS.COMBINED]: 'Combined (2D)',
@@ -269,12 +270,14 @@ const CrackMovementVisualizer = () => {
               ...meterStats.filter(s => !s.empty).map(s => s.totalPathRatePerWeek)
             );
 
-            // One shared scale for every Horizontal vs. Vertical Rate bar on
-            // the page (per-floor cards and the cross-floor summary alike),
-            // so the same rate always renders at the same bar length no
-            // matter where it's shown — computed for the currently selected
-            // ETA method, since componentRates depend on it.
-            const maxComponentRate = Math.max(
+            // One shared axis scale for every Horizontal vs. Vertical Rate
+            // arrow on the page (per-floor cards and the cross-floor summary
+            // alike), so the same rate always renders at the same arrow
+            // length no matter where it's shown — computed for the currently
+            // selected ETA method, since componentRates depend on it.
+            // Rounded up to a "nice" number so the axis labels read as a
+            // clean reference value, not an arbitrary exact maximum.
+            const rateScaleMax = niceCeil(Math.max(
               0.0001,
               ...meters.flatMap(meter => {
                 const etaResult = etaPredictions[meter.key];
@@ -284,7 +287,7 @@ const CrackMovementVisualizer = () => {
                 const rates = estimatorEstimate ? estimatorEstimate.componentRates : null;
                 return rates ? [Math.abs(rates.x), Math.abs(rates.y)] : [];
               })
-            );
+            ));
 
             // Pass 2: render, using the group max computed above.
             const meterResults = meterStats.map(stats => {
@@ -455,12 +458,22 @@ const CrackMovementVisualizer = () => {
                         <div className="font-medium text-gray-700">Horizontal vs. Vertical Rate ({estimator.label}):</div>
                         {componentRates ? (
                           <>
-                            <RateComparisonBar
-                              horizontalRate={componentRates.x}
-                              verticalRate={componentRates.y}
-                              color={meter.color}
-                              maxAbs={maxComponentRate}
-                            />
+                            <div className="max-w-[180px]">
+                              <VectorRateArrow
+                                horizontalRate={componentRates.x}
+                                verticalRate={componentRates.y}
+                                scaleMax={rateScaleMax}
+                                id={meter.key}
+                              />
+                            </div>
+                            <div className="text-xs font-mono space-x-3">
+                              <span style={{ color: RATE_ARROW_COLORS.horizontal }}>
+                                H {componentRates.x.toFixed(4)} mm/wk
+                              </span>
+                              <span style={{ color: RATE_ARROW_COLORS.vertical }}>
+                                V {componentRates.y.toFixed(4)} mm/wk
+                              </span>
+                            </div>
                             <div className="text-gray-500 text-xs mt-1">
                               {Math.abs(componentRates.x) > Math.abs(componentRates.y)
                                 ? 'Horizontal component is currently the stronger driver'
@@ -782,7 +795,7 @@ const CrackMovementVisualizer = () => {
                         return <div className="text-gray-500 text-sm">Insufficient data</div>;
                       }
 
-                      return <RateComparisonSummary data={chartData} maxAbs={maxComponentRate} />;
+                      return <VectorRateArrowGrid data={chartData} scaleMax={rateScaleMax} />;
                     })()}
                   </div>
 
