@@ -41,6 +41,37 @@ const ETA_COMPONENT_LABELS = {
   [ETA_COMPONENTS.VERTICAL]: 'Vertical only'
 };
 
+// Shared by the Movement Summary header and the Structural Analysis Summary
+// header — same state, so changing either copy updates both sections at once.
+const ETAControls = ({ selectedETAMethod, setSelectedETAMethod, selectedComponent, setSelectedComponent }) => (
+  <div className="flex gap-4 flex-wrap">
+    <div>
+      <label className="text-sm font-medium mr-2">ETA Method:</label>
+      <select
+        value={selectedETAMethod}
+        onChange={(e) => setSelectedETAMethod(e.target.value)}
+        className="border border-gray-300 rounded px-2 py-1 text-sm"
+      >
+        {Object.values(ETA_ESTIMATORS).map(estimator => (
+          <option key={estimator.id} value={estimator.id}>{estimator.label}</option>
+        ))}
+      </select>
+    </div>
+    <div>
+      <label className="text-sm font-medium mr-2">Displacement Component:</label>
+      <select
+        value={selectedComponent}
+        onChange={(e) => setSelectedComponent(e.target.value)}
+        className="border border-gray-300 rounded px-2 py-1 text-sm"
+      >
+        {Object.values(ETA_COMPONENTS).map(component => (
+          <option key={component} value={component}>{ETA_COMPONENT_LABELS[component]}</option>
+        ))}
+      </select>
+    </div>
+  </div>
+);
+
 const CrackMovementVisualizer = () => {
   const [hoveredPoint, setHoveredPoint] = useState(null);
 
@@ -188,32 +219,12 @@ const CrackMovementVisualizer = () => {
       <div className="mt-8 p-4 bg-gray-50 rounded">
         <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
           <h3 className="font-semibold">Movement Summary</h3>
-          <div className="flex gap-4 flex-wrap">
-            <div>
-              <label className="text-sm font-medium mr-2">ETA Method:</label>
-              <select
-                value={selectedETAMethod}
-                onChange={(e) => setSelectedETAMethod(e.target.value)}
-                className="border border-gray-300 rounded px-2 py-1 text-sm"
-              >
-                {Object.values(ETA_ESTIMATORS).map(estimator => (
-                  <option key={estimator.id} value={estimator.id}>{estimator.label}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="text-sm font-medium mr-2">Displacement Component:</label>
-              <select
-                value={selectedComponent}
-                onChange={(e) => setSelectedComponent(e.target.value)}
-                className="border border-gray-300 rounded px-2 py-1 text-sm"
-              >
-                {Object.values(ETA_COMPONENTS).map(component => (
-                  <option key={component} value={component}>{ETA_COMPONENT_LABELS[component]}</option>
-                ))}
-              </select>
-            </div>
-          </div>
+          <ETAControls
+            selectedETAMethod={selectedETAMethod}
+            setSelectedETAMethod={setSelectedETAMethod}
+            selectedComponent={selectedComponent}
+            setSelectedComponent={setSelectedComponent}
+          />
         </div>
         <div className="space-y-4">
           {(() => {
@@ -623,15 +634,37 @@ const CrackMovementVisualizer = () => {
 
             return (
               <>
-                {meterResults.map(result => result.component)}
+                {meterResults.map((result, idx) => (
+                  <React.Fragment key={idx}>
+                    {result.component}
+                    {idx < meterResults.length - 1 && (
+                      <div className="flex justify-end py-1 px-1">
+                        <ETAControls
+                          selectedETAMethod={selectedETAMethod}
+                          setSelectedETAMethod={setSelectedETAMethod}
+                          selectedComponent={selectedComponent}
+                          setSelectedComponent={setSelectedComponent}
+                        />
+                      </div>
+                    )}
+                  </React.Fragment>
+                ))}
                 
                 {/* Structural Analysis Summary */}
                 <div className="p-4 bg-blue-50 border-2 border-blue-200 rounded-lg">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-5 h-5 bg-blue-500 rounded-full"></div>
-                    <strong className="text-lg text-blue-800">Structural Analysis Summary</strong>
+                  <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-5 h-5 bg-blue-500 rounded-full"></div>
+                      <strong className="text-lg text-blue-800">Structural Analysis Summary</strong>
+                    </div>
+                    <ETAControls
+                      selectedETAMethod={selectedETAMethod}
+                      setSelectedETAMethod={setSelectedETAMethod}
+                      selectedComponent={selectedComponent}
+                      setSelectedComponent={setSelectedComponent}
+                    />
                   </div>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                       <div className="font-medium text-blue-700 mb-2">Most Active Crack Meter:</div>
