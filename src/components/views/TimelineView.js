@@ -10,6 +10,7 @@ import {
   ResponsiveContainer
 } from 'recharts';
 import { CustomTooltip } from '../common/CustomTooltip';
+import { InfoDisclosure } from '../common/InfoDisclosure';
 
 const formatDateTick = (timestamp) => new Date(timestamp).toISOString().split('T')[0];
 
@@ -29,12 +30,12 @@ export const TimelineView = ({ processedData, selectedMeter }) => {
 
   return (
     <div className="space-y-8">
-      <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded">
-        <p className="text-sm text-blue-800">
+      <InfoDisclosure label="Timeline normalized view">
+        <p>
           <strong>Timeline shows normalized movement data:</strong> All floors are made start at (0, 0) and subsequent readings are shifted according to the first reading.
           This allows direct comparison of structural movement patterns across all floors.
         </p>
-      </div>
+      </InfoDisclosure>
 
       <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer w-fit">
         <input

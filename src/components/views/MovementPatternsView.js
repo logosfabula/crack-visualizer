@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { SVGGrid } from '../common/SVGGrid';
 import { MovementPatternRenderer } from '../common/MovementPatternRenderer';
+import { InfoDisclosure } from '../common/InfoDisclosure';
 import { METER_CONFIGS } from '../../constants/meterConfigs';
 
 export const MovementPatternsView = ({
@@ -25,7 +26,7 @@ export const MovementPatternsView = ({
           {useNormalized ? '↔ Raw View' : '↔ Normalized View'}
         </button>
       </div>
-      <div className="mb-4 text-sm text-gray-600">
+      <InfoDisclosure label={useNormalized ? 'Normalized Movement Patterns view' : 'Movement Patterns view'}>
         {useNormalized ? (
           <>
             <p>• Each meter's first reading set as origin (0, 0)</p>
@@ -40,7 +41,7 @@ export const MovementPatternsView = ({
             <p>• <strong>Click any dot</strong> to view detailed crack position visualization</p>
           </>
         )}
-      </div>
+      </InfoDisclosure>
 
       <div style={{ width: '100%', height: '600px', position: 'relative' }}>
         <SVGGrid>
