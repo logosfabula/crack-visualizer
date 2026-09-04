@@ -14,7 +14,7 @@ import { CustomTooltip } from '../common/CustomTooltip';
 const formatDateTick = (timestamp) => new Date(timestamp).toISOString().split('T')[0];
 
 export const TimelineView = ({ processedData, selectedMeter }) => {
-  const [proportionalSpacing, setProportionalSpacing] = useState(false);
+  const [proportionalSpacing, setProportionalSpacing] = useState(true);
 
   // Recharts' category axis spaces points by index, not by date, unless
   // given a numeric dataKey and told to treat it as a continuous scale.

@@ -10,7 +10,6 @@ import { METER_CONFIGS } from './constants/meterConfigs';
 // View components
 import { TimelineView } from './components/views/TimelineView';
 import { MovementPatternsView } from './components/views/MovementPatternsView';
-import { NormalizedMovementView } from './components/views/NormalizedMovementView';
 import { SingleReadingView } from './components/views/SingleReadingView';
 import { DataTableView } from './components/views/DataTableView';
 
@@ -96,13 +95,12 @@ const CrackMovementVisualizer = () => {
           >
             <option value="timeline">Timeline</option>
             <option value="movement">Movement Patterns</option>
-            <option value="normalized">Normalized Movement</option>
             <option value="single">Single Reading</option>
             <option value="data">Data</option>
           </select>
         </div>
         
-        {(selectedView === 'timeline' || selectedView === 'movement' || selectedView === 'normalized') && (
+        {(selectedView === 'timeline' || selectedView === 'movement') && (
           <div>
             <label className="block text-sm font-medium mb-2">Crack Meter:</label>
             <select 
@@ -165,18 +163,6 @@ const CrackMovementVisualizer = () => {
         />
       )}
 
-      {/******** Normalized Movement Patterns View ********/}
-      {selectedView === 'normalized' && (
-        <NormalizedMovementView
-          processedData={processedData}
-          selectedMeter={selectedMeter}
-          onPointClick={handleMovementPointClick}
-          hoveredPoint={hoveredPoint}
-          setHoveredPoint={setHoveredPoint}
-          setSelectedView={setSelectedView}
-        />
-      )}
-
       {/******** Movement Patterns View ********/}
       {selectedView === 'movement' && (
         <MovementPatternsView
@@ -185,7 +171,6 @@ const CrackMovementVisualizer = () => {
           onPointClick={handleMovementPointClick}
           hoveredPoint={hoveredPoint}
           setHoveredPoint={setHoveredPoint}
-          setSelectedView={setSelectedView}
         />
       )}
 
