@@ -27,9 +27,16 @@ import { ActivityHeatMeter } from './components/common/ActivityHeatMeter';
 
 // ETA estimator registry (Theil-Sen, Secant, ...)
 import { ETA_ESTIMATORS, DEFAULT_ETA_METHOD } from './services/calculations/estimators';
+import { ETA_COMPONENTS, DEFAULT_ETA_COMPONENT } from './constants/regressionConfig';
 
 // Utils
 import { formatDurationFromDays } from './utils/formatDuration';
+
+const ETA_COMPONENT_LABELS = {
+  [ETA_COMPONENTS.COMBINED]: 'Combined (2D)',
+  [ETA_COMPONENTS.HORIZONTAL]: 'Horizontal only',
+  [ETA_COMPONENTS.VERTICAL]: 'Vertical only'
+};
 
 const CrackMovementVisualizer = () => {
   const [hoveredPoint, setHoveredPoint] = useState(null);
@@ -52,6 +59,7 @@ const CrackMovementVisualizer = () => {
   const [selectedMeter, setSelectedMeter] = useState('all');
   const [selectedReading, setSelectedReading] = useState(null);
   const [selectedETAMethod, setSelectedETAMethod] = useState(DEFAULT_ETA_METHOD);
+  const [selectedComponent, setSelectedComponent] = useState(DEFAULT_ETA_COMPONENT);
 
   return (
     <div className="w-full max-w-6xl mx-auto p-6 bg-white">
@@ -177,17 +185,31 @@ const CrackMovementVisualizer = () => {
       <div className="mt-8 p-4 bg-gray-50 rounded">
         <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
           <h3 className="font-semibold">Movement Summary</h3>
-          <div>
-            <label className="text-sm font-medium mr-2">ETA Method:</label>
-            <select
-              value={selectedETAMethod}
-              onChange={(e) => setSelectedETAMethod(e.target.value)}
-              className="border border-gray-300 rounded px-2 py-1 text-sm"
-            >
-              {Object.values(ETA_ESTIMATORS).map(estimator => (
-                <option key={estimator.id} value={estimator.id}>{estimator.label}</option>
-              ))}
-            </select>
+          <div className="flex gap-4 flex-wrap">
+            <div>
+              <label className="text-sm font-medium mr-2">ETA Method:</label>
+              <select
+                value={selectedETAMethod}
+                onChange={(e) => setSelectedETAMethod(e.target.value)}
+                className="border border-gray-300 rounded px-2 py-1 text-sm"
+              >
+                {Object.values(ETA_ESTIMATORS).map(estimator => (
+                  <option key={estimator.id} value={estimator.id}>{estimator.label}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="text-sm font-medium mr-2">Displacement Component:</label>
+              <select
+                value={selectedComponent}
+                onChange={(e) => setSelectedComponent(e.target.value)}
+                className="border border-gray-300 rounded px-2 py-1 text-sm"
+              >
+                {Object.values(ETA_COMPONENTS).map(component => (
+                  <option key={component} value={component}>{ETA_COMPONENT_LABELS[component]}</option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
         <div className="space-y-4">
@@ -272,9 +294,13 @@ const CrackMovementVisualizer = () => {
 
               const etaResult = etaPredictions[meter.key];
               const estimator = ETA_ESTIMATORS[selectedETAMethod];
-              const methodResult = etaResult && !etaResult.insufficientData
+              const estimatorEstimate = etaResult && !etaResult.insufficientData
                 ? etaResult.estimates[selectedETAMethod]
                 : null;
+              const methodResult = estimatorEstimate
+                ? estimatorEstimate.components[selectedComponent]
+                : null;
+              const componentRates = estimatorEstimate ? estimatorEstimate.componentRates : null;
 
               const firstPosition = `(${meterData[0][meter.dataKeys[0]].toFixed(3)}, ${meterData[0][meter.dataKeys[1]].toFixed(3)})`;
               const lastPosition = `(${meterData[meterData.length - 1][meter.dataKeys[0]].toFixed(3)}, ${meterData[meterData.length - 1][meter.dataKeys[1]].toFixed(3)})`;
@@ -393,7 +419,7 @@ const CrackMovementVisualizer = () => {
                       </div>
                       
                       <div>
-                        <div className="font-medium text-gray-700">Trend Rate ({estimator.label}):</div>
+                        <div className="font-medium text-gray-700">Trend Rate ({estimator.label} · {ETA_COMPONENT_LABELS[selectedComponent]}):</div>
                         <div className="text-lg font-semibold" style={{ color: meter.color }}>
                           {methodResult
                             ? `${methodResult.rateMmPerWeek.toFixed(4)} mm/week`
@@ -407,7 +433,36 @@ const CrackMovementVisualizer = () => {
                       </div>
 
                       <div>
-                        <div className="font-medium text-gray-700">ETA to Displacement Thresholds:</div>
+                        <div className="font-medium text-gray-700">Horizontal vs. Vertical Rate ({estimator.label}):</div>
+                        {componentRates ? (
+                          <div className="text-sm">
+                            <div>
+                              Horizontal: <span className="font-mono">{componentRates.x.toFixed(4)} mm/week</span>
+                              {componentRates.x !== 0 && (
+                                <span className="text-gray-500 text-xs"> ({componentRates.x > 0 ? 'expanding' : 'closing'})</span>
+                              )}
+                            </div>
+                            <div>
+                              Vertical: <span className="font-mono">{componentRates.y.toFixed(4)} mm/week</span>
+                              {componentRates.y !== 0 && (
+                                <span className="text-gray-500 text-xs"> ({componentRates.y > 0 ? 'rising' : 'sinking'})</span>
+                              )}
+                            </div>
+                            <div className="text-gray-500 text-xs mt-1">
+                              {Math.abs(componentRates.x) > Math.abs(componentRates.y)
+                                ? 'Horizontal component is currently the stronger driver'
+                                : Math.abs(componentRates.y) > Math.abs(componentRates.x)
+                                  ? 'Vertical component is currently the stronger driver'
+                                  : 'Horizontal and vertical rates are comparable'}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="text-sm text-gray-500">Insufficient data</div>
+                        )}
+                      </div>
+
+                      <div>
+                        <div className="font-medium text-gray-700">ETA to Displacement Thresholds ({ETA_COMPONENT_LABELS[selectedComponent]}):</div>
                         <div className="text-xs text-gray-500 mb-1">{estimator.methodology}</div>
                         {(() => {
                           if (!methodResult) {
@@ -622,7 +677,8 @@ const CrackMovementVisualizer = () => {
 
                         meterResults.forEach(result => {
                           if (!result.etaResult || result.etaResult.insufficientData) return;
-                          const methodResult = result.etaResult.estimates[selectedETAMethod];
+                          const estimatorEstimate = result.etaResult.estimates[selectedETAMethod];
+                          const methodResult = estimatorEstimate ? estimatorEstimate.components[selectedComponent] : null;
                           if (!methodResult) return;
 
                           methodResult.thresholds.forEach(t => {
@@ -685,7 +741,7 @@ const CrackMovementVisualizer = () => {
                               </div>
                             )}
                             <div className="text-xs text-blue-600 mt-1">
-                              {ETA_ESTIMATORS[selectedETAMethod].label} trend per floor
+                              {ETA_ESTIMATORS[selectedETAMethod].label} trend per floor ({ETA_COMPONENT_LABELS[selectedComponent]})
                               {topETAs.some(e => e.reachedFraction !== null) && '; % = share of bootstrap resamples that reach the threshold at all'}
                             </div>
                           </div>
