@@ -30,46 +30,25 @@ import { MovementIcon } from './components/common/MovementIcon';
 
 // ETA estimator registry (Theil-Sen, Secant, ...)
 import { ETA_ESTIMATORS, DEFAULT_ETA_METHOD } from './services/calculations/estimators';
-import { ETA_COMPONENTS, DEFAULT_ETA_COMPONENT } from './constants/regressionConfig';
 
 // Utils
 import { formatDurationFromDays } from './utils/formatDuration';
 import { niceCeil } from './utils/niceCeil';
 
-const ETA_COMPONENT_LABELS = {
-  [ETA_COMPONENTS.COMBINED]: 'Combined (2D)',
-  [ETA_COMPONENTS.HORIZONTAL]: 'Horizontal only',
-  [ETA_COMPONENTS.VERTICAL]: 'Vertical only'
-};
-
 // Shared by the Movement Summary header and the Structural Analysis Summary
 // header — same state, so changing either copy updates both sections at once.
-const ETAControls = ({ selectedETAMethod, setSelectedETAMethod, selectedComponent, setSelectedComponent }) => (
-  <div className="flex gap-4 flex-wrap">
-    <div>
-      <label className="text-sm font-medium mr-2">ETA Method:</label>
-      <select
-        value={selectedETAMethod}
-        onChange={(e) => setSelectedETAMethod(e.target.value)}
-        className="border border-gray-300 rounded px-2 py-1 text-sm"
-      >
-        {Object.values(ETA_ESTIMATORS).map(estimator => (
-          <option key={estimator.id} value={estimator.id}>{estimator.label}</option>
-        ))}
-      </select>
-    </div>
-    <div>
-      <label className="text-sm font-medium mr-2">Displacement Component:</label>
-      <select
-        value={selectedComponent}
-        onChange={(e) => setSelectedComponent(e.target.value)}
-        className="border border-gray-300 rounded px-2 py-1 text-sm"
-      >
-        {Object.values(ETA_COMPONENTS).map(component => (
-          <option key={component} value={component}>{ETA_COMPONENT_LABELS[component]}</option>
-        ))}
-      </select>
-    </div>
+const ETAControls = ({ selectedETAMethod, setSelectedETAMethod }) => (
+  <div>
+    <label className="text-sm font-medium mr-2">ETA Method:</label>
+    <select
+      value={selectedETAMethod}
+      onChange={(e) => setSelectedETAMethod(e.target.value)}
+      className="border border-gray-300 rounded px-2 py-1 text-sm"
+    >
+      {Object.values(ETA_ESTIMATORS).map(estimator => (
+        <option key={estimator.id} value={estimator.id}>{estimator.label}</option>
+      ))}
+    </select>
   </div>
 );
 
@@ -94,7 +73,6 @@ const CrackMovementVisualizer = () => {
   const [selectedMeter, setSelectedMeter] = useState('all');
   const [selectedReading, setSelectedReading] = useState(null);
   const [selectedETAMethod, setSelectedETAMethod] = useState(DEFAULT_ETA_METHOD);
-  const [selectedComponent, setSelectedComponent] = useState(DEFAULT_ETA_COMPONENT);
 
   return (
     <div className="w-full max-w-6xl mx-auto p-6 bg-white">
@@ -223,8 +201,6 @@ const CrackMovementVisualizer = () => {
           <ETAControls
             selectedETAMethod={selectedETAMethod}
             setSelectedETAMethod={setSelectedETAMethod}
-            selectedComponent={selectedComponent}
-            setSelectedComponent={setSelectedComponent}
           />
         </div>
         <div className="space-y-4">
@@ -328,13 +304,10 @@ const CrackMovementVisualizer = () => {
 
               const etaResult = etaPredictions[meter.key];
               const estimator = ETA_ESTIMATORS[selectedETAMethod];
-              const estimatorEstimate = etaResult && !etaResult.insufficientData
+              const methodResult = etaResult && !etaResult.insufficientData
                 ? etaResult.estimates[selectedETAMethod]
                 : null;
-              const methodResult = estimatorEstimate
-                ? estimatorEstimate.components[selectedComponent]
-                : null;
-              const componentRates = estimatorEstimate ? estimatorEstimate.componentRates : null;
+              const componentRates = methodResult ? methodResult.componentRates : null;
 
               const firstPosition = `(${meterData[0][meter.dataKeys[0]].toFixed(3)}, ${meterData[0][meter.dataKeys[1]].toFixed(3)})`;
               const lastPosition = `(${meterData[meterData.length - 1][meter.dataKeys[0]].toFixed(3)}, ${meterData[meterData.length - 1][meter.dataKeys[1]].toFixed(3)})`;
@@ -453,7 +426,7 @@ const CrackMovementVisualizer = () => {
                       </div>
                       
                       <div>
-                        <div className="font-medium text-gray-700">Trend Rate ({estimator.label} · {ETA_COMPONENT_LABELS[selectedComponent]}):</div>
+                        <div className="font-medium text-gray-700">Trend Rate ({estimator.label}):</div>
                         <div className="text-lg font-semibold" style={{ color: meter.color }}>
                           {methodResult
                             ? `${methodResult.rateMmPerWeek.toFixed(4)} mm/week`
@@ -579,7 +552,7 @@ const CrackMovementVisualizer = () => {
                         </div>
 
                         <div className="flex-[2] min-w-[280px]">
-                          <div className="font-medium text-gray-700 mb-1">ETA to Displacement Thresholds ({ETA_COMPONENT_LABELS[selectedComponent]}):</div>
+                          <div className="font-medium text-gray-700 mb-1">ETA to Displacement Thresholds:</div>
                           <div className="text-xs text-gray-500 mb-1">{estimator.methodology}</div>
                           {(() => {
                             if (!methodResult) {
@@ -644,8 +617,6 @@ const CrackMovementVisualizer = () => {
                         <ETAControls
                           selectedETAMethod={selectedETAMethod}
                           setSelectedETAMethod={setSelectedETAMethod}
-                          selectedComponent={selectedComponent}
-                          setSelectedComponent={setSelectedComponent}
                         />
                       </div>
                     )}
@@ -662,8 +633,6 @@ const CrackMovementVisualizer = () => {
                     <ETAControls
                       selectedETAMethod={selectedETAMethod}
                       setSelectedETAMethod={setSelectedETAMethod}
-                      selectedComponent={selectedComponent}
-                      setSelectedComponent={setSelectedComponent}
                     />
                   </div>
 
@@ -739,8 +708,7 @@ const CrackMovementVisualizer = () => {
 
                         meterResults.forEach(result => {
                           if (!result.etaResult || result.etaResult.insufficientData) return;
-                          const estimatorEstimate = result.etaResult.estimates[selectedETAMethod];
-                          const methodResult = estimatorEstimate ? estimatorEstimate.components[selectedComponent] : null;
+                          const methodResult = result.etaResult.estimates[selectedETAMethod];
                           if (!methodResult) return;
 
                           methodResult.thresholds.forEach(t => {
@@ -780,7 +748,6 @@ const CrackMovementVisualizer = () => {
                                   <MovementIcon
                                     dirX={eta.direction.x}
                                     dirY={eta.direction.y}
-                                    component={selectedComponent}
                                     size={18}
                                   />
                                   <span className="font-medium text-black-700">
@@ -807,7 +774,7 @@ const CrackMovementVisualizer = () => {
                               </div>
                             )}
                             <div className="text-xs text-blue-600 mt-1">
-                              {ETA_ESTIMATORS[selectedETAMethod].label} trend per floor ({ETA_COMPONENT_LABELS[selectedComponent]})
+                              {ETA_ESTIMATORS[selectedETAMethod].label} trend per floor
                               {topETAs.some(e => e.reachedFraction !== null) && '; % = share of bootstrap resamples that reach the threshold at all'}
                             </div>
                           </div>

@@ -22,18 +22,6 @@ export const MAX_EXTRAPOLATION_MULTIPLE = 10;
 // (potentially huge or divide-by-near-zero) projected ETA.
 export const RATE_EPSILON_MM_PER_WEEK = 0.0001;
 
-// Which displacement component an ETA is solved for: the combined 2D
-// magnitude (default, historical behavior), or a single axis analyzed on
-// its own — lets the user compare whether sinking (vertical) or outward
-// pull (horizontal) is the stronger driver.
-export const ETA_COMPONENTS = {
-  COMBINED: 'combined',
-  HORIZONTAL: 'horizontal',
-  VERTICAL: 'vertical'
-};
-
-export const DEFAULT_ETA_COMPONENT = ETA_COMPONENTS.COMBINED;
-
 // Continuous, always-positive weight from orthogonality deviation (degrees).
 // A reading is never fully excluded, only discounted.
 export const computeReadingWeight = (deviationDegrees) => {
