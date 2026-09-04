@@ -24,6 +24,8 @@ import Footer from './components/Footer';
 
 // Common components
 import { ActivityHeatMeter } from './components/common/ActivityHeatMeter';
+import { RateComparisonBar } from './components/common/RateComparisonBar';
+import { ComponentRateChart } from './components/common/ComponentRateChart';
 
 // ETA estimator registry (Theil-Sen, Secant, ...)
 import { ETA_ESTIMATORS, DEFAULT_ETA_METHOD } from './services/calculations/estimators';
@@ -435,19 +437,12 @@ const CrackMovementVisualizer = () => {
                       <div>
                         <div className="font-medium text-gray-700">Horizontal vs. Vertical Rate ({estimator.label}):</div>
                         {componentRates ? (
-                          <div className="text-sm">
-                            <div>
-                              Horizontal: <span className="font-mono">{componentRates.x.toFixed(4)} mm/week</span>
-                              {componentRates.x !== 0 && (
-                                <span className="text-gray-500 text-xs"> ({componentRates.x > 0 ? 'expanding' : 'closing'})</span>
-                              )}
-                            </div>
-                            <div>
-                              Vertical: <span className="font-mono">{componentRates.y.toFixed(4)} mm/week</span>
-                              {componentRates.y !== 0 && (
-                                <span className="text-gray-500 text-xs"> ({componentRates.y > 0 ? 'rising' : 'sinking'})</span>
-                              )}
-                            </div>
+                          <>
+                            <RateComparisonBar
+                              horizontalRate={componentRates.x}
+                              verticalRate={componentRates.y}
+                              color={meter.color}
+                            />
                             <div className="text-gray-500 text-xs mt-1">
                               {Math.abs(componentRates.x) > Math.abs(componentRates.y)
                                 ? 'Horizontal component is currently the stronger driver'
@@ -455,7 +450,7 @@ const CrackMovementVisualizer = () => {
                                   ? 'Vertical component is currently the stronger driver'
                                   : 'Horizontal and vertical rates are comparable'}
                             </div>
-                          </div>
+                          </>
                         ) : (
                           <div className="text-sm text-gray-500">Insufficient data</div>
                         )}
@@ -590,7 +585,8 @@ const CrackMovementVisualizer = () => {
                 etaResult: etaResult,
                 directDisplacement: directDistance,
                 movementDirectionX: directDx,
-                movementDirectionY: directDy
+                movementDirectionY: directDy,
+                componentRates: componentRates
               };
             });
 
@@ -749,7 +745,24 @@ const CrackMovementVisualizer = () => {
                       })()}
                     </div>
                   </div>
-                  
+
+                  <div className="mt-4 pt-4 border-t border-blue-200">
+                    <div className="font-medium text-blue-700 mb-2">
+                      Horizontal vs. Vertical Rate — All Floors ({ETA_ESTIMATORS[selectedETAMethod].label}):
+                    </div>
+                    {(() => {
+                      const chartData = meterResults
+                        .filter(r => r.componentRates)
+                        .map(r => ({ name: r.meterName, horizontal: r.componentRates.x, vertical: r.componentRates.y }));
+
+                      if (chartData.length === 0) {
+                        return <div className="text-gray-500 text-sm">Insufficient data</div>;
+                      }
+
+                      return <ComponentRateChart data={chartData} />;
+                    })()}
+                  </div>
+
                   <div className="mt-3 text-xs text-blue-600">
                     {(() => {
                       // Get all dates from active meters
