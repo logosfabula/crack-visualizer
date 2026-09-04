@@ -507,23 +507,9 @@ const CrackMovementVisualizer = () => {
                           );
                         })()}
                       </div>
-                      <div>
-                        <div className="font-medium text-gray-700">Weekly Rate (Total Path):</div>
-                        <div className="text-lg font-semibold" style={{ color: meter.color }}>
-                          {totalPathRatePerWeek.toFixed(4)} mm/week
-                        </div>
-                        <div className="text-gray-500 text-xs mb-2">
-                          Based on cumulative path distance (direction-agnostic activity, not a projection)
-                        </div>
-                        <ActivityHeatMeter
-                          rateMmPerWeek={totalPathRatePerWeek}
-                          maxRateMmPerWeek={maxTotalPathRate}
-                          color={meter.color}
-                        />
-                      </div> {/* End of grid */}
 
                       {/* Overall Interpretation */}
-                      <div className="mt-3 pt-3 border-t border-gray-200 grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="mt-3 pt-3 border-t border-gray-200 grid grid-cols-1 md:grid-cols-3 gap-4">
                         {(() => {
                           if (!methodResult) {
                             return (
@@ -617,6 +603,21 @@ const CrackMovementVisualizer = () => {
                           ) : (
                             <div className="text-sm text-gray-500">Insufficient data</div>
                           )}
+                        </div>
+
+                        <div>
+                          <div className="font-medium text-gray-700 mb-1">Weekly Rate (Total Path):</div>
+                          <div className="text-lg font-semibold" style={{ color: meter.color }}>
+                            {totalPathRatePerWeek.toFixed(4)} mm/week
+                          </div>
+                          <div className="text-gray-500 text-xs mb-2">
+                            Based on cumulative path distance (direction-agnostic activity, not a projection)
+                          </div>
+                          <ActivityHeatMeter
+                            rateMmPerWeek={totalPathRatePerWeek}
+                            maxRateMmPerWeek={maxTotalPathRate}
+                            color={meter.color}
+                          />
                         </div>
                       </div>
                     </div>

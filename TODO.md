@@ -37,6 +37,7 @@
   - Nella Top 5 Soonest ETAs l'icona è ridotta in base al Displacement Component selezionato: Horizontal/Vertical only forzano l'altro asse a "still" invece di mostrare uno stato che quella proiezione non usa affatto (un'ETA solo-orizzontale non guarda mai il trend verticale) — non serve un set di icone nuovo, sono semplicemente la riga/colonna centrale (asse forzato a "still") della stessa matrice 3×3
   - Considerata e scartata generazione di immagini via AI per l'icona: nessun tool di image generation disponibile in questa sessione; inoltre 9 icone devono restare un set internamente coerente (stessi scarti di gap/offset comparabili fra loro), cosa che l'SVG parametrico garantisce per costruzione e la generazione per immagine no
 - [x] "Horizontal vs. Vertical Rate" spostato fuori dalla griglia di statistiche del piano e affiancato a "Overall Movement Direction" (richiesto esplicitamente) — i due spiegano lo stesso trend ed erano separati da campi non correlati
+  - Anche "Weekly Rate (Total Path)" spostato nella stessa sezione sotto lo stesso `<hr>` (richiesto esplicitamente): le tre card ora condividono un'unica griglia a 3 colonne sotto il divisore, invece di essere sparse nella griglia principale delle statistiche
 - [ ] Revisione del linguaggio: coerenza generale e glossario
 - [ ] CI/CD automatically replace v.number in README and add entry in CHANGELOG and TODO
 
