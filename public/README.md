@@ -48,7 +48,7 @@ This application helps monitor and visualize crack meter readings from structura
 - 📈 **Normalized Data**: Floor-specific corrections for consistent analysis
 - 📋 **Data Tables**: Complete raw and normalized measurement history
 - 📊 **Statistical Summary**: Movement rates, displacement analysis, and trends
-- ⏳ **ETA Predictions**: Threshold-crossing estimates via a selectable weighted-regression or legacy secant method, with confidence ranges — analyzable as combined 2D displacement or a single horizontal/vertical component, plus an always-visible rate comparison between the two axes — see METHOD.md
+- ⏳ **ETA Predictions**: Threshold-crossing estimates via a selectable weighted-regression or legacy secant method, with confidence ranges, plus an always-visible horizontal-vs-vertical rate comparison per floor — see METHOD.md
 - 🔥 **Activity Indicator**: Relative gauge of cumulative movement per floor, independent of ETA trend
 
 ## Installation
