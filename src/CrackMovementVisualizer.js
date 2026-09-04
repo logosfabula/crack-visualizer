@@ -269,6 +269,23 @@ const CrackMovementVisualizer = () => {
               ...meterStats.filter(s => !s.empty).map(s => s.totalPathRatePerWeek)
             );
 
+            // One shared scale for every Horizontal vs. Vertical Rate bar on
+            // the page (per-floor cards and the cross-floor summary alike),
+            // so the same rate always renders at the same bar length no
+            // matter where it's shown — computed for the currently selected
+            // ETA method, since componentRates depend on it.
+            const maxComponentRate = Math.max(
+              0.0001,
+              ...meters.flatMap(meter => {
+                const etaResult = etaPredictions[meter.key];
+                const estimatorEstimate = etaResult && !etaResult.insufficientData
+                  ? etaResult.estimates[selectedETAMethod]
+                  : null;
+                const rates = estimatorEstimate ? estimatorEstimate.componentRates : null;
+                return rates ? [Math.abs(rates.x), Math.abs(rates.y)] : [];
+              })
+            );
+
             // Pass 2: render, using the group max computed above.
             const meterResults = meterStats.map(stats => {
               if (stats.empty) {
@@ -442,6 +459,7 @@ const CrackMovementVisualizer = () => {
                               horizontalRate={componentRates.x}
                               verticalRate={componentRates.y}
                               color={meter.color}
+                              maxAbs={maxComponentRate}
                             />
                             <div className="text-gray-500 text-xs mt-1">
                               {Math.abs(componentRates.x) > Math.abs(componentRates.y)
@@ -764,7 +782,7 @@ const CrackMovementVisualizer = () => {
                         return <div className="text-gray-500 text-sm">Insufficient data</div>;
                       }
 
-                      return <RateComparisonSummary data={chartData} />;
+                      return <RateComparisonSummary data={chartData} maxAbs={maxComponentRate} />;
                     })()}
                   </div>
 

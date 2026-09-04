@@ -5,12 +5,20 @@ const ROWS = [
   { key: 'vertical', label: 'Vertical', positiveWord: 'rising', negativeWord: 'sinking' }
 ];
 
+// The current largest value fills this much of the track, not 100% — a
+// full bar reads as "maxed out against some limit", which this scale
+// doesn't have: it's just whatever is largest right now, and future
+// readings can exceed it. Headroom keeps that visually honest.
+const MAX_FILL_PERCENT = 80;
+
 // Compact bar pair for a single floor: horizontal and vertical rate
 // (mm/week) drawn as same-direction, magnitude-only bars (both growing
 // from zero), so their length is directly comparable at a glance — sign
 // is only carried by the word next to the number, not by bar direction.
-// `maxAbs` lets a caller impose a shared scale (e.g. across floors); left
-// unset, the pair scales to its own larger magnitude.
+// `maxAbs` should be the same shared scale passed to every other
+// RateComparisonBar on the page (see CrackMovementVisualizer), so a given
+// rate always renders at the same length wherever it's shown; left unset,
+// the pair falls back to scaling against its own larger magnitude.
 export const RateComparisonBar = ({ horizontalRate, verticalRate, color, maxAbs }) => {
   const scale = maxAbs ?? Math.max(Math.abs(horizontalRate), Math.abs(verticalRate), 0.0001);
   const values = { horizontal: horizontalRate, vertical: verticalRate };
@@ -19,7 +27,7 @@ export const RateComparisonBar = ({ horizontalRate, verticalRate, color, maxAbs 
     <div className="space-y-1.5">
       {ROWS.map(row => {
         const value = values[row.key];
-        const percent = Math.min(100, (Math.abs(value) / scale) * 100);
+        const percent = Math.min(MAX_FILL_PERCENT, (Math.abs(value) / scale) * MAX_FILL_PERCENT);
         const isPositive = value > 0;
         return (
           <div key={row.key} className="flex items-center gap-2 text-xs">

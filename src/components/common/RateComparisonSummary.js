@@ -3,13 +3,11 @@ import { RateComparisonBar } from './RateComparisonBar';
 
 // Cross-floor version of RateComparisonBar: every floor's pair is scaled
 // to one shared max across the whole group, so bar length compares
-// intensity both within a floor and across floors at a glance.
-export const RateComparisonSummary = ({ data }) => {
-  const maxAbs = Math.max(
-    0.0001,
-    ...data.flatMap(d => [Math.abs(d.horizontal), Math.abs(d.vertical)])
-  );
-
+// intensity both within a floor and across floors at a glance. `maxAbs`
+// must be the same scale passed to each floor's own RateComparisonBar
+// elsewhere on the page — see CrackMovementVisualizer — so a given rate
+// renders at the same length here as it does in its floor's own card.
+export const RateComparisonSummary = ({ data, maxAbs }) => {
   return (
     <div className="space-y-3">
       {data.map(d => (
