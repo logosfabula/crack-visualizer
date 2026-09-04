@@ -509,11 +509,11 @@ const CrackMovementVisualizer = () => {
                       </div>
 
                       {/* Overall Interpretation */}
-                      <div className="mt-3 pt-3 border-t border-gray-200 grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="md:col-span-2 mt-3 pt-3 border-t border-gray-200 flex flex-wrap gap-4">
                         {(() => {
                           if (!methodResult) {
                             return (
-                              <div>
+                              <div className="flex-1 min-w-[200px]">
                                 <div className="font-medium text-gray-700 mb-1">Overall Movement Direction ({estimator.label}):</div>
                                 <div className="text-sm text-gray-500">Insufficient data</div>
                               </div>
@@ -557,7 +557,7 @@ const CrackMovementVisualizer = () => {
                           }
 
                           return (
-                            <div>
+                            <div className="flex-1 min-w-[200px]">
                               <div className="font-medium text-gray-700 mb-1">Overall Movement Direction ({estimator.label}):</div>
                               <div className="text-sm font-semibold mb-2" style={{ color: meter.color }}>
                                 {dirX === 0 && dirY === 0 ? 'No movement detected' :
@@ -572,7 +572,7 @@ const CrackMovementVisualizer = () => {
                           );
                         })()}
 
-                        <div>
+                        <div className="flex-1 min-w-[200px]">
                           <div className="font-medium text-gray-700 mb-1">Horizontal vs. Vertical Rate ({estimator.label}):</div>
                           {componentRates ? (
                             <>
@@ -605,7 +605,7 @@ const CrackMovementVisualizer = () => {
                           )}
                         </div>
 
-                        <div>
+                        <div className="flex-[2] min-w-[280px]">
                           <div className="font-medium text-gray-700 mb-1">Weekly Rate (Total Path):</div>
                           <div className="text-lg font-semibold" style={{ color: meter.color }}>
                             {totalPathRatePerWeek.toFixed(4)} mm/week
