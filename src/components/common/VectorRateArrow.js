@@ -32,7 +32,11 @@ export const VectorRateArrow = ({ horizontalRate, verticalRate, scaleMax, id }) 
   const color = dominantColor(horizontalRate, verticalRate);
   const x = CENTER + toPx(horizontalRate);
   const y = CENTER - toPx(verticalRate);
-  const markerId = `rate-arrowhead-${id}`;
+  // url(#id) breaks if id contains anything but a handful of safe
+  // characters (a space in a floor name like "Piano 1" is enough to make
+  // the marker fail to resolve, silently dropping the arrowhead) — sanitize
+  // rather than trust callers to pass an already-safe id.
+  const markerId = `rate-arrowhead-${String(id).replace(/[^a-zA-Z0-9_-]/g, '-')}`;
 
   return (
     <svg viewBox={`0 0 ${VB} ${VB}`} className="w-full h-auto">

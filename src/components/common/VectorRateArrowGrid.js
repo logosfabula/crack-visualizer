@@ -12,7 +12,9 @@ export const VectorRateArrowGrid = ({ data, scaleMax }) => (
           <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: d.color }} />
           <span className="text-sm font-medium text-gray-700">{d.name}</span>
         </div>
-        <VectorRateArrow horizontalRate={d.horizontal} verticalRate={d.vertical} scaleMax={scaleMax} id={d.name} />
+        <div className="max-w-[140px]">
+          <VectorRateArrow horizontalRate={d.horizontal} verticalRate={d.vertical} scaleMax={scaleMax} id={d.name} />
+        </div>
       </div>
     ))}
   </div>
