@@ -18,6 +18,12 @@ const CameraScopeIcon = () => (
   </svg>
 );
 
+// Matches the Cross Orthogonality readout's own thresholds (below), so the
+// same deviation reads as the same severity everywhere on this page instead
+// of showing an alarming orange box next to a "Good" label.
+const angleAnalysisTone = (deviation) =>
+  deviation < 1.0 ? 'info' : deviation < 2.0 ? 'warning' : 'danger';
+
 // Helper to get meter color by display name
 const getMeterColor = (meterDisplayName) => {
   const config = Object.values(METER_CONFIGS).find(c => c.displayName === meterDisplayName);
@@ -258,7 +264,7 @@ export const SingleReadingView = ({
           </div>
           {angleAnalysis && angleAnalysis.deviation > 0.1 && (
             <InfoDisclosure
-              tone="warning"
+              tone={angleAnalysisTone(angleAnalysis.deviation)}
               className="mt-3"
               label={
                 <>
@@ -641,8 +647,8 @@ export const SingleReadingView = ({
           </div>
         </div>
         
-        <div className="bg-blue-50 p-4 rounded border border-blue-200">
-          <h4 className="font-semibold text-blue-800 mb-2">Reading Analysis</h4>
+        <div className="bg-gray-50 p-4 rounded border border-gray-200">
+          <h4 className="font-semibold text-gray-800 mb-2">Reading Analysis</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div>
               <strong>Days Since First Reading:</strong> {daysSinceFirst} days
@@ -706,7 +712,7 @@ export const SingleReadingView = ({
           </div>
           
           {angleAnalysis && (
-            <div className="mt-3 pt-3 border-t border-blue-200">
+            <div className="mt-3 pt-3 border-t border-gray-200">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                 <div>
                   <strong>Cross Orthogonality:</strong><br/>
