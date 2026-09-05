@@ -314,8 +314,6 @@ const CrackMovementVisualizer = () => {
                     estimator={estimator}
                     methodResult={methodResult}
                     rateScaleMax={rateScaleMax}
-                    rateFiguresShrunk={rateFiguresShrunk}
-                    toggleRateFigures={toggleRateFigures}
                   />
                 ),
                 totalDistance: totalDistance,

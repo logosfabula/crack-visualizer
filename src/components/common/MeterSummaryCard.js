@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { activateOnKey } from './InfoDisclosure';
 import { ActivityHeatMeter, getActivityAssessment } from './ActivityHeatMeter';
 import { VectorRateArrow, RATE_ARROW_COLORS } from './VectorRateArrow';
-import { ResizableFigure } from './ResizableFigure';
 import { formatDurationFromDays } from '../../utils/formatDuration';
 
 // Half of ResizableFigure's own HALF_SIZE — the lean view's graph is a fixed
@@ -10,6 +9,12 @@ import { formatDurationFromDays } from '../../utils/formatDuration';
 // click-to-resize affordance, just a size consistent with what "shrunk"
 // looks like everywhere else on the page.
 const LEAN_GRAPH_SIZE = 135;
+
+// ResizableFigure's own FULL_SIZE — the expanded view's graph is always
+// shown at full detail regardless of the shared shrink toggle used by the
+// Structural Analysis Summary's figures, so it's rendered directly rather
+// than through ResizableFigure.
+const EXPANDED_GRAPH_SIZE = 270;
 
 const directionHeadline = (dirX, dirY) =>
   dirX === 0 && dirY === 0 ? 'No movement detected' :
@@ -50,7 +55,7 @@ const formatThresholdRow = (thresholds, pick) => thresholds.map(t => {
 export const MeterSummaryCard = ({
   meter, meterData, totalDistance, firstDate, lastDate, directDistance,
   totalPathRatePerWeek, maxTotalPathRate, etaResult, estimator, methodResult,
-  rateScaleMax, rateFiguresShrunk, toggleRateFigures
+  rateScaleMax
 }) => {
   const [expanded, setExpanded] = useState(false);
   const toggle = () => setExpanded(v => !v);
@@ -76,9 +81,7 @@ export const MeterSummaryCard = ({
       >
         <div className="w-4 h-4 rounded-full flex-shrink-0" style={{ backgroundColor: meter.color }}></div>
         <strong>{meter.name}</strong>
-        <span className="ml-auto text-xs text-gray-400" aria-hidden="true">
-          {expanded ? '▲ Less detail' : '▼ More detail'}
-        </span>
+        {!expanded && <span aria-hidden="true" className="text-gray-400">›</span>}
       </div>
 
       {expanded ? (
@@ -222,18 +225,14 @@ export const MeterSummaryCard = ({
               <div className="font-medium text-gray-700 mb-1">Horizontal vs. Vertical Rate ({estimator.label}):</div>
               {componentRates ? (
                 <>
-                  <ResizableFigure
-                    shrunk={rateFiguresShrunk}
-                    onToggle={toggleRateFigures}
-                    label="all horizontal vs. vertical rate figures"
-                  >
+                  <div style={{ maxWidth: `${EXPANDED_GRAPH_SIZE}px` }}>
                     <VectorRateArrow
                       horizontalRate={componentRates.x}
                       verticalRate={componentRates.y}
                       scaleMax={rateScaleMax}
                       id={meter.key}
                     />
-                  </ResizableFigure>
+                  </div>
                   <div className="text-xs font-mono space-x-3">
                     <span style={{ color: RATE_ARROW_COLORS.horizontal }}>
                       H {componentRates.x.toFixed(4)} mm/wk
@@ -295,27 +294,32 @@ export const MeterSummaryCard = ({
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-          <div>
-            <span className="font-medium text-gray-700">Direct Displacement: </span>
-            <span className="text-lg font-semibold" style={{ color: meter.color }}>{directDistance.toFixed(3)} mm</span>
-          </div>
-          <div>
-            <span className="font-medium text-gray-700">Trend Rate ({estimator.label}): </span>
-            <span className="text-lg font-semibold" style={{ color: meter.color }}>
-              {methodResult ? `${methodResult.rateMmPerWeek.toFixed(4)} mm/week` : 'Insufficient data'}
-            </span>
-          </div>
-          <div>
-            <span className="font-medium text-gray-700">Total Path Distance: </span>
-            <span className="text-lg font-semibold" style={{ color: meter.color }}>{totalDistance.toFixed(3)} mm</span>
-          </div>
-          <div>
-            <span className="font-medium text-gray-700">Weekly Rate (Total Path): </span>
-            <span className="text-lg font-semibold" style={{ color: meter.color }}>{totalPathRatePerWeek.toFixed(4)} mm/week</span>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+          <div className="space-y-1">
+            <div>
+              <span className="font-medium text-gray-700">Direct Displacement: </span>
+              <span className="text-lg font-semibold" style={{ color: meter.color }}>{directDistance.toFixed(3)} mm</span>
+            </div>
+            <div>
+              <span className="font-medium text-gray-700">Total Path Distance: </span>
+              <span className="text-lg font-semibold" style={{ color: meter.color }}>{totalDistance.toFixed(3)} mm</span>
+            </div>
           </div>
 
-          <div className="md:col-span-2">
+          <div className="space-y-1">
+            <div>
+              <span className="font-medium text-gray-700">Trend Rate ({estimator.label}): </span>
+              <span className="text-lg font-semibold" style={{ color: meter.color }}>
+                {methodResult ? `${methodResult.rateMmPerWeek.toFixed(4)} mm/week` : 'Insufficient data'}
+              </span>
+            </div>
+            <div>
+              <span className="font-medium text-gray-700">Weekly Rate (Total Path): </span>
+              <span className="text-lg font-semibold" style={{ color: meter.color }}>{totalPathRatePerWeek.toFixed(4)} mm/week</span>
+            </div>
+          </div>
+
+          <div>
             <div className="text-xs font-medium text-gray-600 mb-1">
               Activity Gauge: <span style={{ color: meter.color }}>{getActivityAssessment(totalPathRatePerWeek, maxTotalPathRate)}</span>
             </div>
@@ -326,7 +330,7 @@ export const MeterSummaryCard = ({
             />
           </div>
 
-          {componentRates && (
+          {componentRates ? (
             <div style={{ maxWidth: `${LEAN_GRAPH_SIZE}px` }}>
               <VectorRateArrow
                 horizontalRate={componentRates.x}
@@ -335,27 +339,30 @@ export const MeterSummaryCard = ({
                 id={`${meter.key}-lean`}
               />
             </div>
+          ) : (
+            <div className="text-sm text-gray-500">Insufficient data</div>
           )}
 
-          <div className="space-y-1">
+          <div>
+            <span className="font-medium text-gray-700">Overall Movement Direction ({estimator.label}): </span>
+            <span className="text-sm font-semibold" style={{ color: meter.color }}>
+              {methodResult ? directionHeadline(dirX, dirY) : 'Insufficient data'}
+            </span>
+          </div>
+
+          {methodResult ? (
             <div>
-              <span className="font-medium text-gray-700">Overall Movement Direction ({estimator.label}): </span>
-              <span className="text-sm font-semibold" style={{ color: meter.color }}>
-                {methodResult ? directionHeadline(dirX, dirY) : 'Insufficient data'}
+              <span className="font-medium text-gray-700">
+                ETA ({methodResult.thresholds.map(t => `${t.threshold}mm`).join('/')}):{' '}
+              </span>
+              <span className="font-mono" style={{ color: meter.color }}>
+                {formatThresholdRow(methodResult.thresholds, 'eta')} yr
+                {hasConfidence && ` (${formatThresholdRow(methodResult.thresholds, 'confidence')} conf.)`}
               </span>
             </div>
-            {methodResult && (
-              <div className="text-sm">
-                <span className="font-medium text-gray-700">
-                  ETA ({methodResult.thresholds.map(t => `${t.threshold}mm`).join('/')}):{' '}
-                </span>
-                <span className="font-mono" style={{ color: meter.color }}>
-                  {formatThresholdRow(methodResult.thresholds, 'eta')} yr
-                  {hasConfidence && ` (${formatThresholdRow(methodResult.thresholds, 'confidence')} conf.)`}
-                </span>
-              </div>
-            )}
-          </div>
+          ) : (
+            <div className="text-sm text-gray-500">Insufficient data</div>
+          )}
         </div>
       )}
     </div>
