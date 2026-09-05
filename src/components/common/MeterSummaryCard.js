@@ -295,7 +295,7 @@ export const MeterSummaryCard = ({
           </div>
         </div>
       ) : (
-        <div className="text-sm space-y-1.5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
           <div className="flex justify-between items-baseline gap-2">
             <span className="text-gray-700">Direct Displacement:</span>
             <span className="font-mono font-semibold" style={{ color: meter.color }}>{directDistance.toFixed(3)} mm</span>
@@ -314,7 +314,8 @@ export const MeterSummaryCard = ({
             <span className="text-gray-700">Weekly Rate (Total Path):</span>
             <span className="font-mono font-semibold" style={{ color: meter.color }}>{totalPathRatePerWeek.toFixed(4)} mm/week</span>
           </div>
-          <div>
+
+          <div className="md:col-span-2">
             <div className="flex justify-between items-baseline gap-2 mb-1">
               <span className="text-gray-700">Activity Gauge:</span>
               <span className="font-medium" style={{ color: meter.color }}>{getActivityAssessment(totalPathRatePerWeek, maxTotalPathRate)}</span>
@@ -325,25 +326,9 @@ export const MeterSummaryCard = ({
               color={meter.color}
             />
           </div>
-          <div className="flex justify-between items-baseline gap-2">
-            <span className="text-gray-700">Overall Movement Direction ({estimator.label}):</span>
-            <span className="font-semibold text-right" style={{ color: meter.color }}>
-              {methodResult ? directionHeadline(dirX, dirY) : 'Insufficient data'}
-            </span>
-          </div>
-          {methodResult && (
-            <div className="flex justify-between items-baseline gap-2">
-              <span className="text-gray-700">
-                ETA ({methodResult.thresholds.map(t => `${t.threshold}mm`).join('/')}):
-              </span>
-              <span className="font-mono font-semibold text-right" style={{ color: meter.color }}>
-                {formatThresholdRow(methodResult.thresholds, 'eta')} yr
-                {hasConfidence && ` (${formatThresholdRow(methodResult.thresholds, 'confidence')} conf.)`}
-              </span>
-            </div>
-          )}
+
           {componentRates && (
-            <div className="pt-1" style={{ maxWidth: `${LEAN_GRAPH_SIZE}px` }}>
+            <div style={{ maxWidth: `${LEAN_GRAPH_SIZE}px` }}>
               <VectorRateArrow
                 horizontalRate={componentRates.x}
                 verticalRate={componentRates.y}
@@ -352,6 +337,26 @@ export const MeterSummaryCard = ({
               />
             </div>
           )}
+
+          <div className="space-y-2">
+            <div className="flex justify-between items-baseline gap-2">
+              <span className="text-gray-700">Overall Movement Direction ({estimator.label}):</span>
+              <span className="font-semibold text-right" style={{ color: meter.color }}>
+                {methodResult ? directionHeadline(dirX, dirY) : 'Insufficient data'}
+              </span>
+            </div>
+            {methodResult && (
+              <div className="flex justify-between items-baseline gap-2">
+                <span className="text-gray-700">
+                  ETA ({methodResult.thresholds.map(t => `${t.threshold}mm`).join('/')}):
+                </span>
+                <span className="font-mono font-semibold text-right" style={{ color: meter.color }}>
+                  {formatThresholdRow(methodResult.thresholds, 'eta')} yr
+                  {hasConfidence && ` (${formatThresholdRow(methodResult.thresholds, 'confidence')} conf.)`}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
