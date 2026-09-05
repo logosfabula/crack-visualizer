@@ -296,29 +296,28 @@ export const MeterSummaryCard = ({
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-          <div className="flex justify-between items-baseline gap-2">
-            <span className="text-gray-700">Direct Displacement:</span>
-            <span className="font-mono font-semibold" style={{ color: meter.color }}>{directDistance.toFixed(3)} mm</span>
+          <div>
+            <span className="font-medium text-gray-700">Direct Displacement: </span>
+            <span className="text-lg font-semibold" style={{ color: meter.color }}>{directDistance.toFixed(3)} mm</span>
           </div>
-          <div className="flex justify-between items-baseline gap-2">
-            <span className="text-gray-700">Trend Rate ({estimator.label}):</span>
-            <span className="font-mono font-semibold" style={{ color: meter.color }}>
+          <div>
+            <span className="font-medium text-gray-700">Trend Rate ({estimator.label}): </span>
+            <span className="text-lg font-semibold" style={{ color: meter.color }}>
               {methodResult ? `${methodResult.rateMmPerWeek.toFixed(4)} mm/week` : 'Insufficient data'}
             </span>
           </div>
-          <div className="flex justify-between items-baseline gap-2">
-            <span className="text-gray-700">Total Path Distance:</span>
-            <span className="font-mono font-semibold" style={{ color: meter.color }}>{totalDistance.toFixed(3)} mm</span>
+          <div>
+            <span className="font-medium text-gray-700">Total Path Distance: </span>
+            <span className="text-lg font-semibold" style={{ color: meter.color }}>{totalDistance.toFixed(3)} mm</span>
           </div>
-          <div className="flex justify-between items-baseline gap-2">
-            <span className="text-gray-700">Weekly Rate (Total Path):</span>
-            <span className="font-mono font-semibold" style={{ color: meter.color }}>{totalPathRatePerWeek.toFixed(4)} mm/week</span>
+          <div>
+            <span className="font-medium text-gray-700">Weekly Rate (Total Path): </span>
+            <span className="text-lg font-semibold" style={{ color: meter.color }}>{totalPathRatePerWeek.toFixed(4)} mm/week</span>
           </div>
 
           <div className="md:col-span-2">
-            <div className="flex justify-between items-baseline gap-2 mb-1">
-              <span className="text-gray-700">Activity Gauge:</span>
-              <span className="font-medium" style={{ color: meter.color }}>{getActivityAssessment(totalPathRatePerWeek, maxTotalPathRate)}</span>
+            <div className="text-xs font-medium text-gray-600 mb-1">
+              Activity Gauge: <span style={{ color: meter.color }}>{getActivityAssessment(totalPathRatePerWeek, maxTotalPathRate)}</span>
             </div>
             <ActivityHeatMeter
               rateMmPerWeek={totalPathRatePerWeek}
@@ -338,19 +337,19 @@ export const MeterSummaryCard = ({
             </div>
           )}
 
-          <div className="space-y-2">
-            <div className="flex justify-between items-baseline gap-2">
-              <span className="text-gray-700">Overall Movement Direction ({estimator.label}):</span>
-              <span className="font-semibold text-right" style={{ color: meter.color }}>
+          <div className="space-y-1">
+            <div>
+              <span className="font-medium text-gray-700">Overall Movement Direction ({estimator.label}): </span>
+              <span className="text-sm font-semibold" style={{ color: meter.color }}>
                 {methodResult ? directionHeadline(dirX, dirY) : 'Insufficient data'}
               </span>
             </div>
             {methodResult && (
-              <div className="flex justify-between items-baseline gap-2">
-                <span className="text-gray-700">
-                  ETA ({methodResult.thresholds.map(t => `${t.threshold}mm`).join('/')}):
+              <div className="text-sm">
+                <span className="font-medium text-gray-700">
+                  ETA ({methodResult.thresholds.map(t => `${t.threshold}mm`).join('/')}):{' '}
                 </span>
-                <span className="font-mono font-semibold text-right" style={{ color: meter.color }}>
+                <span className="font-mono" style={{ color: meter.color }}>
                   {formatThresholdRow(methodResult.thresholds, 'eta')} yr
                   {hasConfidence && ` (${formatThresholdRow(methodResult.thresholds, 'confidence')} conf.)`}
                 </span>
