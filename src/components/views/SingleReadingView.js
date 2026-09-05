@@ -264,7 +264,7 @@ export const SingleReadingView = ({
                 <>
                   Cross Angle Analysis <CameraScopeIcon />
                   <span className="font-bold" aria-hidden="true">!</span>
-                  <span className="sr-only">— scope: reading/shooting issue, not necessarily structural</span>
+                  <span className="sr-only">— scope: reading/shooting issue</span>
                 </>
               }
             >
@@ -274,7 +274,7 @@ export const SingleReadingView = ({
                 {angleAnalysis.deviation > 2.0 && " - Consider measurement verification"}
               </div>
               <div className="text-xs mt-1 italic">
-                Scope: this flags a reading/shooting issue — camera angle or transcription at capture time (photos are taken freehand) — not necessarily real structural movement.
+                Scope: this flags a reading/shooting issue — camera angle or transcription at capture time (photos are taken freehand).
               </div>
             </InfoDisclosure>
           )}
