@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const activateOnKey = (fn) => (e) => {
+export const activateOnKey = (fn) => (e) => {
   if (e.key === 'Enter' || e.key === ' ') {
     e.preventDefault();
     fn();
