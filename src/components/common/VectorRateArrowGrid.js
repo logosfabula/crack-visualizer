@@ -10,8 +10,15 @@ import { ResizableFigure } from './ResizableFigure';
 // clicking any one of them (here or per-floor) resizes all of them
 // together, since they're meant to be read as one group, not compared one
 // figure at a time.
+//
+// Column count depends on both viewport and shrunk state: desktop always
+// fits all three figures in one row regardless of size; on a narrow
+// (mobile) viewport, full-size figures are too wide for more than one per
+// row, but once shrunk to half size, two fit comfortably — so mobile
+// switches from 1 column to 2 (two rows, the third left-aligned) exactly
+// when shrunk flips.
 export const VectorRateArrowGrid = ({ data, scaleMax, shrunk, onToggle }) => (
-  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+  <div className={`grid gap-4 sm:grid-cols-3 ${shrunk ? 'grid-cols-2' : 'grid-cols-1'}`}>
     {data.map(d => (
       <div key={d.name}>
         <div className="flex items-center gap-2 mb-1">
