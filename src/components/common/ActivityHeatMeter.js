@@ -20,7 +20,11 @@ export const getActivityAssessment = (rateMmPerWeek, maxRateMmPerWeek) => {
     : 'Highest';
 };
 
-export const ActivityHeatMeter = ({ rateMmPerWeek, maxRateMmPerWeek, color }) => {
+// `showCaption`: the explanatory line is dropped in space-constrained
+// callers (e.g. the lean per-floor card) where it would push the bar past
+// the bottom edge shared with sibling cells — the "Activity Gauge:" label
+// above the bar already names what it is.
+export const ActivityHeatMeter = ({ rateMmPerWeek, maxRateMmPerWeek, color, showCaption = true }) => {
   const percent = Math.round(activityFraction(rateMmPerWeek, maxRateMmPerWeek) * 100);
 
   return (
@@ -31,9 +35,11 @@ export const ActivityHeatMeter = ({ rateMmPerWeek, maxRateMmPerWeek, color }) =>
           style={{ width: `${percent}%`, backgroundColor: color }}
         />
       </div>
-      <div className="text-xs text-gray-400 mt-1">
-        relative to the other floors, by cumulative path
-      </div>
+      {showCaption && (
+        <div className="text-xs text-gray-400 mt-1">
+          relative to the other floors, by cumulative path
+        </div>
+      )}
     </div>
   );
 };

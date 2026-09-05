@@ -297,22 +297,24 @@ export const MeterSummaryCard = ({
         </div>
       ) : (
         <div className="grid overflow-x-auto grid-cols-[max-content] max-lg:landscape:grid-cols-[repeat(2,max-content)] lg:grid-cols-[repeat(3,max-content)] gap-x-8 gap-y-3 text-sm">
-          <div className="space-y-1 whitespace-nowrap">
-            <div>
-              <span className="font-medium text-gray-700">Direct Displacement: </span>
-              <span className="text-lg font-semibold" style={{ color: meter.color }}>{directDistance.toFixed(3)} mm</span>
+          <div className="flex flex-col whitespace-nowrap">
+            <div className="space-y-1">
+              <div>
+                <span className="font-medium text-gray-700">Direct Displacement: </span>
+                <span className="text-lg font-semibold" style={{ color: meter.color }}>{directDistance.toFixed(3)} mm</span>
+              </div>
+              <div>
+                <span className="font-medium text-gray-700">Total Path Distance: </span>
+                <span className="text-lg font-semibold" style={{ color: meter.color }}>{totalDistance.toFixed(3)} mm</span>
+              </div>
+              <div>
+                <span className="font-medium text-gray-700">Trend Rate ({abbreviateLabel(estimator.label)}): </span>
+                <span className="text-lg font-semibold" style={{ color: meter.color }}>
+                  {methodResult ? `${methodResult.rateMmPerWeek.toFixed(4)} mm/week` : 'Insufficient data'}
+                </span>
+              </div>
             </div>
-            <div>
-              <span className="font-medium text-gray-700">Total Path Distance: </span>
-              <span className="text-lg font-semibold" style={{ color: meter.color }}>{totalDistance.toFixed(3)} mm</span>
-            </div>
-            <div>
-              <span className="font-medium text-gray-700">Trend Rate ({abbreviateLabel(estimator.label)}): </span>
-              <span className="text-lg font-semibold" style={{ color: meter.color }}>
-                {methodResult ? `${methodResult.rateMmPerWeek.toFixed(4)} mm/week` : 'Insufficient data'}
-              </span>
-            </div>
-            <div>
+            <div className="mt-auto pt-2">
               <span className="font-medium text-gray-700">Weekly Rate (Activity): </span>
               <span className="text-lg font-semibold" style={{ color: meter.color }}>{totalPathRatePerWeek.toFixed(4)} mm/week</span>
             </div>
@@ -348,6 +350,7 @@ export const MeterSummaryCard = ({
                 rateMmPerWeek={totalPathRatePerWeek}
                 maxRateMmPerWeek={maxTotalPathRate}
                 color={meter.color}
+                showCaption={false}
               />
             </div>
           </div>
