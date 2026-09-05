@@ -318,27 +318,29 @@ export const MeterSummaryCard = ({
             </div>
           </div>
 
-          <div className="space-y-1 whitespace-nowrap">
-            <div>
-              <span className="font-medium text-gray-700">Overall Movement Direction ({abbreviateLabel(estimator.label)}): </span>
-              <span className="text-sm font-semibold" style={{ color: meter.color }}>
-                {methodResult ? directionHeadline(dirX, dirY) : 'Insufficient data'}
-              </span>
-            </div>
-            {methodResult ? (
+          <div className="flex flex-col whitespace-nowrap">
+            <div className="space-y-1">
               <div>
-                <span className="font-medium text-gray-700">
-                  ETA ({methodResult.thresholds.map(t => `${t.threshold}mm`).join('/')}):{' '}
-                </span>
-                <span className="font-mono" style={{ color: meter.color }}>
-                  {formatThresholdRow(methodResult.thresholds, 'eta')} yr
-                  {hasConfidence && ` (${formatThresholdRow(methodResult.thresholds, 'confidence')} conf.)`}
+                <span className="font-medium text-gray-700">Overall Movement Direction ({abbreviateLabel(estimator.label)}): </span>
+                <span className="text-sm font-semibold" style={{ color: meter.color }}>
+                  {methodResult ? directionHeadline(dirX, dirY) : 'Insufficient data'}
                 </span>
               </div>
-            ) : (
-              <div className="text-sm text-gray-500">Insufficient data</div>
-            )}
-            <div>
+              {methodResult ? (
+                <div>
+                  <span className="font-medium text-gray-700">
+                    ETA ({methodResult.thresholds.map(t => `${t.threshold}mm`).join('/')}):{' '}
+                  </span>
+                  <span className="font-mono" style={{ color: meter.color }}>
+                    {formatThresholdRow(methodResult.thresholds, 'eta')} yr
+                    {hasConfidence && ` (${formatThresholdRow(methodResult.thresholds, 'confidence')} conf.)`}
+                  </span>
+                </div>
+              ) : (
+                <div className="text-sm text-gray-500">Insufficient data</div>
+              )}
+            </div>
+            <div className="mt-auto pt-2">
               <div className="text-xs font-medium text-gray-600 mb-1">
                 Activity Gauge: <span style={{ color: meter.color }}>{getActivityAssessment(totalPathRatePerWeek, maxTotalPathRate)}</span>
               </div>
