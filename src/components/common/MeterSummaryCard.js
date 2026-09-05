@@ -30,6 +30,11 @@ const directionDescription = (dirX, dirY, directionLabel) => {
   return description + '.';
 };
 
+// Shortens "Weighted Theil-Sen" to "W. Theil-Sen" for the space-constrained
+// lean view; leaves other estimator labels (e.g. "Secant (first → last
+// reading)") untouched since they don't start with "Weighted ".
+const abbreviateLabel = (label) => label.replace('Weighted ', 'W. ');
+
 // One value per threshold (in `methodResult.thresholds` order), formatted
 // for the lean view's single-line ETA summary: "✓" once already reached,
 // "–" if never reached on the current trend, otherwise years remaining.
@@ -291,7 +296,7 @@ export const MeterSummaryCard = ({
           </div>
         </div>
       ) : (
-        <div className="grid overflow-x-auto grid-cols-[minmax(max-content,1fr)] max-md:landscape:grid-cols-[repeat(2,minmax(max-content,1fr))] md:grid-cols-[repeat(3,minmax(max-content,1fr))] gap-3 text-sm">
+        <div className="grid overflow-x-auto grid-cols-[max-content] max-md:landscape:grid-cols-[repeat(2,max-content)] md:grid-cols-[repeat(3,max-content)] gap-x-8 gap-y-3 text-sm">
           <div className="space-y-1 whitespace-nowrap">
             <div>
               <span className="font-medium text-gray-700">Direct Displacement: </span>
@@ -301,30 +306,48 @@ export const MeterSummaryCard = ({
               <span className="font-medium text-gray-700">Total Path Distance: </span>
               <span className="text-lg font-semibold" style={{ color: meter.color }}>{totalDistance.toFixed(3)} mm</span>
             </div>
-          </div>
-
-          <div className="space-y-1 whitespace-nowrap">
             <div>
-              <span className="font-medium text-gray-700">Trend Rate ({estimator.label}): </span>
+              <span className="font-medium text-gray-700">Trend Rate ({abbreviateLabel(estimator.label)}): </span>
               <span className="text-lg font-semibold" style={{ color: meter.color }}>
                 {methodResult ? `${methodResult.rateMmPerWeek.toFixed(4)} mm/week` : 'Insufficient data'}
               </span>
             </div>
             <div>
-              <span className="font-medium text-gray-700">Weekly Rate (Total Path): </span>
+              <span className="font-medium text-gray-700">Weekly Rate (Activity): </span>
               <span className="text-lg font-semibold" style={{ color: meter.color }}>{totalPathRatePerWeek.toFixed(4)} mm/week</span>
             </div>
           </div>
 
-          <div>
-            <div className="text-xs font-medium text-gray-600 mb-1 whitespace-nowrap">
-              Activity Gauge: <span style={{ color: meter.color }}>{getActivityAssessment(totalPathRatePerWeek, maxTotalPathRate)}</span>
+          <div className="space-y-1 whitespace-nowrap">
+            <div>
+              <span className="font-medium text-gray-700">Overall Movement Direction ({abbreviateLabel(estimator.label)}): </span>
+              <span className="text-sm font-semibold" style={{ color: meter.color }}>
+                {methodResult ? directionHeadline(dirX, dirY) : 'Insufficient data'}
+              </span>
             </div>
-            <ActivityHeatMeter
-              rateMmPerWeek={totalPathRatePerWeek}
-              maxRateMmPerWeek={maxTotalPathRate}
-              color={meter.color}
-            />
+            {methodResult ? (
+              <div>
+                <span className="font-medium text-gray-700">
+                  ETA ({methodResult.thresholds.map(t => `${t.threshold}mm`).join('/')}):{' '}
+                </span>
+                <span className="font-mono" style={{ color: meter.color }}>
+                  {formatThresholdRow(methodResult.thresholds, 'eta')} yr
+                  {hasConfidence && ` (${formatThresholdRow(methodResult.thresholds, 'confidence')} conf.)`}
+                </span>
+              </div>
+            ) : (
+              <div className="text-sm text-gray-500">Insufficient data</div>
+            )}
+            <div>
+              <div className="text-xs font-medium text-gray-600 mb-1">
+                Activity Gauge: <span style={{ color: meter.color }}>{getActivityAssessment(totalPathRatePerWeek, maxTotalPathRate)}</span>
+              </div>
+              <ActivityHeatMeter
+                rateMmPerWeek={totalPathRatePerWeek}
+                maxRateMmPerWeek={maxTotalPathRate}
+                color={meter.color}
+              />
+            </div>
           </div>
 
           {componentRates ? (
@@ -338,27 +361,6 @@ export const MeterSummaryCard = ({
             </div>
           ) : (
             <div className="text-sm text-gray-500">Insufficient data</div>
-          )}
-
-          <div className="whitespace-nowrap md:col-span-2">
-            <span className="font-medium text-gray-700">Overall Movement Direction ({estimator.label}): </span>
-            <span className="text-sm font-semibold" style={{ color: meter.color }}>
-              {methodResult ? directionHeadline(dirX, dirY) : 'Insufficient data'}
-            </span>
-          </div>
-
-          {methodResult ? (
-            <div className="whitespace-nowrap md:col-span-3">
-              <span className="font-medium text-gray-700">
-                ETA ({methodResult.thresholds.map(t => `${t.threshold}mm`).join('/')}):{' '}
-              </span>
-              <span className="font-mono" style={{ color: meter.color }}>
-                {formatThresholdRow(methodResult.thresholds, 'eta')} yr
-                {hasConfidence && ` (${formatThresholdRow(methodResult.thresholds, 'confidence')} conf.)`}
-              </span>
-            </div>
-          ) : (
-            <div className="text-sm text-gray-500 md:col-span-3">Insufficient data</div>
           )}
         </div>
       )}
