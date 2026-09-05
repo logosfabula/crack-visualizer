@@ -1,4 +1,4 @@
-##### v0.16.0 
+##### v0.18.0 
 - [x] Calcolo ETA: sostituita la vecchia secante a due punti (solo prima e ultima lettura) con una regressione robusta e pesata nel tempo:
   - `TheilSen.js`, `ETASolver.js`, `BootstrapEstimator.js`, `RegressionAnalyzer.js` (`src/services/calculations/`) + `useETAPredictions.js` (`src/hooks/`) + `regressionConfig.js` (`src/constants/`)
   - Regressione separata per x(t) e y(t) per piano, t = giorni reali dalla prima lettura; stimatore Theil-Sen pesato (nessuna lettura scartata), peso decrescente in base alla deviazione di ortogonalità di `AngleAnalyzer`
