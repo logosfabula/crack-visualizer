@@ -71,11 +71,6 @@ const CrackMovementVisualizer = () => {
   const [selectedMeter, setSelectedMeter] = useState('all');
   const [selectedReading, setSelectedReading] = useState(null);
   const [selectedETAMethod, setSelectedETAMethod] = useState(DEFAULT_ETA_METHOD);
-  // Shared by every Horizontal vs. Vertical Rate figure on the page (each
-  // floor's own card, and the cross-floor grid in Structural Analysis
-  // Summary) — clicking any single one resizes all of them together.
-  const [rateFiguresShrunk, setRateFiguresShrunk] = useState(false);
-  const toggleRateFigures = () => setRateFiguresShrunk(v => !v);
 
   return (
     <div className="w-full max-w-6xl mx-auto p-6 bg-white">
@@ -525,8 +520,6 @@ const CrackMovementVisualizer = () => {
                         <VectorRateArrowGrid
                           data={chartData}
                           scaleMax={rateScaleMax}
-                          shrunk={rateFiguresShrunk}
-                          onToggle={toggleRateFigures}
                         />
                       );
                     })()}
