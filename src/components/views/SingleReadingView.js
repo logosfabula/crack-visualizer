@@ -263,7 +263,6 @@ export const SingleReadingView = ({
               label={
                 <>
                   Cross Angle Analysis <CameraScopeIcon />
-                  <span className="font-bold" aria-hidden="true">!</span>
                   <span className="sr-only">— scope: reading/shooting issue</span>
                 </>
               }
@@ -273,8 +272,9 @@ export const SingleReadingView = ({
                 Deviation from 90°: {angleAnalysis.deviation.toFixed(2)}°
                 {angleAnalysis.deviation > 2.0 && " - Consider measurement verification"}
               </div>
-              <div className="text-xs mt-1 italic">
-                Scope: this flags a reading/shooting issue — camera angle or transcription at capture time (photos are taken freehand).
+              <div className="text-xs mt-1 italic flex items-center gap-1">
+                <CameraScopeIcon />
+                Scope: this flags a reading/shooting issue — camera angle or transcription at capture time.
               </div>
             </InfoDisclosure>
           )}
