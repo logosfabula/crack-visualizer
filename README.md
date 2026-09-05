@@ -1,6 +1,6 @@
 # Crack Movement Visualizer
 
-![Version](https://img.shields.io/badge/version-0.17.2-blue)
+![Version](https://img.shields.io/badge/version-0.18.0-blue)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE.md)
 
 A React-based application for visualizing and analyzing crack meter data from structural monitoring systems.
@@ -48,7 +48,7 @@ This application helps monitor and visualize crack meter readings from structura
 - 📈 **Normalized Data**: Floor-specific corrections for consistent analysis
 - 📋 **Data Tables**: Complete raw and normalized measurement history
 - 📊 **Statistical Summary**: Movement rates, displacement analysis, and trends
-- ⏳ **ETA Predictions**: Threshold-crossing estimates via a selectable weighted-regression or legacy secant method, with confidence ranges — see METHOD.md
+- ⏳ **ETA Predictions**: Threshold-crossing estimates via a selectable weighted-regression or legacy secant method, with confidence ranges, plus an always-visible horizontal-vs-vertical rate comparison per floor — see METHOD.md
 - 🔥 **Activity Indicator**: Relative gauge of cumulative movement per floor, independent of ETA trend
 
 ## Installation
@@ -101,7 +101,7 @@ The system accounts for different crack meter orientations. In this case:
 - **Piano 1 (P1)**: Standard interpretation  
 - **Piano 2 (P2)**: Inverted interpretation
 
-The flags for standard/inverted interpretations of each floor are harcoded in the main component at current version (v0.17.2)
+The flags for standard/inverted interpretations of each floor are harcoded in the main component at current version (v0.18.0)
 TODO: move this info into the data tier
 
 ## Technology Stack
@@ -128,8 +128,7 @@ crack-visualizer/
 │   │   │   └── MovementPatternRenderer.js  # Movement patterns renderer
 │   │   ├── views/                 # Main view components
 │   │   │   ├── TimelineView.js    # Timeline chart view
-│   │   │   ├── MovementPatternsView.js     # Raw movement patterns
-│   │   │   ├── NormalizedMovementView.js   # Normalized movements
+│   │   │   ├── MovementPatternsView.js     # Movement patterns (raw/normalized toggle, defaults to normalized)
 │   │   │   ├── SingleReadingView.js        # Individual reading detail
 │   │   │   └── DataTableView.js   # Tabular data display
 │   │   ├── Footer.jsx             # Footer with links and version
