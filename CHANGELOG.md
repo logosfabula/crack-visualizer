@@ -10,6 +10,62 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.18.0] - 2026-09-05
+### Added
+- scope icon on Cross Angle Analysis to disclaim structural causation
+- click-to-resize for Horizontal vs. Vertical Rate figures
+- collapsed-by-default info disclosure for explanatory text blocks
+- fix mobile grid width, add click-to-shrink to Summary rate figures
+- "Activity Gauge" label above the activity bar
+- confirmation-density weighting for reconfirmed readings
+- pluggable movement-state icon set, wired into Top 5 Soonest ETAs
+- document horizontal/vertical rate graphs in METHOD.md
+- horizontal vs. vertical rate graphs to Movement Summary
+- document horizontal/vertical component analysis in METHOD.md and README.md
+- Displacement Component selector and horizontal/vertical rate comparison to Movement Summary
+- horizontal/vertical component-selective ETA calculation
+### Changed
+- rename stale TODO.md heading to v0.18.0, the target for this batch
+- document final Cross Angle Analysis copy trims and rate-grid fix in TODO.md
+- trim Cross Angle Analysis scope copy, keep camera icon in expanded text
+- drop the "not necessarily real structural movement" trailing clause
+- document collapsible Cross Angle Analysis and dedup fix in docs
+- make Cross Angle Analysis collapsible, matching the other disclosures
+- unify all Horizontal vs. Vertical Rate figures under one shared trigger
+- document group resize, 2-col Summary layout, and InfoDisclosure in TODO.md
+- document mobile grid fix and click-to-shrink feature in TODO.md
+- document cross-floor rate figure widening in TODO.md
+- widen cross-floor Horizontal vs. Vertical Rate figures to match per-floor size
+- document Horizontal vs. Vertical Rate figure widening in TODO.md
+- widen per-floor Horizontal vs. Vertical Rate figure to 270px
+- document view merge, timeline default, and activity gauge label in docs
+- color-code the activity assessment in the "Activity Gauge" title
+- document Displacement Component selector removal in docs
+- document confirmation-density weighting in METHOD.md and TODO.md
+- swap ETA to Displacement Thresholds with Weekly Rate (Total Path)
+- move Weekly Rate (Total Path) next to Overall Movement Direction and H vs. V Rate
+- document movement-state icon set in METHOD.md and TODO.md
+- document repeated ETA controls in TODO.md
+- repeat ETA Method/Displacement Component controls throughout Movement Summary
+- document arrowhead/sizing fix in TODO.md
+- document vector-arrow figure redesign in METHOD.md and TODO.md
+- replace horizontal/vertical rate bars with a vector-arrow figure
+- document shared bar scale fix in METHOD.md and TODO.md
+- document same-direction magnitude bar redesign in METHOD.md and TODO.md
+- same-direction magnitude bars for horizontal/vertical rate comparison
+- document horizontal/vertical rate graphs in TODO.md
+- document component-selective ETA feature in TODO.md
+### Fixed
+- keep all three rate figures on one row at desktop width
+- dedup discarding the true first reading's timestamp in a leading run
+- fix mobile grid width, add click-to-shrink to Summary rate figures
+- Overall Interpretation section spans full card width, Weekly Rate gets double space
+- missing arrowhead and oversized figures in the cross-floor rate grid
+- make horizontal/vertical rate bar scale consistent and non-misleading
+- second stale updated_crack_meter_method.md reference in README.md
+### Removed
+- merge Normalized Movement into Movement Patterns, remove from View selector
+- remove Displacement Component selector and single-axis ETA machinery
 ## [0.17.2] - 2026-08-29
 ### Added
 - backlog item: synthetic 2017 datapoint for P0 ETA regression
