@@ -294,7 +294,7 @@ export const MeterSummaryCard = ({
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+        <div className="grid grid-cols-1 max-md:landscape:grid-cols-2 md:grid-cols-3 gap-3 text-sm">
           <div className="space-y-1">
             <div>
               <span className="font-medium text-gray-700">Direct Displacement: </span>
