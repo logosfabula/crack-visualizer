@@ -296,7 +296,7 @@ export const MeterSummaryCard = ({
           </div>
         </div>
       ) : (
-        <div className="grid overflow-x-auto grid-cols-[max-content] max-md:landscape:grid-cols-[repeat(2,max-content)] md:grid-cols-[repeat(3,max-content)] gap-x-8 gap-y-3 text-sm">
+        <div className="grid overflow-x-auto grid-cols-[max-content] max-lg:landscape:grid-cols-[repeat(2,max-content)] lg:grid-cols-[repeat(3,max-content)] gap-x-8 gap-y-3 text-sm">
           <div className="space-y-1 whitespace-nowrap">
             <div>
               <span className="font-medium text-gray-700">Direct Displacement: </span>
