@@ -4,16 +4,13 @@ import { ActivityHeatMeter, getActivityAssessment } from './ActivityHeatMeter';
 import { VectorRateArrow, RATE_ARROW_COLORS } from './VectorRateArrow';
 import { formatDurationFromDays } from '../../utils/formatDuration';
 
-// Half of ResizableFigure's own HALF_SIZE — the lean view's graph is a fixed
-// small preview (not a control), so it doesn't need ResizableFigure's own
-// click-to-resize affordance, just a size consistent with what "shrunk"
-// looks like everywhere else on the page.
+// The lean view's graph is a fixed small preview, not a control — no
+// click-to-resize affordance, just a size consistent with a "shrunk" figure
+// elsewhere on the page.
 const LEAN_GRAPH_SIZE = 135;
 
-// ResizableFigure's own FULL_SIZE — the expanded view's graph is always
-// shown at full detail regardless of the shared shrink toggle used by the
-// Structural Analysis Summary's figures, so it's rendered directly rather
-// than through ResizableFigure.
+// The expanded view's graph is always shown at full detail, matching the
+// full size used by the Structural Analysis Summary's own figures.
 const EXPANDED_GRAPH_SIZE = 270;
 
 const directionHeadline = (dirX, dirY) =>
@@ -294,8 +291,8 @@ export const MeterSummaryCard = ({
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 max-md:landscape:grid-cols-2 md:grid-cols-3 gap-3 text-sm">
-          <div className="space-y-1">
+        <div className="grid overflow-x-auto grid-cols-[minmax(max-content,1fr)] max-md:landscape:grid-cols-[repeat(2,minmax(max-content,1fr))] md:grid-cols-[repeat(3,minmax(max-content,1fr))] gap-3 text-sm">
+          <div className="space-y-1 whitespace-nowrap">
             <div>
               <span className="font-medium text-gray-700">Direct Displacement: </span>
               <span className="text-lg font-semibold" style={{ color: meter.color }}>{directDistance.toFixed(3)} mm</span>
@@ -306,7 +303,7 @@ export const MeterSummaryCard = ({
             </div>
           </div>
 
-          <div className="space-y-1">
+          <div className="space-y-1 whitespace-nowrap">
             <div>
               <span className="font-medium text-gray-700">Trend Rate ({estimator.label}): </span>
               <span className="text-lg font-semibold" style={{ color: meter.color }}>
@@ -320,7 +317,7 @@ export const MeterSummaryCard = ({
           </div>
 
           <div>
-            <div className="text-xs font-medium text-gray-600 mb-1">
+            <div className="text-xs font-medium text-gray-600 mb-1 whitespace-nowrap">
               Activity Gauge: <span style={{ color: meter.color }}>{getActivityAssessment(totalPathRatePerWeek, maxTotalPathRate)}</span>
             </div>
             <ActivityHeatMeter
@@ -343,7 +340,7 @@ export const MeterSummaryCard = ({
             <div className="text-sm text-gray-500">Insufficient data</div>
           )}
 
-          <div>
+          <div className="whitespace-nowrap md:col-span-2">
             <span className="font-medium text-gray-700">Overall Movement Direction ({estimator.label}): </span>
             <span className="text-sm font-semibold" style={{ color: meter.color }}>
               {methodResult ? directionHeadline(dirX, dirY) : 'Insufficient data'}
@@ -351,7 +348,7 @@ export const MeterSummaryCard = ({
           </div>
 
           {methodResult ? (
-            <div>
+            <div className="whitespace-nowrap md:col-span-3">
               <span className="font-medium text-gray-700">
                 ETA ({methodResult.thresholds.map(t => `${t.threshold}mm`).join('/')}):{' '}
               </span>
@@ -361,7 +358,7 @@ export const MeterSummaryCard = ({
               </span>
             </div>
           ) : (
-            <div className="text-sm text-gray-500">Insufficient data</div>
+            <div className="text-sm text-gray-500 md:col-span-3">Insufficient data</div>
           )}
         </div>
       )}
