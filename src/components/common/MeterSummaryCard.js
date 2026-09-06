@@ -78,6 +78,7 @@ export const MeterSummaryCard = ({
   const dirX = methodResult ? methodResult.direction.x : null;
   const dirY = methodResult ? methodResult.direction.y : null;
   const hasConsensus = !!(methodResult && methodResult.thresholds.some(t => t.bootstrap));
+  const totalMonitoringDays = Math.round((new Date(lastDate) - new Date(firstDate)) / (1000 * 60 * 60 * 24));
 
   const normDataKeyX = meter.dataKeys[0].replace('_x', '_norm_x');
   const normDataKeyY = meter.dataKeys[1].replace('_y', '_norm_y');
@@ -103,7 +104,7 @@ export const MeterSummaryCard = ({
           <div>
             <div className="font-medium text-gray-700">Monitoring Period:</div>
             <div>{firstDate} → {lastDate}</div>
-            <div className="text-gray-500">({meterData.length} measurements)</div>
+            <div className="text-gray-500">({meterData.length} measurements over {formatDurationFromDays(totalMonitoringDays)})</div>
           </div>
 
           <div>
@@ -148,7 +149,7 @@ export const MeterSummaryCard = ({
           </div>
 
           <div>
-            <div className="font-medium text-gray-700">Total Path Distance:</div>
+            <div className="font-medium text-gray-700">Total Observed Activity:</div>
             <div className="text-lg font-semibold" style={{ color: meter.color }}>
               {totalDistance.toFixed(3)} mm
             </div>
@@ -315,7 +316,7 @@ export const MeterSummaryCard = ({
               <span className="text-lg font-semibold" style={{ color: meter.color }}>{directDistance.toFixed(3)} mm</span>
             </div>
             <div>
-              <span className="font-medium text-gray-700">Total Activity: </span>
+              <span className="font-medium text-gray-700">Total Observed Activity: </span>
               <span className="text-lg font-semibold" style={{ color: meter.color }}>{totalDistance.toFixed(3)} mm</span>
             </div>
             <div>
@@ -355,8 +356,9 @@ export const MeterSummaryCard = ({
               </span>
             </div>
             {/* Spacer: gives this cell the same 4-slot justify-between rhythm
-                as the left cell (Direct Displacement/Total Activity/Trend
-                Rate/Activity Rate), so ETA — this cell's 3rd slot — lands at
+                as the left cell (Direct Displacement/Total Observed
+                Activity/Trend Rate/Activity Rate), so ETA — this cell's 3rd
+                slot — lands at
                 the same height as Trend Rate, the left cell's 3rd slot. */}
             <div aria-hidden="true">&nbsp;</div>
             {methodResult ? (
