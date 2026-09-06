@@ -13,16 +13,12 @@ const LEAN_GRAPH_SIZE = 135;
 // full size used by the Structural Analysis Summary's own figures.
 const EXPANDED_GRAPH_SIZE = 270;
 
-// U+00B5 MICRO SIGN — not U+03BC GREEK SMALL LETTER MU, which looks
-// identical in most fonts but is the wrong character for an SI unit prefix.
-const MICRO = 'µ';
-
-// A rate value that toggles between mm/wk and µm/wk on click — at these
+// A rate value that toggles between mm/wk and micron/wk on click — at these
 // magnitudes (a few thousandths of a mm per week) mm buries the meaningful
-// digits after a string of leading zeros; µm reads the same quantity in a
-// range where the digits carry information at a glance. Own toggle state
+// digits after a string of leading zeros; micron reads the same quantity in
+// a range where the digits carry information at a glance. Own toggle state
 // per value, not shared, since a reader may want one rate in mm and
-// another in µm side by side.
+// another in micron side by side.
 const ToggleableRate = ({ mmPerWeek, color, className = 'text-lg font-semibold' }) => {
   const [useMicrons, setUseMicrons] = useState(false);
   if (mmPerWeek === null || mmPerWeek === undefined) {
@@ -37,9 +33,9 @@ const ToggleableRate = ({ mmPerWeek, color, className = 'text-lg font-semibold' 
       onKeyDown={activateOnKey(toggle)}
       className={`${className} cursor-pointer`}
       style={{ color }}
-      title={useMicrons ? 'Click to show mm/wk' : `Click to show ${MICRO}m/wk`}
+      title={useMicrons ? 'Click to show mm/wk' : 'Click to show micron/wk'}
     >
-      {useMicrons ? `${(mmPerWeek * 1000).toFixed(1)} ${MICRO}m/wk` : `${mmPerWeek.toFixed(4)} mm/wk`}
+      {useMicrons ? `${(mmPerWeek * 1000).toFixed(1)} micron/wk` : `${mmPerWeek.toFixed(4)} mm/wk`}
     </span>
   );
 };
@@ -90,6 +86,28 @@ const formatThresholdRow = (thresholds, pick) => thresholds.map(t => {
   return t.bootstrap ? `${Math.round(t.bootstrap.reachedFraction * 100)}%` : '–';
 }).join('/');
 
+// Single-axis ETA: a much simpler projection than the fitted 2D estimator
+// above — no resampling, no robust median, just "at the current rate on
+// this one axis, when does |position| reach the threshold" (linear
+// extrapolation, straight from today's normalized position). It exists
+// only to answer "which axis is driving this threshold" at a glance when
+// cycled to from the combined (radial) ETA, not as a replacement for it —
+// mirrors the same {threshold, alreadyReached, reached, remainingDays}
+// shape as methodResult.thresholds (minus `bootstrap`, since there's
+// nothing here to resample) so formatThresholdRow can render either.
+const computeAxisThresholds = (currentPos, ratePerWeek, thresholds) => {
+  const ratePerDay = ratePerWeek / 7;
+  return thresholds.map(({ threshold }) => {
+    if (Math.abs(currentPos) >= threshold) return { threshold, alreadyReached: true };
+    if (ratePerDay === 0) return { threshold, alreadyReached: false, reached: false, remainingDays: null };
+    const candidates = [(threshold - currentPos) / ratePerDay, (-threshold - currentPos) / ratePerDay]
+      .filter(t => t > 0 && Number.isFinite(t));
+    return candidates.length
+      ? { threshold, alreadyReached: false, reached: true, remainingDays: Math.min(...candidates) }
+      : { threshold, alreadyReached: false, reached: false, remainingDays: null };
+  });
+};
+
 // A single floor's Movement Summary card. Defaults to a lean, one-glance
 // view — the handful of numbers most people check on a return visit — and
 // expands in place to the full detail (monitoring period, raw vs.
@@ -105,16 +123,31 @@ export const MeterSummaryCard = ({
   const [expanded, setExpanded] = useState(false);
   const toggle = () => setExpanded(v => !v);
 
+  // Cycles the lean view's ETA line through the combined (radial) estimate
+  // and each individual axis, so a reader can tell whether a threshold is
+  // being driven mainly by horizontal or vertical movement.
+  const [etaMode, setEtaMode] = useState('normal');
+  const cycleEtaMode = () => setEtaMode(m => (m === 'normal' ? 'h' : m === 'h' ? 'v' : 'normal'));
+
   const componentRates = methodResult ? methodResult.componentRates : null;
   const dirX = methodResult ? methodResult.direction.x : null;
   const dirY = methodResult ? methodResult.direction.y : null;
-  const hasConsensus = !!(methodResult && methodResult.thresholds.some(t => t.bootstrap));
   const totalMonitoringDays = Math.round((new Date(lastDate) - new Date(firstDate)) / (1000 * 60 * 60 * 24));
 
   const normDataKeyX = meter.dataKeys[0].replace('_x', '_norm_x');
   const normDataKeyY = meter.dataKeys[1].replace('_y', '_norm_y');
   const lastNormX = meterData[meterData.length - 1][normDataKeyX];
   const lastNormY = meterData[meterData.length - 1][normDataKeyY];
+
+  // Consensus (the bootstrap reached-fraction) only exists for the combined
+  // radial estimate — the per-axis projection above is a plain linear
+  // extrapolation with nothing to resample.
+  const hasConsensus = !!(methodResult && etaMode === 'normal' && methodResult.thresholds.some(t => t.bootstrap));
+  const etaThresholds = methodResult && (
+    etaMode === 'normal' ? methodResult.thresholds :
+    etaMode === 'h' ? computeAxisThresholds(lastNormX, componentRates.x, methodResult.thresholds) :
+    computeAxisThresholds(lastNormY, componentRates.y, methodResult.thresholds)
+  );
 
   return (
     <div className="p-3 border border-gray-200 rounded">
@@ -391,16 +424,23 @@ export const MeterSummaryCard = ({
                 the same height as Trend Rate, the left cell's 3rd slot. */}
             <div aria-hidden="true">&nbsp;</div>
             {methodResult ? (
-              <div className="text-right">
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={cycleEtaMode}
+                onKeyDown={activateOnKey(cycleEtaMode)}
+                className="text-right cursor-pointer select-none"
+                title="Click to cycle: combined / horizontal / vertical"
+              >
                 <span className="font-medium text-gray-700">
-                  ETA ({methodResult.thresholds.map(t => `${t.threshold}mm`).join('/')}):{' '}
+                  ETA{etaMode === 'h' ? ' H' : etaMode === 'v' ? ' V' : ''} ({methodResult.thresholds.map(t => `${t.threshold}mm`).join('/')}):{' '}
                 </span>
                 <span className="text-lg font-semibold font-mono" style={{ color: meter.color }}>
-                  {formatThresholdRow(methodResult.thresholds, 'eta')}
+                  {formatThresholdRow(etaThresholds, 'eta')}
                 </span>
                 {hasConsensus && (
                   <span className="text-sm font-mono" style={{ color: meter.color }}>
-                    {' '}({formatThresholdRow(methodResult.thresholds, 'consensus')})
+                    {' '}({formatThresholdRow(etaThresholds, 'consensus')})
                   </span>
                 )}
               </div>
