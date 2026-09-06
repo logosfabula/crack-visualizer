@@ -10,6 +10,63 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.19.0] - 2026-09-06
+### Added
+- click-to-toggle mm/wk <-> µm/wk on Trend Rate and Activity Rate
+- show total monitoring duration; rename to "Total Observed Activity" in both views
+- make the Crack Overall Movement line clickable, group value + chevron on the right
+- make per-floor Movement Summary cards collapsible
+### Changed
+- document removal of compact-view consensus percentage in TODO.md
+- document bootstrap range coverage clarification in TODO.md
+- clarify the bootstrap range's actual coverage, in both views
+- document micron display, ETA cycle signal, and fixed extrapolation cap in TODO.md
+- extrapolation cap: fixed 100 years instead of 10x the observed span
+- Trend Rate/Activity Rate: always µm/wk, no longer clickable; signal ETA is clickable
+- use the word "micron" instead of the µ symbol; [ADD] click ETA to cycle combined/H/V
+- document total monitoring duration and Total Observed Activity rename in TODO.md
+- show total monitoring duration; rename to "Total Observed Activity" in both views
+- correct and extend TODO.md's account of cell-2 alignment iterations
+- cell 2: Crack Overall Movement left, ETA + Activity Gauge right, ETA aligned to Trend Rate
+- document full cell-2 right-alignment fix in TODO.md
+- right-align "Crack Overall Movement" too, matching the rest of cell 2
+- document lean-view text alignment in TODO.md
+- lean-view text alignment: cell 1 right, cell 2 left except ETA and Activity Gauge
+- document confidence/consensus terminology cleanup in TODO.md
+- use "confidence" only for the actual confidence interval, "consensus" for the reached-fraction
+- document ETA per-value yr suffix and confidence sizing in TODO.md
+- ETA line: per-value "yr" suffix, smaller confidence percentages
+- document lean-view relabeling batch in TODO.md
+- lean-view relabeling: wk, Total Activity, Crack Overall Movement, Activity Rate
+- document lean-view width/label/spacing refinements in TODO.md
+- rename "Weekly Rate (Activity)" to "Weekly Activity Rate" in lean view
+- fix gauge column width across floors, drop Secant's parenthetical in lean view
+- lean-view polish: match value styling, tone down "no movement", drop " conf."
+- bottom-align Weekly Rate, Activity Gauge, and the graph in the lean view
+- push Activity Gauge to the bottom of its lean-view cell
+- document per-floor lean-view redesign and mobile-landscape breakpoint fix in TODO.md
+- Structural Analysis Summary graphs: 2 cols on mobile, smaller still in landscape
+- regroup lean-view fields into 3 semantic cells, abbreviate estimator label
+- document mobile-small/desktop-full Structural Analysis Summary graphs in TODO.md
+- Structural Analysis Summary graphs: small on mobile, full size from sm: up
+- document orientation-responsive grid, shrink-toggle removal, and nowrap fix in TODO.md
+- lean-view grid: 1 column in mobile portrait, 2 in mobile landscape
+- document 3-col lean layout, chevron header, and always-big expanded graph in TODO.md
+- refine Movement Summary card: 3-col lean layout, always-big expanded graph, chevron header
+- document inline-string/font-matching fix for lean view in TODO.md
+- make lean-view rows a single inline string, matching expanded-view fonts
+- document lean-view 2-column grid layout in TODO.md
+- lay out the lean Movement Summary view as a 2-column grid
+- document collapsible Movement Summary cards and normalization note fix in TODO.md
+- make per-floor Movement Summary cards collapsible
+### Fixed
+- uneven gap before the bottom-pinned line in lean-view cells
+- Cross Angle Analysis color no longer contradicts Cross Orthogonality's own verdict
+- mobile-landscape figures were getting the desktop size, overflowing the row
+- stop clipping non-wrapping lean-view text, rearrange for its actual widths
+### Removed
+- remove the consensus percentage from the compact view's ETA line
+- remove the shared rate-figure shrink toggle, fix summary graphs at full size
 ## [0.18.0] - 2026-09-05
 ### Added
 - scope icon on Cross Angle Analysis to disclaim structural causation
