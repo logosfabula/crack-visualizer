@@ -66,12 +66,18 @@ const abbreviateLabel = (label) => label.replace('Weighted ', 'W. ').replace(/\s
 // Theil-Sen only) the *consensus*: what share of the resampled trends also
 // reach the threshold at all. Deliberately not called "confidence" — it
 // isn't a confidence bound on any single value, just a tally of how many
-// resamples agree with the reached/not-reached verdict (see the p5-p95
-// date range below for the actual confidence-interval-style quantity).
+// resamples agree with the reached/not-reached verdict.
+//
+// Scaled by 0.9 (matching the expanded view's "covers X% of all resampled
+// trends" next to the p5-p95 range) rather than showing the raw reached
+// fraction: the raw fraction alone overstates how much of the full
+// bootstrap picture the single ETA value shown actually represents, since
+// even among resamples that reach, the date range spans only their middle
+// 90%.
 const formatThresholdRow = (thresholds, pick) => thresholds.map(t => {
   if (t.alreadyReached) return '✓';
   if (pick === 'eta') return t.reached ? `${(t.remainingDays / 365.25).toFixed(1)}yr` : '–';
-  return t.bootstrap ? `${Math.round(t.bootstrap.reachedFraction * 100)}%` : '–';
+  return t.bootstrap ? `${Math.round(t.bootstrap.reachedFraction * 0.9 * 100)}%` : '–';
 }).join('/');
 
 // Single-axis ETA: a much simpler projection than the fitted 2D estimator
@@ -346,10 +352,21 @@ export const MeterSummaryCard = ({
                             </span>
                             {t.bootstrap && (
                               <span className="text-gray-500 text-xs ml-1 block">
-                                {t.bootstrap.p5Date && t.bootstrap.p95Date
-                                  ? `range: ${t.bootstrap.p5Date.toISOString().split('T')[0]} – ${t.bootstrap.p95Date.toISOString().split('T')[0]}`
-                                  : ''}
-                                {` (reached in ${Math.round(t.bootstrap.reachedFraction * 100)}% of resampled trends)`}
+                                {t.bootstrap.p5Date && t.bootstrap.p95Date && (
+                                  <>
+                                    {/* This range is the 5th-95th percentile of only the
+                                        resamples that reach at all — 90% of that reaching
+                                        subset, not 90% of all 500. "Covers X% of all
+                                        resampled trends" (0.9 × reachedFraction) is the
+                                        share of the full 500 the range actually accounts
+                                        for, since reachedFraction alone can make the range
+                                        look more comprehensive than it is. */}
+                                    range: {t.bootstrap.p5Date.toISOString().split('T')[0]} – {t.bootstrap.p95Date.toISOString().split('T')[0]}
+                                    {` (covers ${Math.round(0.9 * t.bootstrap.reachedFraction * 100)}% of all resampled trends)`}
+                                    <br />
+                                  </>
+                                )}
+                                {`reached within 100 years in ${Math.round(t.bootstrap.reachedFraction * 100)}% of resampled trends`}
                               </span>
                             )}
                           </>
