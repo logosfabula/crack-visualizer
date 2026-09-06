@@ -217,8 +217,25 @@ export const SingleReadingView = ({
     .filter(d => d[`${meterKey}_x`] !== undefined)
     .sort((a, b) => new Date(a.date) - new Date(b.date))[0];
   
-  const daysSinceFirst = firstReading ? 
+  const daysSinceFirst = firstReading ?
     Math.round((new Date(date) - new Date(firstReading.date)) / (1000 * 60 * 60 * 24)) : 0;
+
+  // First-reading-to-current dotted line, in raw coordinates but shaped by
+  // the *normalized* displacement rather than the literal raw delta —
+  // for a floor marked needsInversion (Pianterreno, Piano 2), the raw
+  // delta points the opposite way from what "expanding"/"sinking" means
+  // everywhere else on this page. Anchored at the first raw reading
+  // (== the normalized origin by definition) and shifted by the
+  // normalized displacement, so its direction always agrees with the
+  // normalized interpretation shown alongside it.
+  const originRawX = firstReading ? firstReading[`${meterKey}_x`] : null;
+  const originRawY = firstReading ? firstReading[`${meterKey}_y`] : null;
+  const firstToCurrentLine = (firstReading && normalizedIntersection) ? {
+    x1: toSVGX(originRawX),
+    y1: toSVGY(originRawY),
+    x2: toSVGX(originRawX + normalizedIntersection.x),
+    y2: toSVGY(originRawY + normalizedIntersection.y)
+  } : null;
 
   return (
     <div>
@@ -354,7 +371,21 @@ export const SingleReadingView = ({
               strokeDasharray="3,3"
               opacity="0.6"
             />
-            
+
+            {/* First-reading-to-current path - DOTTED LINE, shaped by the
+                normalized displacement (see firstToCurrentLine above) */}
+            {firstToCurrentLine && (
+              <line
+                x1={firstToCurrentLine.x1} y1={firstToCurrentLine.y1}
+                x2={firstToCurrentLine.x2} y2={firstToCurrentLine.y2}
+                stroke={meterColor}
+                strokeWidth="1.5"
+                strokeDasharray="2,3"
+                strokeLinecap="round"
+                opacity="0.6"
+              />
+            )}
+
             {/* Intersection point (absolute) - DASHED CIRCLE */}
             <circle 
               cx={intersectionX_svg} 
@@ -638,6 +669,12 @@ export const SingleReadingView = ({
                   <circle cx="25" cy="15" r="5" fill="none" stroke="#ff6b6b" strokeWidth="2" strokeDasharray="3,3" opacity="0.6" />
                 </svg>
                 <span> Cross intersections at physical meter edges</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <svg width="50" height="30" viewBox="0 0 50 30">
+                  <line x1="10" y1="20" x2="40" y2="10" stroke={meterColor} strokeWidth="1.5" strokeDasharray="2,3" strokeLinecap="round" opacity="0.6" />
+                </svg>
+                <span> First reading to this reading (normalized direction)</span>
               </div>
             </div>
             <div className="mt-2 text-xs text-gray-600">
