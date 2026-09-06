@@ -309,18 +309,18 @@ export const MeterSummaryCard = ({
               <span className="text-lg font-semibold" style={{ color: meter.color }}>{directDistance.toFixed(3)} mm</span>
             </div>
             <div>
-              <span className="font-medium text-gray-700">Total Path Distance: </span>
+              <span className="font-medium text-gray-700">Total Activity: </span>
               <span className="text-lg font-semibold" style={{ color: meter.color }}>{totalDistance.toFixed(3)} mm</span>
             </div>
             <div>
               <span className="font-medium text-gray-700">Trend Rate ({abbreviateLabel(estimator.label)}): </span>
               <span className="text-lg font-semibold" style={{ color: meter.color }}>
-                {methodResult ? `${methodResult.rateMmPerWeek.toFixed(4)} mm/week` : 'Insufficient data'}
+                {methodResult ? `${methodResult.rateMmPerWeek.toFixed(4)} mm/wk` : 'Insufficient data'}
               </span>
             </div>
             <div>
-              <span className="font-medium text-gray-700">Weekly Activity Rate: </span>
-              <span className="text-lg font-semibold" style={{ color: meter.color }}>{totalPathRatePerWeek.toFixed(4)} mm/week</span>
+              <span className="font-medium text-gray-700">Activity Rate: </span>
+              <span className="text-lg font-semibold" style={{ color: meter.color }}>{totalPathRatePerWeek.toFixed(4)} mm/wk</span>
             </div>
           </div>
 
@@ -334,7 +334,7 @@ export const MeterSummaryCard = ({
               needs more. */}
           <div className="flex flex-col justify-between whitespace-nowrap w-[500px]">
             <div>
-              <span className="font-medium text-gray-700">Overall Movement Direction ({abbreviateLabel(estimator.label)}): </span>
+              <span className="font-medium text-gray-700">Crack Overall Movement ({abbreviateLabel(estimator.label)}): </span>
               <span className="text-lg font-semibold" style={{ color: meter.color }}>
                 {methodResult ? directionHeadline(dirX, dirY, { compact: true }) : 'Insufficient data'}
               </span>
