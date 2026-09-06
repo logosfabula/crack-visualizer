@@ -13,8 +13,12 @@ const LEAN_GRAPH_SIZE = 135;
 // full size used by the Structural Analysis Summary's own figures.
 const EXPANDED_GRAPH_SIZE = 270;
 
-const directionHeadline = (dirX, dirY) =>
-  dirX === 0 && dirY === 0 ? 'No movement detected' :
+// `compact`: the lean view's values all share the same bold text-lg
+// treatment, which makes the full phrase "No movement detected" read as
+// far more emphasized than a plain number — shortened to "no movement"
+// there instead.
+const directionHeadline = (dirX, dirY, { compact = false } = {}) =>
+  dirX === 0 && dirY === 0 ? (compact ? 'no movement' : 'No movement detected') :
   dirX === 0 ? (dirY > 0 ? '↑ Wall Rising' : '↓ Wall Sinking') :
   dirY === 0 ? (dirX > 0 ? '→ Crack Expanding' : '← Crack Closing') :
   `${dirX > 0 ? '→ Expanding' : '← Closing'} & ${dirY > 0 ? '↑ Rising' : '↓ Sinking'}`;
@@ -324,8 +328,8 @@ export const MeterSummaryCard = ({
             <div className="space-y-1">
               <div>
                 <span className="font-medium text-gray-700">Overall Movement Direction ({abbreviateLabel(estimator.label)}): </span>
-                <span className="text-sm font-semibold" style={{ color: meter.color }}>
-                  {methodResult ? directionHeadline(dirX, dirY) : 'Insufficient data'}
+                <span className="text-lg font-semibold" style={{ color: meter.color }}>
+                  {methodResult ? directionHeadline(dirX, dirY, { compact: true }) : 'Insufficient data'}
                 </span>
               </div>
               {methodResult ? (
@@ -333,9 +337,9 @@ export const MeterSummaryCard = ({
                   <span className="font-medium text-gray-700">
                     ETA ({methodResult.thresholds.map(t => `${t.threshold}mm`).join('/')}):{' '}
                   </span>
-                  <span className="font-mono" style={{ color: meter.color }}>
+                  <span className="text-lg font-semibold font-mono" style={{ color: meter.color }}>
                     {formatThresholdRow(methodResult.thresholds, 'eta')} yr
-                    {hasConfidence && ` (${formatThresholdRow(methodResult.thresholds, 'confidence')} conf.)`}
+                    {hasConfidence && ` (${formatThresholdRow(methodResult.thresholds, 'confidence')})`}
                   </span>
                 </div>
               ) : (
