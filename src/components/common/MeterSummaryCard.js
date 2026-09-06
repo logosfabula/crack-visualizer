@@ -34,10 +34,12 @@ const directionDescription = (dirX, dirY, directionLabel) => {
   return description + '.';
 };
 
-// Shortens "Weighted Theil-Sen" to "W. Theil-Sen" for the space-constrained
-// lean view; leaves other estimator labels (e.g. "Secant (first → last
-// reading)") untouched since they don't start with "Weighted ".
-const abbreviateLabel = (label) => label.replace('Weighted ', 'W. ');
+// Shortens estimator labels for the space-constrained lean view:
+// "Weighted Theil-Sen" -> "W. Theil-Sen", and any trailing parenthetical
+// dropped entirely ("Secant (first → last reading)" -> "Secant") — that
+// detail belongs in the expanded view's methodology text, not a compact
+// label.
+const abbreviateLabel = (label) => label.replace('Weighted ', 'W. ').replace(/\s*\([^)]*\)\s*$/, '');
 
 // One value per threshold (in `methodResult.thresholds` order), formatted
 // for the lean view's single-line ETA summary: "✓" once already reached,
@@ -324,7 +326,15 @@ export const MeterSummaryCard = ({
             </div>
           </div>
 
-          <div className="flex flex-col whitespace-nowrap">
+          {/* Fixed width (not max-content) so this column — and the
+              Activity Gauge bar in it — is the same width on every floor's
+              card, since each card is its own independent grid and would
+              otherwise size this column to its own shortest/longest text
+              (e.g. "no movement" vs. "→ Expanding & ↓ Sinking"). 500px
+              fits the widest real content seen so far; overflow-x-auto on
+              the grid is the safety net if a future estimator's label
+              needs more. */}
+          <div className="flex flex-col whitespace-nowrap w-[500px]">
             <div className="space-y-1">
               <div>
                 <span className="font-medium text-gray-700">Overall Movement Direction ({abbreviateLabel(estimator.label)}): </span>
