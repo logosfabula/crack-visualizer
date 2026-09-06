@@ -309,7 +309,7 @@ export const MeterSummaryCard = ({
         </div>
       ) : (
         <div className="grid overflow-x-auto grid-cols-[max-content] max-lg:landscape:grid-cols-[repeat(2,max-content)] lg:grid-cols-[repeat(3,max-content)] gap-x-8 gap-y-3 text-sm">
-          <div className="flex flex-col justify-between whitespace-nowrap">
+          <div className="flex flex-col justify-between whitespace-nowrap text-right">
             <div>
               <span className="font-medium text-gray-700">Direct Displacement: </span>
               <span className="text-lg font-semibold" style={{ color: meter.color }}>{directDistance.toFixed(3)} mm</span>
@@ -346,7 +346,7 @@ export const MeterSummaryCard = ({
               </span>
             </div>
             {methodResult ? (
-              <div>
+              <div className="text-right">
                 <span className="font-medium text-gray-700">
                   ETA ({methodResult.thresholds.map(t => `${t.threshold}mm`).join('/')}):{' '}
                 </span>
@@ -360,10 +360,10 @@ export const MeterSummaryCard = ({
                 )}
               </div>
             ) : (
-              <div className="text-sm text-gray-500">Insufficient data</div>
+              <div className="text-sm text-gray-500 text-right">Insufficient data</div>
             )}
             <div>
-              <div className="text-xs font-medium text-gray-600 mb-1">
+              <div className="text-xs font-medium text-gray-600 mb-1 text-right">
                 Activity Gauge: <span style={{ color: meter.color }}>{getActivityAssessment(totalPathRatePerWeek, maxTotalPathRate)}</span>
               </div>
               <ActivityHeatMeter
@@ -385,7 +385,7 @@ export const MeterSummaryCard = ({
               />
             </div>
           ) : (
-            <div className="text-sm text-gray-500">Insufficient data</div>
+            <div className="text-sm text-gray-500 text-right">Insufficient data</div>
           )}
         </div>
       )}
