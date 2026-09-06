@@ -56,28 +56,16 @@ const directionDescription = (dirX, dirY, directionLabel) => {
 // label.
 const abbreviateLabel = (label) => label.replace('Weighted ', 'W. ').replace(/\s*\([^)]*\)\s*$/, '');
 
-// One value per threshold (in `methodResult.thresholds` order), formatted
-// for the lean view's single-line ETA summary: "✓" once already reached,
-// "–" if never reached on the current trend, otherwise years remaining
-// with its own "yr" suffix (e.g. "3.4yr") so each value in the slash-joined
-// list is self-contained rather than relying on one trailing unit for all
-// of them. `pick` selects which number to show — the ETA itself, or (only
-// present for estimators that compute a bootstrap interval, currently
-// Theil-Sen only) the *consensus*: what share of the resampled trends also
-// reach the threshold at all. Deliberately not called "confidence" — it
-// isn't a confidence bound on any single value, just a tally of how many
-// resamples agree with the reached/not-reached verdict.
-//
-// Scaled by 0.9 (matching the expanded view's "covers X% of all resampled
-// trends" next to the p5-p95 range) rather than showing the raw reached
-// fraction: the raw fraction alone overstates how much of the full
-// bootstrap picture the single ETA value shown actually represents, since
-// even among resamples that reach, the date range spans only their middle
-// 90%.
-const formatThresholdRow = (thresholds, pick) => thresholds.map(t => {
+// One ETA value per threshold (in `methodResult.thresholds` order),
+// formatted for the lean view's single-line ETA summary: "✓" once already
+// reached, "–" if never reached on the current trend, otherwise years
+// remaining with its own "yr" suffix (e.g. "3.4yr") so each value in the
+// slash-joined list is self-contained rather than relying on one trailing
+// unit for all of them. Consensus (the bootstrap reached-fraction) isn't
+// shown here — see the expanded view's per-threshold breakdown for that.
+const formatThresholdRow = (thresholds) => thresholds.map(t => {
   if (t.alreadyReached) return '✓';
-  if (pick === 'eta') return t.reached ? `${(t.remainingDays / 365.25).toFixed(1)}yr` : '–';
-  return t.bootstrap ? `${Math.round(t.bootstrap.reachedFraction * 0.9 * 100)}%` : '–';
+  return t.reached ? `${(t.remainingDays / 365.25).toFixed(1)}yr` : '–';
 }).join('/');
 
 // Single-axis ETA: a much simpler projection than the fitted 2D estimator
@@ -137,10 +125,6 @@ export const MeterSummaryCard = ({
   const lastNormX = meterData[meterData.length - 1][normDataKeyX];
   const lastNormY = meterData[meterData.length - 1][normDataKeyY];
 
-  // Consensus (the bootstrap reached-fraction) only exists for the combined
-  // radial estimate — the per-axis projection above is a plain linear
-  // extrapolation with nothing to resample.
-  const hasConsensus = !!(methodResult && etaMode === 'normal' && methodResult.thresholds.some(t => t.bootstrap));
   const etaThresholds = methodResult && (
     etaMode === 'normal' ? methodResult.thresholds :
     etaMode === 'h' ? computeAxisThresholds(lastNormX, componentRates.x, methodResult.thresholds) :
@@ -445,13 +429,8 @@ export const MeterSummaryCard = ({
                   ETA{etaMode === 'h' ? ' H' : etaMode === 'v' ? ' V' : ''} <span aria-hidden="true" className="text-gray-400">⇄</span> ({methodResult.thresholds.map(t => `${t.threshold}mm`).join('/')}):{' '}
                 </span>
                 <span className="text-lg font-semibold font-mono" style={{ color: meter.color }}>
-                  {formatThresholdRow(etaThresholds, 'eta')}
+                  {formatThresholdRow(etaThresholds)}
                 </span>
-                {hasConsensus && (
-                  <span className="text-sm font-mono" style={{ color: meter.color }}>
-                    {' '}({formatThresholdRow(etaThresholds, 'consensus')})
-                  </span>
-                )}
               </div>
             ) : (
               <div className="text-sm text-gray-500 text-right">Insufficient data</div>
