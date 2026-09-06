@@ -43,13 +43,16 @@ const abbreviateLabel = (label) => label.replace('Weighted ', 'W. ').replace(/\s
 
 // One value per threshold (in `methodResult.thresholds` order), formatted
 // for the lean view's single-line ETA summary: "✓" once already reached,
-// "–" if never reached on the current trend, otherwise years remaining.
-// `pick` selects which number to show — the ETA itself, or (only present
-// for estimators that compute a bootstrap interval, currently Theil-Sen
-// only) the confidence that resampled trends actually reach the threshold.
+// "–" if never reached on the current trend, otherwise years remaining
+// with its own "yr" suffix (e.g. "3.4yr") so each value in the slash-joined
+// list is self-contained rather than relying on one trailing unit for all
+// of them. `pick` selects which number to show — the ETA itself, or (only
+// present for estimators that compute a bootstrap interval, currently
+// Theil-Sen only) the confidence that resampled trends actually reach the
+// threshold.
 const formatThresholdRow = (thresholds, pick) => thresholds.map(t => {
   if (t.alreadyReached) return '✓';
-  if (pick === 'eta') return t.reached ? (t.remainingDays / 365.25).toFixed(1) : '–';
+  if (pick === 'eta') return t.reached ? `${(t.remainingDays / 365.25).toFixed(1)}yr` : '–';
   return t.bootstrap ? `${Math.round(t.bootstrap.reachedFraction * 100)}%` : '–';
 }).join('/');
 
@@ -345,9 +348,13 @@ export const MeterSummaryCard = ({
                   ETA ({methodResult.thresholds.map(t => `${t.threshold}mm`).join('/')}):{' '}
                 </span>
                 <span className="text-lg font-semibold font-mono" style={{ color: meter.color }}>
-                  {formatThresholdRow(methodResult.thresholds, 'eta')} yr
-                  {hasConfidence && ` (${formatThresholdRow(methodResult.thresholds, 'confidence')})`}
+                  {formatThresholdRow(methodResult.thresholds, 'eta')}
                 </span>
+                {hasConfidence && (
+                  <span className="text-sm font-semibold font-mono" style={{ color: meter.color }}>
+                    {' '}({formatThresholdRow(methodResult.thresholds, 'confidence')})
+                  </span>
+                )}
               </div>
             ) : (
               <div className="text-sm text-gray-500">Insufficient data</div>
