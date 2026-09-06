@@ -321,7 +321,7 @@ export const MeterSummaryCard = ({
               </div>
             </div>
             <div className="mt-auto pt-2">
-              <span className="font-medium text-gray-700">Weekly Rate (Activity): </span>
+              <span className="font-medium text-gray-700">Weekly Activity Rate: </span>
               <span className="text-lg font-semibold" style={{ color: meter.color }}>{totalPathRatePerWeek.toFixed(4)} mm/week</span>
             </div>
           </div>
