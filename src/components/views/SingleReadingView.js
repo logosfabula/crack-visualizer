@@ -220,21 +220,17 @@ export const SingleReadingView = ({
   const daysSinceFirst = firstReading ?
     Math.round((new Date(date) - new Date(firstReading.date)) / (1000 * 60 * 60 * 24)) : 0;
 
-  // First-reading-to-current dotted line, in raw coordinates but shaped by
-  // the *normalized* displacement rather than the literal raw delta —
-  // for a floor marked needsInversion (Pianterreno, Piano 2), the raw
-  // delta points the opposite way from what "expanding"/"sinking" means
-  // everywhere else on this page. Anchored at the first raw reading
-  // (== the normalized origin by definition) and shifted by the
-  // normalized displacement, so its direction always agrees with the
-  // normalized interpretation shown alongside it.
+  // First-reading-to-current dotted line, literally in raw coordinates —
+  // both endpoints are the actual raw marker positions (this reading's and
+  // the floor's first reading's), not shifted or mirrored by the
+  // normalized-view inversion some floors use.
   const originRawX = firstReading ? firstReading[`${meterKey}_x`] : null;
   const originRawY = firstReading ? firstReading[`${meterKey}_y`] : null;
-  const firstToCurrentLine = (firstReading && normalizedIntersection) ? {
+  const firstToCurrentLine = firstReading ? {
     x1: toSVGX(originRawX),
     y1: toSVGY(originRawY),
-    x2: toSVGX(originRawX + normalizedIntersection.x),
-    y2: toSVGY(originRawY + normalizedIntersection.y)
+    x2: toSVGX(intersection.x),
+    y2: toSVGY(intersection.y)
   } : null;
 
   return (
@@ -372,8 +368,8 @@ export const SingleReadingView = ({
               opacity="0.6"
             />
 
-            {/* First-reading-to-current path - DOTTED LINE, shaped by the
-                normalized displacement (see firstToCurrentLine above) */}
+            {/* First-reading-to-current path - DOTTED LINE, literal raw
+                coordinates (see firstToCurrentLine above) */}
             {firstToCurrentLine && (
               <line
                 x1={firstToCurrentLine.x1} y1={firstToCurrentLine.y1}
@@ -674,7 +670,7 @@ export const SingleReadingView = ({
                 <svg width="50" height="30" viewBox="0 0 50 30">
                   <line x1="10" y1="20" x2="40" y2="10" stroke={meterColor} strokeWidth="1.5" strokeDasharray="2,3" strokeLinecap="round" opacity="0.6" />
                 </svg>
-                <span> First reading to this reading (normalized direction)</span>
+                <span> First reading to this reading (raw)</span>
               </div>
             </div>
             <div className="mt-2 text-xs text-gray-600">
