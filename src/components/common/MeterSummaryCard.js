@@ -338,7 +338,7 @@ export const MeterSummaryCard = ({
               fits the widest real content seen so far; overflow-x-auto on
               the grid is the safety net if a future estimator's label
               needs more. */}
-          <div className="flex flex-col justify-between whitespace-nowrap w-[500px]">
+          <div className="flex flex-col justify-between whitespace-nowrap text-right w-[500px]">
             <div>
               <span className="font-medium text-gray-700">Crack Overall Movement ({abbreviateLabel(estimator.label)}): </span>
               <span className="text-lg font-semibold" style={{ color: meter.color }}>
@@ -346,7 +346,7 @@ export const MeterSummaryCard = ({
               </span>
             </div>
             {methodResult ? (
-              <div className="text-right">
+              <div>
                 <span className="font-medium text-gray-700">
                   ETA ({methodResult.thresholds.map(t => `${t.threshold}mm`).join('/')}):{' '}
                 </span>
@@ -360,10 +360,10 @@ export const MeterSummaryCard = ({
                 )}
               </div>
             ) : (
-              <div className="text-sm text-gray-500 text-right">Insufficient data</div>
+              <div className="text-sm text-gray-500">Insufficient data</div>
             )}
             <div>
-              <div className="text-xs font-medium text-gray-600 mb-1 text-right">
+              <div className="text-xs font-medium text-gray-600 mb-1">
                 Activity Gauge: <span style={{ color: meter.color }}>{getActivityAssessment(totalPathRatePerWeek, maxTotalPathRate)}</span>
               </div>
               <ActivityHeatMeter
