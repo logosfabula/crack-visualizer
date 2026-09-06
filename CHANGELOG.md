@@ -10,6 +10,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.20.0] - 2026-09-06
+### Added
+- dotted line from the first reading to this reading, shaped by normalized displacement
+### Changed
+- correct TODO.md's account of the first-to-current dotted line
+- document the first-to-current dotted line feature in TODO.md
+### Fixed
+- first-to-current dotted line: literal raw coordinates, not the normalized-shifted variant
 ## [0.19.0] - 2026-09-06
 ### Added
 - click-to-toggle mm/wk <-> µm/wk on Trend Rate and Activity Rate
