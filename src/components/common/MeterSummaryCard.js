@@ -338,15 +338,20 @@ export const MeterSummaryCard = ({
               fits the widest real content seen so far; overflow-x-auto on
               the grid is the safety net if a future estimator's label
               needs more. */}
-          <div className="flex flex-col justify-between whitespace-nowrap text-right w-[500px]">
+          <div className="flex flex-col justify-between whitespace-nowrap w-[500px]">
             <div>
               <span className="font-medium text-gray-700">Crack Overall Movement ({abbreviateLabel(estimator.label)}): </span>
               <span className="text-lg font-semibold" style={{ color: meter.color }}>
                 {methodResult ? directionHeadline(dirX, dirY, { compact: true }) : 'Insufficient data'}
               </span>
             </div>
+            {/* Spacer: gives this cell the same 4-slot justify-between rhythm
+                as the left cell (Direct Displacement/Total Activity/Trend
+                Rate/Activity Rate), so ETA — this cell's 3rd slot — lands at
+                the same height as Trend Rate, the left cell's 3rd slot. */}
+            <div aria-hidden="true">&nbsp;</div>
             {methodResult ? (
-              <div>
+              <div className="text-right">
                 <span className="font-medium text-gray-700">
                   ETA ({methodResult.thresholds.map(t => `${t.threshold}mm`).join('/')}):{' '}
                 </span>
@@ -360,10 +365,10 @@ export const MeterSummaryCard = ({
                 )}
               </div>
             ) : (
-              <div className="text-sm text-gray-500">Insufficient data</div>
+              <div className="text-sm text-gray-500 text-right">Insufficient data</div>
             )}
             <div>
-              <div className="text-xs font-medium text-gray-600 mb-1">
+              <div className="text-xs font-medium text-gray-600 mb-1 text-right">
                 Activity Gauge: <span style={{ color: meter.color }}>{getActivityAssessment(totalPathRatePerWeek, maxTotalPathRate)}</span>
               </div>
               <ActivityHeatMeter
