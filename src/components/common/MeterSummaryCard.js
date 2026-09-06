@@ -339,10 +339,19 @@ export const MeterSummaryCard = ({
               the grid is the safety net if a future estimator's label
               needs more. */}
           <div className="flex flex-col justify-between whitespace-nowrap w-[500px]">
-            <div>
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={toggle}
+              onKeyDown={activateOnKey(toggle)}
+              className="flex justify-between items-baseline cursor-pointer select-none"
+            >
               <span className="font-medium text-gray-700">Crack Overall Movement ({abbreviateLabel(estimator.label)}): </span>
-              <span className="text-lg font-semibold" style={{ color: meter.color }}>
-                {methodResult ? directionHeadline(dirX, dirY, { compact: true }) : 'Insufficient data'}
+              <span>
+                <span className="text-lg font-semibold" style={{ color: meter.color }}>
+                  {methodResult ? directionHeadline(dirX, dirY, { compact: true }) : 'Insufficient data'}
+                </span>
+                <span aria-hidden="true" className="text-gray-400 ml-1">›</span>
               </span>
             </div>
             {/* Spacer: gives this cell the same 4-slot justify-between rhythm
