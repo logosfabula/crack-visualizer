@@ -13,6 +13,37 @@ const LEAN_GRAPH_SIZE = 135;
 // full size used by the Structural Analysis Summary's own figures.
 const EXPANDED_GRAPH_SIZE = 270;
 
+// U+00B5 MICRO SIGN — not U+03BC GREEK SMALL LETTER MU, which looks
+// identical in most fonts but is the wrong character for an SI unit prefix.
+const MICRO = 'µ';
+
+// A rate value that toggles between mm/wk and µm/wk on click — at these
+// magnitudes (a few thousandths of a mm per week) mm buries the meaningful
+// digits after a string of leading zeros; µm reads the same quantity in a
+// range where the digits carry information at a glance. Own toggle state
+// per value, not shared, since a reader may want one rate in mm and
+// another in µm side by side.
+const ToggleableRate = ({ mmPerWeek, color, className = 'text-lg font-semibold' }) => {
+  const [useMicrons, setUseMicrons] = useState(false);
+  if (mmPerWeek === null || mmPerWeek === undefined) {
+    return <span className={className} style={{ color }}>Insufficient data</span>;
+  }
+  const toggle = () => setUseMicrons(v => !v);
+  return (
+    <span
+      role="button"
+      tabIndex={0}
+      onClick={toggle}
+      onKeyDown={activateOnKey(toggle)}
+      className={`${className} cursor-pointer`}
+      style={{ color }}
+      title={useMicrons ? 'Click to show mm/wk' : `Click to show ${MICRO}m/wk`}
+    >
+      {useMicrons ? `${(mmPerWeek * 1000).toFixed(1)} ${MICRO}m/wk` : `${mmPerWeek.toFixed(4)} mm/wk`}
+    </span>
+  );
+};
+
 // `compact`: the lean view's values all share the same bold text-lg
 // treatment, which makes the full phrase "No movement detected" read as
 // far more emphasized than a plain number — shortened to "no movement"
@@ -321,13 +352,11 @@ export const MeterSummaryCard = ({
             </div>
             <div>
               <span className="font-medium text-gray-700">Trend Rate ({abbreviateLabel(estimator.label)}): </span>
-              <span className="text-lg font-semibold" style={{ color: meter.color }}>
-                {methodResult ? `${methodResult.rateMmPerWeek.toFixed(4)} mm/wk` : 'Insufficient data'}
-              </span>
+              <ToggleableRate mmPerWeek={methodResult ? methodResult.rateMmPerWeek : null} color={meter.color} />
             </div>
             <div>
               <span className="font-medium text-gray-700">Activity Rate: </span>
-              <span className="text-lg font-semibold" style={{ color: meter.color }}>{totalPathRatePerWeek.toFixed(4)} mm/wk</span>
+              <ToggleableRate mmPerWeek={totalPathRatePerWeek} color={meter.color} />
             </div>
           </div>
 
