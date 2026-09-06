@@ -48,8 +48,11 @@ const abbreviateLabel = (label) => label.replace('Weighted ', 'W. ').replace(/\s
 // list is self-contained rather than relying on one trailing unit for all
 // of them. `pick` selects which number to show — the ETA itself, or (only
 // present for estimators that compute a bootstrap interval, currently
-// Theil-Sen only) the confidence that resampled trends actually reach the
-// threshold.
+// Theil-Sen only) the *consensus*: what share of the resampled trends also
+// reach the threshold at all. Deliberately not called "confidence" — it
+// isn't a confidence bound on any single value, just a tally of how many
+// resamples agree with the reached/not-reached verdict (see the p5-p95
+// date range below for the actual confidence-interval-style quantity).
 const formatThresholdRow = (thresholds, pick) => thresholds.map(t => {
   if (t.alreadyReached) return '✓';
   if (pick === 'eta') return t.reached ? `${(t.remainingDays / 365.25).toFixed(1)}yr` : '–';
@@ -74,7 +77,7 @@ export const MeterSummaryCard = ({
   const componentRates = methodResult ? methodResult.componentRates : null;
   const dirX = methodResult ? methodResult.direction.x : null;
   const dirY = methodResult ? methodResult.direction.y : null;
-  const hasConfidence = !!(methodResult && methodResult.thresholds.some(t => t.bootstrap));
+  const hasConsensus = !!(methodResult && methodResult.thresholds.some(t => t.bootstrap));
 
   const normDataKeyX = meter.dataKeys[0].replace('_x', '_norm_x');
   const normDataKeyY = meter.dataKeys[1].replace('_y', '_norm_y');
@@ -350,9 +353,9 @@ export const MeterSummaryCard = ({
                 <span className="text-lg font-semibold font-mono" style={{ color: meter.color }}>
                   {formatThresholdRow(methodResult.thresholds, 'eta')}
                 </span>
-                {hasConfidence && (
-                  <span className="text-sm font-semibold font-mono" style={{ color: meter.color }}>
-                    {' '}({formatThresholdRow(methodResult.thresholds, 'confidence')})
+                {hasConsensus && (
+                  <span className="text-sm font-mono" style={{ color: meter.color }}>
+                    {' '}({formatThresholdRow(methodResult.thresholds, 'consensus')})
                   </span>
                 )}
               </div>

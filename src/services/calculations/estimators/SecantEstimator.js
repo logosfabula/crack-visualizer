@@ -9,7 +9,7 @@ export class SecantEstimator {
   static label = 'Secant (first → last reading)';
   static directionLabel = 'the net change from first to last reading';
 
-  static methodology = 'Straight-line rate from the first reading to the last, projected forward from today. No confidence range: a 2-point fit has nothing to resample.';
+  static methodology = 'Straight-line rate from the first reading to the last, projected forward from today. No bootstrap range: a 2-point fit has nothing to resample.';
 
   static describe({ rawReadingCount }) {
     const ignored = Math.max(0, rawReadingCount - 2);
