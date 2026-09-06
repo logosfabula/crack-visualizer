@@ -3,6 +3,7 @@ import { activateOnKey } from './InfoDisclosure';
 import { ActivityHeatMeter, getActivityAssessment } from './ActivityHeatMeter';
 import { VectorRateArrow, RATE_ARROW_COLORS } from './VectorRateArrow';
 import { formatDurationFromDays } from '../../utils/formatDuration';
+import { MAX_EXTRAPOLATION_YEARS } from '../../constants/regressionConfig';
 
 // The lean view's graph is a fixed small preview, not a control — no
 // click-to-resize affordance, just a size consistent with a "shrunk" figure
@@ -82,13 +83,17 @@ const formatThresholdRow = (thresholds, pick) => thresholds.map(t => {
 // mirrors the same {threshold, alreadyReached, reached, remainingDays}
 // shape as methodResult.thresholds (minus `bootstrap`, since there's
 // nothing here to resample) so formatThresholdRow can render either.
+// Shares the same MAX_EXTRAPOLATION_YEARS cap as the combined estimator —
+// without it, a near-zero axis rate produces the same absurd
+// centuries-out ETA that cap exists to prevent there.
+const MAX_AXIS_ETA_DAYS = MAX_EXTRAPOLATION_YEARS * 365.25;
 const computeAxisThresholds = (currentPos, ratePerWeek, thresholds) => {
   const ratePerDay = ratePerWeek / 7;
   return thresholds.map(({ threshold }) => {
     if (Math.abs(currentPos) >= threshold) return { threshold, alreadyReached: true };
     if (ratePerDay === 0) return { threshold, alreadyReached: false, reached: false, remainingDays: null };
     const candidates = [(threshold - currentPos) / ratePerDay, (-threshold - currentPos) / ratePerDay]
-      .filter(t => t > 0 && Number.isFinite(t));
+      .filter(t => t > 0 && t <= MAX_AXIS_ETA_DAYS);
     return candidates.length
       ? { threshold, alreadyReached: false, reached: true, remainingDays: Math.min(...candidates) }
       : { threshold, alreadyReached: false, reached: false, remainingDays: null };

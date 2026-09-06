@@ -11,12 +11,15 @@ export const ETA_THRESHOLDS_MM = [1, 2, 5];
 
 export const BOOTSTRAP_ITERATIONS = 500;
 
-// A linear fit shouldn't be trusted arbitrarily far past the span it was
-// actually observed over (a near-zero but technically nonzero slope still
-// has a finite quadratic root — without a cap that turns into ETAs
-// centuries out). Projections beyond this multiple of the observed
-// monitoring span are reported as "not reached" rather than a real date.
-export const MAX_EXTRAPOLATION_MULTIPLE = 10;
+// A linear fit shouldn't be trusted arbitrarily far into the future (a
+// near-zero but technically nonzero slope still has a finite quadratic
+// root — without a cap that turns into ETAs centuries out). Projections
+// beyond this many years from today are reported as "not reached" rather
+// than a real date. Fixed rather than scaled to the observed monitoring
+// span — a floor watched for 20 years and one watched for 2 get the same
+// trusted horizon, since the cap is about how far a straight-line
+// projection is plausible at all, not about how much data backs it.
+export const MAX_EXTRAPOLATION_YEARS = 100;
 
 // Below this rate, a method reports "insufficient movement" rather than a
 // (potentially huge or divide-by-near-zero) projected ETA.

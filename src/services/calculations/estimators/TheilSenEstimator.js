@@ -1,7 +1,7 @@
 import { RegressionAnalyzer } from '../RegressionAnalyzer';
 import { ETASolver } from '../ETASolver';
 import { BootstrapEstimator } from '../BootstrapEstimator';
-import { BOOTSTRAP_ITERATIONS, MAX_EXTRAPOLATION_MULTIPLE } from '../../../constants/regressionConfig';
+import { BOOTSTRAP_ITERATIONS, MAX_EXTRAPOLATION_YEARS } from '../../../constants/regressionConfig';
 
 // Robust, quality-weighted regression over every reading. See
 // RegressionAnalyzer/ETASolver/BootstrapEstimator for the actual math.
@@ -23,9 +23,7 @@ export class TheilSenEstimator {
     const fit = RegressionAnalyzer.fitFloor(readings);
     if (!fit) return null;
 
-    const last = readings[readings.length - 1];
-    const observedSpan = Math.max(last.t, tNow);
-    const maxT = tNow + observedSpan * MAX_EXTRAPOLATION_MULTIPLE;
+    const maxT = tNow + MAX_EXTRAPOLATION_YEARS * 365.25;
 
     const t = readings.map(r => r.t);
     const x = readings.map(r => r.x);
