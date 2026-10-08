@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.20.1] - 2026-10-08
+### Added
+- gitignore .claude/settings.local.json
+- 2026/10 readings
 ## [0.20.0] - 2026-09-06
 ### Added
 - dotted line from the first reading to this reading, shaped by normalized displacement
