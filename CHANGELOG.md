@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.20.2] - 2026-11-03
+### Added
+- 2026/11 reading photos
+- 2026/11 readings
 ## [0.20.1] - 2026-10-08
 ### Added
 - gitignore .claude/settings.local.json
